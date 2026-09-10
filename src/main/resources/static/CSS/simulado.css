@@ -1,0 +1,424 @@
+/* Paleta do design: roxo da marca, cinzas de texto e borda, verde e vermelho de status */
+:root {
+    --marca: #6C4CE8;
+    --marca-clara: #EEE9FF;
+    --marca-fundo: #F5F2FF;
+    --texto: #202124;
+    --texto-secundario: #5F6368;
+    --texto-apagado: #9AA0A6;
+    --borda: #E4E7EC;
+    --cinza-claro: #F1F3F8;
+    --fundo: #f8f9fc;
+    --verde: #22C55E;
+    --vermelho: #EF4444;
+    --vermelho-fundo: #FEF2F2;
+    --verde-fundo: #F0FDF4;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: "Inter", system-ui, sans-serif;
+    background: var(--fundo);
+    color: var(--texto);
+}
+
+*:focus-visible {
+    outline: 2px solid var(--marca);
+    outline-offset: 2px;
+}
+
+.prova {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+/* ---------- Topo fixo ---------- */
+
+.topo {
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    background: #fff;
+    border-bottom: 1px solid var(--borda);
+    padding: 12px 24px 8px;
+}
+
+.topo-linha,
+.barra-progresso,
+.conteudo,
+.rodape-linha {
+    max-width: 768px;
+    margin: 0 auto;
+}
+
+.topo-linha {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.topo-esquerda,
+.topo-direita {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.link-sair {
+    color: var(--texto-apagado);
+    font-size: 12px;
+    text-decoration: none;
+}
+
+.link-sair:hover {
+    color: var(--texto-secundario);
+}
+
+.divisor {
+    width: 1px;
+    height: 16px;
+    background: var(--borda);
+}
+
+.titulo-prova {
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.cronometro {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 12px;
+    border-radius: 8px;
+    background: var(--cinza-claro);
+    font-size: 14px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+
+/* Ultimos 15 minutos: o cronometro muda de cor */
+.cronometro.urgente {
+    background: var(--vermelho-fundo);
+    color: var(--vermelho);
+}
+
+.contador {
+    font-size: 14px;
+    color: var(--texto-secundario);
+}
+
+.contador strong {
+    color: var(--texto);
+}
+
+.barra-progresso {
+    height: 6px;
+    border-radius: 999px;
+    background: var(--cinza-claro);
+    margin-top: 8px;
+    overflow: hidden;
+}
+
+.barra-preenchida {
+    height: 100%;
+    background: var(--marca);
+    border-radius: 999px;
+}
+
+/* ---------- Conteudo ---------- */
+
+.conteudo {
+    flex: 1;
+    padding: 32px 24px;
+    width: 100%;
+}
+
+.etiquetas {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 20px;
+}
+
+.etiqueta-tema {
+    font-size: 12px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: var(--marca-clara);
+    color: var(--marca);
+}
+
+.etiqueta-ordem {
+    font-size: 12px;
+    color: var(--texto-apagado);
+}
+
+.cartao-enunciado,
+.cartao-fonte {
+    background: #fff;
+    border: 1px solid var(--borda);
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 20px;
+}
+
+.cartao-fonte {
+    background: var(--cinza-claro);
+    border-style: dashed;
+}
+
+.cartao-enunciado p,
+.cartao-fonte p {
+    margin: 0;
+    font-size: 15px;
+    line-height: 1.7;
+}
+
+/* ---------- Alternativas ---------- */
+
+.alternativas {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.alternativa {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 16px;
+    border: 2px solid var(--borda);
+    border-radius: 12px;
+    background: #fff;
+    font-size: 14px;
+    line-height: 1.6;
+    cursor: pointer;
+}
+
+.alternativa:hover {
+    border-color: rgba(108, 76, 232, 0.4);
+}
+
+/* O radio fica escondido: quem mostra a selecao e o proprio cartao */
+.alternativa input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* :has() deixa o CSS reagir ao clique sem precisar de JavaScript */
+.alternativa:has(input:checked) {
+    border-color: var(--marca);
+    background: var(--marca-fundo);
+}
+
+.letra {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    flex-shrink: 0;
+    border-radius: 999px;
+    background: var(--cinza-claro);
+    color: var(--texto-secundario);
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.alternativa:has(input:checked) .letra {
+    background: var(--marca);
+    color: #fff;
+}
+
+.texto-alternativa {
+    flex: 1;
+}
+
+/* ---------- Rodape ---------- */
+
+.rodape {
+    position: sticky;
+    bottom: 0;
+    background: #fff;
+    border-top: 1px solid var(--borda);
+    padding: 16px 24px;
+}
+
+.rodape-linha {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.resumo {
+    font-size: 12px;
+    color: var(--texto-secundario);
+}
+
+.respondidas {
+    color: var(--verde);
+    font-weight: 500;
+}
+
+.em-branco {
+    color: var(--texto-apagado);
+}
+
+.ponto {
+    color: var(--borda);
+    margin: 0 4px;
+}
+
+.botao-primario,
+.botao-secundario {
+    padding: 10px 20px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-family: inherit;
+    cursor: pointer;
+}
+
+.botao-primario {
+    background: var(--marca);
+    color: #fff;
+    border: none;
+    font-weight: 600;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.botao-secundario {
+    background: #fff;
+    border: 1px solid var(--borda);
+    color: var(--texto-secundario);
+    font-weight: 500;
+}
+
+.botao-secundario:hover:not(:disabled) {
+    border-color: rgba(108, 76, 232, 0.4);
+}
+
+.botao-secundario:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.bloco {
+    display: block;
+    width: 100%;
+    text-align: center;
+    margin-top: 24px;
+}
+
+/* ---------- Confirmacao ---------- */
+
+.fundo-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    background: rgba(0, 0, 0, 0.4);
+}
+
+.fundo-modal[hidden] {
+    display: none;
+}
+
+.modal {
+    background: #fff;
+    border-radius: 16px;
+    padding: 24px;
+    max-width: 384px;
+    width: 100%;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+}
+
+.modal h3 {
+    margin: 0 0 8px;
+    font-size: 18px;
+}
+
+.modal p {
+    margin: 0 0 20px;
+    font-size: 14px;
+    color: var(--texto-secundario);
+}
+
+.modal p strong {
+    color: var(--texto);
+}
+
+.modal-botoes {
+    display: flex;
+    gap: 12px;
+}
+
+.modal-botoes button {
+    flex: 1;
+}
+
+/* ---------- Tela de conclusao ---------- */
+
+.conclusao {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+}
+
+.cartao-conclusao {
+    background: #fff;
+    border: 1px solid var(--borda);
+    border-radius: 16px;
+    padding: 40px;
+    max-width: 480px;
+    width: 100%;
+    text-align: center;
+}
+
+.selo-ok {
+    width: 56px;
+    height: 56px;
+    margin: 0 auto 20px;
+    border-radius: 999px;
+    background: var(--verde-fundo);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.cartao-conclusao h1 {
+    margin: 0 0 4px;
+    font-size: 22px;
+}
+
+.subtitulo {
+    margin: 0 0 24px;
+    font-size: 14px;
+    color: var(--texto-secundario);
+}
+
+.resumo-final {
+    margin: 0 0 8px;
+    font-size: 15px;
+}
+
+.horario {
+    margin: 0;
+    font-size: 13px;
+    color: var(--texto-apagado);
+}

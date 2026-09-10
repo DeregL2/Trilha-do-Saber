@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="${simulado.titulo}">Simulado</title>
+    <link rel="stylesheet" th:href="@{/css/simulado.css}"><body>
+
+<form th:action="@{'/simulado/' + ${simulado.id} + '/questao/' + ${ordem}}" method="post" class="prova">
+
+    <header class="topo">
+        <div class="topo-linha">
+            <div class="topo-esquerda">
+                <a th:href="@{/}" class="link-sair">&larr; Sair</a>
+                <span class="divisor"></span>
+                <span class="titulo-prova" th:text="${simulado.titulo}">Simulado</span>
+            </div>
+            <div class="topo-direita">
+                <span class="cronometro" id="cronometro" th:data-segundos="${segundosRestantes}">--:--:--</span>
+                <span class="contador">
+                    Questão <strong th:text="${ordem}">1</strong> de <span th:text="${total}">20</span>
+                </span>
+            </div>
+        </div>
+        <div class="barra-progresso">
+            <div class="barra-preenchida" th:style="'width:' + ${progresso} + '%'"></div>
+        </div>
+    </header>
+
+    <main class="conteudo">
+
+        <div class="etiquetas">
+            <span class="etiqueta-tema" th:text="${questao.tema != null} ? ${questao.tema.nome} : 'Geral'">Tema</span>
+            <span class="etiqueta-ordem">Questão <span th:text="${ordem}">1</span></span>
+        </div>
+
+        <!-- Texto de apoio: so aparece quando a questao tem fonte cadastrada -->
+        <div class="cartao-fonte" th:if="${questao.fonte != null}">
+            <p th:text="${questao.fonte.texto}">Texto de apoio</p>
+        </div>
+
+        <div class="cartao-enunciado">
+            <p th:text="${questao.enunciado}">Enunciado da questão</p>
+        </div>
+
+        <div class="alternativas">
+            <!-- iter.index comeca em 0, entao a letra sai de 'ABCDE' na mesma posicao -->
+            <label class="alternativa" th:each="alt, iter : ${alternativas}">
+                <input type="radio" name="alternativaId" th:value="${alt.id}"
+                       th:checked="${alternativaSelecionadaId != null and alternativaSelecionadaId == alt.id}">
+                <span class="letra" th:text="${#strings.substring('ABCDE', iter.index, iter.index + 1)}">A</span>
+                <span class="texto-alternativa" th:text="${alt.texto}">Texto da alternativa</span>
+            </label>
+        </div>
+
+    </main>
+
+    <footer class="rodape">
+        <div class="rodape-linha">
+            <button type="submit" name="acao" value="anterior" class="botao-secundario"
+                    th:disabled="${ordem == 1}">&larr; Anterior
+            </button>
+
+            <div class="resumo">
+                <span class="respondidas" th:text="${respondidas}">0</span> respondidas
+                <span class="ponto">·</span>
+                <span class="em-branco" th:text="${emBranco}">0</span> em branco
+            </div>
+
+            <button type="submit" name="acao" value="proxima" class="botao-primario"
+                    th:if="${ordem < total}">Próxima &rarr;
+            </button>
+
+            <!-- Na ultima questao o botao abre a confirmacao em vez de enviar direto -->
+            <button type="button" class="botao-primario" id="abrir-confirmacao"
+                    th:if="${ordem == total}">Finalizar simulado
+            </button>
+        </div>
+    </footer>
+
+    <div class="fundo-modal" id="modal" hidden>
+        <div class="modal">
+            <h3>Finalizar simulado?</h3>
+            <p>
+                Você respondeu <strong th:text="${respondidas}">0</strong> de
+                <strong th:text="${total}">20</strong> questões.
+                <span th:if="${emBranco > 0}">
+                    <span th:text="${emBranco}">0</span> ficarão em branco.
+                </span>
+            </p>
+            <div class="modal-botoes">
+                <button type="button" class="botao-secundario" id="fechar-confirmacao">Continuar revisando</button>
+                <button type="submit" name="acao" value="finalizar" class="botao-primario">Enviar respostas</button>
+            </div>
+        </div>
+    </div>
+
+</form>
+
+<script>
+    // Cronometro visual. A validacao de tempo que vale e a do servidor.
+    const elemento = document.getElementById("cronometro");
+    let restante = Number(elemento.dataset.segundos);
+
+    function mostrar() {
+        const h = String(Math.floor(restante / 3600)).padStart(2, "0");
+        const m = String(Math.floor((restante % 3600) / 60)).padStart(2, "0");
+        const s = String(restante % 60).padStart(2, "0");
+        elemento.textContent = h + ":" + m + ":" + s;
+        elemento.classList.toggle("urgente", restante < 900);
+    }
+
+    mostrar();
+    setInterval(function () {
+        if (restante > 0) {
+            restante--;
+            mostrar();
+        }
+    }, 1000);
+
+    // Abre e fecha a confirmacao de envio
+    const modal = document.getElementById("modal");
+    const abrir = document.getElementById("abrir-confirmacao");
+    const fechar = document.getElementById("fechar-confirmacao");
+
+    if (abrir) {
+        abrir.addEventListener("click", () => modal.hidden = false);
+        fechar.addEventListener("click", () => modal.hidden = true);
+    }
+</script>
+
+</body>
+</html>
