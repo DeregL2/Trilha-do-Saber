@@ -9,4 +9,6 @@ import java.util.List;
 public interface AlternativaRepository extends JpaRepository<Alternativa, Long> {
 
     List<Alternativa> findByQuestaoId(Long questaoId);
+
+    List<Alternativa> findByQuestaoIdOrderByIdAsc(Long questaoId);
 }

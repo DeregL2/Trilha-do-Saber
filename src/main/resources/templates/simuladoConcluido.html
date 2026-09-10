@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Simulado entregue</title>
+    <link rel="stylesheet" th:href="@{/css/simulado.css}">
+</head>
+<body>
+
+<main class="conteudo conclusao">
+
+    <div class="cartao-conclusao">
+        <div class="selo-ok">
+            <svg width="28" height="28" viewBox="0 0 16 16" fill="none">
+                <path d="M3.5 8l3.5 3.5 5.5-6" stroke="#22C55E" stroke-width="1.6"
+                      stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+        </div>
+
+        <h1>Simulado entregue</h1>
+        <p class="subtitulo" th:text="${simulado.titulo}">Simulado</p>
+
+        <p class="resumo-final">
+            Você respondeu <strong th:text="${respondidas}">0</strong> de
+            <strong th:text="${total}">20</strong> questões.
+        </p>
+
+        <p class="horario">
+            Entregue em
+            <span th:text="${#temporals.format(simulado.dataFim, 'dd/MM/yyyy HH:mm')}">--</span>
+        </p>
+
+        <a th:href="@{/simulado/iniciar}" class="botao-primario bloco">Fazer outro simulado</a>
+    </div>
+
+</main>
+
+</body>
+</html>
