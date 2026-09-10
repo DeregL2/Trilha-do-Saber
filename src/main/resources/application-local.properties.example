@@ -1,0 +1,3 @@
+spring.datasource.url=jdbc:postgresql://localhost:5432/trilha_do_saber
+spring.datasource.username=SEU_USUARIO_AQUI
+spring.datasource.password=SUA_SENHA_AQUI

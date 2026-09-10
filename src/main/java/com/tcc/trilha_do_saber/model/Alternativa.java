@@ -18,15 +18,18 @@ public class Alternativa {
     @JoinColumn(name = "questao_id") // Relacionamento de Questao para Tema (Muitas questoes pertencem a um tema)
     private Questao questao;
 
+    private char letra;
+
     //Cosntrutor JPA
     public Alternativa(){
 
     }
 
-    public Alternativa(String texto, boolean correta, Questao questao){
+    public Alternativa(String texto, boolean correta, Questao questao, char letra){
         this.texto = texto;
         this.correta = correta;
         this.questao = questao;
+        this.letra = letra;
     }
 
     public Long getId(){
@@ -44,5 +47,7 @@ public class Alternativa {
     public Questao getQuestao(){
         return questao;
     }
+
+    public char getLetra(){return letra;}
 
 }   
