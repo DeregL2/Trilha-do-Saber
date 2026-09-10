@@ -1,12 +1,8 @@
 package com.tcc.trilha_do_saber.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
-import com.tcc.trilha_do_saber.model.Alternativa;
-import java.util.List;
+import com.tcc.trilha_do_saber.model.Simulado;
 
-
-// Repositório de Alternativa.
-public interface AlternativaRepository extends JpaRepository<Alternativa, Long> {
-
-    List<Alternativa> findByQuestaoId(Long questaoId);
+// Repositorio de Simulado. Ja vem com save/findById/findAll/delete prontos.
+public interface SimuladoRepository extends JpaRepository<Simulado, Long> {
 }
