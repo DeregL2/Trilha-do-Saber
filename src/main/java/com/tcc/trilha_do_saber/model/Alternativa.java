@@ -10,6 +10,7 @@ public class Alternativa {
     @GeneratedValue(strategy = GenerationType.IDENTITY) // Atributo para gerar as Chaves automaticas.
     private Long id;
 
+    @Column(columnDefinition = "TEXT")
     private String texto;
     private boolean correta;
     
