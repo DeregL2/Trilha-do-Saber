@@ -27,18 +27,21 @@ public class Questao {
     @JoinColumn(name = "fonte_id")
     private Fonte fonte;
 
+    private int numero;
+
     //Construtor JPA
     public Questao(){
 
     }
 
     // Construtor da Classe
-    public Questao(String enunciado, Dificuldade dificuldade, Tema tema, Prova prova, Fonte fonte){
+    public Questao(String enunciado, Dificuldade dificuldade, Tema tema, Prova prova, Fonte fonte,  int numero){
         this.enunciado = enunciado;
         this.dificuldade = dificuldade;
         this.tema = tema;
         this.prova = prova;
         this.fonte = fonte;
+        this.numero = numero;
     }
 
     public Long getId() { 
@@ -60,4 +63,6 @@ public class Questao {
     public Prova getProva(){return  prova;}
 
     public Fonte getFonte(){return fonte;}
+
+    public int getNumero(){return numero;}
 }
