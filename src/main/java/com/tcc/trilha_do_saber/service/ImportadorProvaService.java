@@ -1,226 +1,130 @@
 package com.tcc.trilha_do_saber.service;
 
+import com.tcc.trilha_do_saber.model.Alternativa;
+import com.tcc.trilha_do_saber.model.Prova;
+import com.tcc.trilha_do_saber.model.Questao;
 import com.tcc.trilha_do_saber.model.Tema;
 import com.tcc.trilha_do_saber.repository.AlternativaRepository;
+import com.tcc.trilha_do_saber.repository.ProvaRepository;
 import com.tcc.trilha_do_saber.repository.QuestaoRepository;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.springframework.stereotype.Service;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-@Service // Anotação do Spring informando que nessa Classe contem lógica de negócio e gerencia ela como um bean.
+@Service
 public class ImportadorProvaService {
 
-    // Repositories usados mais pra frente, pra salvar Questao e Alternativa extraídas do PDF.
+    // Repositories para persistir Prova, Questao e Alternativa.
     private final QuestaoRepository questaoRepository;
     private final AlternativaRepository alternativaRepository;
+    private final ProvaRepository provaRepository;
 
-    // Construtor da Classe
-    public ImportadorProvaService(QuestaoRepository questaoRepository, AlternativaRepository alternativaRepository) {
-
+    public ImportadorProvaService(QuestaoRepository questaoRepository, AlternativaRepository alternativaRepository, ProvaRepository provaRepository) {
         this.questaoRepository = questaoRepository;
         this.alternativaRepository = alternativaRepository;
-
+        this.provaRepository = provaRepository;
     }
 
-    // Metodo principal do importador.
-    public int provaMontada(String documento, Tema tema){
+    // Lê o PDF, separa cada questão/alternativa e salva no banco. Retorna quantas questões foram importadas.
+    public int provaMontada(String documento, Tema tema, int ano, String curso){
 
-        // Texto inteiro extraído do PDF.
         String textoPdfCompleto = null;
-
-        // Controla o número da última questão objetiva processada.
-        int numeroQuestaoEsperado = 1;
-
-        // Se já passamos da primeira "QUESTÃO" válida do PDF.
-        boolean jaComecouQuestao = false;
-
-        // Se estamos dentro de uma questão discursiva no momento.
-        boolean emQuestaoDiscursiva = false;
-
-        // Cada posição é o bloco completo de uma questão objetiva já separada.
-        List<String> blocosDeQuestoes = new ArrayList<>();
-
-        // Acumulador temporário do bloco da questão atual.
-        String blocoAtual = "";
+        int questoesImportadas = 0;
 
         try {
-            // Abre o arquivo PDF a partir do caminho recebido.
             File file = new File(documento);
-
-            // Carrega o PDF em memória (jeito certo na versão 3.x do PDFBox).
             PDDocument doc = Loader.loadPDF(file);
-
-            // Ferramenta do PDFBox que extrai o texto de dentro do PDF.
             PDFTextStripper pdfTextStripper = new PDFTextStripper();
-
-            // Executa a extração e guarda o texto inteiro da prova.
             textoPdfCompleto = pdfTextStripper.getText(doc);
 
-            // Quebra em linhas (o PDF usa quebra de linha estilo Windows, \r\n).
-            String[] linhasDoPdf = textoPdfCompleto.split("\r\n");
-
-            // Separar o PDF em blocos por questão
-//            for (String linha : linhasDoPdf) {
-//
-//                // Início de uma questão discursiva: liga a flag, não acumula o conteúdo dela.
-//                if (linha.toLowerCase().startsWith("questão discursiva")) {
-//                    emQuestaoDiscursiva = true;
-//                }
-//
-//                // Marcador de questão OBJETIVA válida (começa com "questão", mas não é discursiva).
-//                if (linha.toLowerCase().startsWith("questão") && !linha.toLowerCase().contains("discursiva")) {
-//
-//                    emQuestaoDiscursiva = false;
-//                    jaComecouQuestao = true;
-//
-//                    // Extrai o número da questão (ex: "QUESTÃO 09" -> "09").
-//                    int numeroQuestao = Integer.parseInt(linha.substring(7).trim());
-//
-//                    if (numeroQuestaoEsperado > numeroQuestao) {
-//                        if (!blocoAtual.isEmpty()) {
-//                            blocosDeQuestoes.add(blocoAtual);
-//                        }
-//                        break;
-//                    }
-//                    // Próxima questão da sequência normal: fecha o bloco anterior e abre um novo.
-//                    else {
-//                        if (!blocoAtual.isEmpty()) {
-//                            blocosDeQuestoes.add(blocoAtual);
-//                        }
-//                        blocoAtual = "";
-//                        numeroQuestaoEsperado++;
-//                    }
-//
-//                }
-//
-//                else {
-//                    // Só acumula se já passamos da primeira questão e não estamos numa discursiva.
-//                    if  (jaComecouQuestao && !emQuestaoDiscursiva){
-//                        blocoAtual += linha + "\n";
-//                    }
-//                }
-//            }
-//
-//            // Separar cada bloco em enunciado + 5 alternativas
-//            for (String blocoQuestao : blocosDeQuestoes){
-//
-//                // As 5 alternativas dessa questão, na ordem A-E.
-//                List<String> alternativas = new ArrayList<>();
-//
-//                char letraAtual = 'A';
-//                char proximaLetra = 'B';
-//
-//                // Normaliza espaços repetidos (o PDFBox extrai algumas páginas com 1 espaço após a letra, outras com 2).
-//                blocoQuestao = blocoQuestao.replaceAll(" +", " ");
-//
-//                // Posição do marcador da alternativa B, ancorado com "\n".
-//                int indiceB = blocoQuestao.indexOf("\nB ");
-//
-//                // Posição do marcador da alternativa A. lastIndexOf até indiceB
-//                int indiceA = blocoQuestao.lastIndexOf("\nA ", indiceB);
-//
-//                // Não achou A ou B (ex: questão com alternativas em formato de tabela) — pula.
-//                if (indiceA < 0 || indiceB < 0){
-//                    System.out.println(blocoQuestao);
-//                    continue;
-//                }
-//
-//                // Enunciado é tudo que vem antes do marcador da alternativa A.
-//                String enunciado = blocoQuestao.substring(0, indiceA);
-//                System.out.print(enunciado);
-//
-//
-//                while (proximaLetra <= 'E'){
-//
-//                    String buscaLetraAtual = "\n" + letraAtual + " ";
-//                    String buscaProximaLetra = "\n" + proximaLetra + " ";
-//
-//                    // Acha a próxima letra primeiro, depois a atual (lastIndexOf, limitado até a próxima).
-//                    int localizarSegundoIndice = blocoQuestao.indexOf(buscaProximaLetra);
-//                    int localizarPrimeiroInidice = blocoQuestao.lastIndexOf(buscaLetraAtual, localizarSegundoIndice);
-//
-//                    // Texto da alternativa atual: tudo entre essas duas posições.
-//                    String novoTextoAlternativa = blocoQuestao.substring(localizarPrimeiroInidice, localizarSegundoIndice);
-//                    alternativas.add(novoTextoAlternativa);
-//
-//                    letraAtual++;
-//                    proximaLetra++;
-//
-//                }
-//
-//                // A última alternativa (E) não tem "próxima letra" para servir de limite trata à parte.
-//                if (letraAtual == 'E'){
-//                    String buscaLetraAtual = "\n" + letraAtual + " ";
-//                    int localizarPrimeiroInidice = blocoQuestao.indexOf(buscaLetraAtual);
-//
-//                    // Do início da alternativa E até o fim do bloco.
-//                    String novoTextoAlternativa = blocoQuestao.substring(localizarPrimeiroInidice);
-//                    alternativas.add(novoTextoAlternativa);
-//                }
-//
-//                // Confere visualmente que as 5 alternativas saíram certas.
-//                System.out.println(alternativas);
-//
-//            }
             int posicaoAtual = 0;
             int posicaoAnterior = 0;
+            int posicaoInicioProximaQuestao = 0;
+
+            // Cria e salva a Prova (o PDF inteiro) uma única vez, antes do loop.
+            Prova prova = provaRepository.save(new Prova(ano, curso));
 
             while (true){
 
                 char letraAtual = 'A';
                 char proximaLetra = 'B';
+
+                // Acha o primeiro B, a partir dele, o procura o A mais proximo (fim do enunciado / início das alternativas).
                 int indiceB = textoPdfCompleto.indexOf("\nB ", posicaoAtual);
                 int indiceA = textoPdfCompleto.lastIndexOf("\nA ", indiceB);
                 int posicaoBusca = indiceB;
+                List<String> alternativas = new ArrayList<>();
 
+                // Não achou mais nenhum "B "; acabaram as questões objetivas.
                 if(indiceB < 0){
                     break;
                 }
 
+                // Distância pequena demais para ser uma questão nova de verdade (provável fim do PDF).
                 int posicaoCalculada = indiceB - posicaoAnterior;
-
                 if (posicaoCalculada <= 500){
                     break;
                 }
 
-                // Processa os pares de letras (A-B, B-C, C-D, D-E), exceto a última (E).
-                while(proximaLetra <= 'E'){
+                // Pula a questão problemática (ex: Q29->Q30) para não estourar o substring.
+                if (posicaoInicioProximaQuestao > indiceA){
+                    posicaoAtual = indiceB + 1;
+                    posicaoAnterior = indiceB;
+                    System.out.println(posicaoInicioProximaQuestao);
+                    continue;
+                }
 
+                // Enunciado vai do fim da questão anterior até o início da alternativa A.
+                String enunciado = textoPdfCompleto.substring(posicaoInicioProximaQuestao, indiceA);
+
+                // Salva a Questao já vinculada à Prova e ao Tema.
+                Questao questao = questaoRepository.save(new Questao(enunciado, null, tema, prova, null));
+
+                // Processa os pares de letras (A-B, B-C, C-D, D-E), recortando o texto entre uma letra e a próxima.
+                while(proximaLetra <= 'E'){
                     String buscaLetraAtual = "\n" + letraAtual + " ";
                     String buscaProximaLetra = "\n" + proximaLetra + " ";
 
-                    // Acha a próxima letra primeiro, depois a atual (lastIndexOf, limitado até a próxima).
                     int localizarSegundoIndice = textoPdfCompleto.indexOf(buscaProximaLetra, posicaoBusca);
-                    int localizarPrimeiroInidice = textoPdfCompleto.lastIndexOf(buscaLetraAtual, localizarSegundoIndice);
+                    int localizarPrimeiroIndice = textoPdfCompleto.lastIndexOf(buscaLetraAtual, localizarSegundoIndice);
 
                     letraAtual ++;
                     proximaLetra ++;
                     posicaoBusca = localizarSegundoIndice;
 
-                    System.out.println(localizarPrimeiroInidice);
-
+                    // Salva a alternativa (A a D) vinculada à Questao;
+                    String textoAlternativa = textoPdfCompleto.substring(localizarPrimeiroIndice, localizarSegundoIndice);
+                    alternativas.add(textoAlternativa);
+                    alternativaRepository.save(new Alternativa(textoAlternativa, false, questao));
                 }
 
+                // Alternativa E vai até o início da próxima "questão" no texto (mesmo ponto que fecha o enunciado seguinte).
+                int comecaLetraE = textoPdfCompleto.toLowerCase().indexOf("questão", posicaoBusca);
+                String textoAlternativaE = textoPdfCompleto.substring(posicaoBusca, comecaLetraE);
+                alternativas.add(textoAlternativaE);
+                alternativaRepository.save(new Alternativa(textoAlternativaE, false, questao));
 
-                System.out.println(indiceB);
-                System.out.println(indiceA);
+                // Guarda onde a próxima questão deve começar a ler o enunciado.
+                posicaoInicioProximaQuestao = comecaLetraE;
                 posicaoAtual = indiceB + 1;
                 posicaoAnterior = indiceB;
+
+                // Só conta se a questão inteira foi processada com sucesso (não caiu no guard acima).
+                questoesImportadas++;
             }
 
-            // Libera o documento da memória.
             doc.close();
         }
         catch (IOException e) {
             System.out.println("Erro ao gerar PDF");
         }
 
-        return 0;
+        return questoesImportadas;
     }
-
 }
