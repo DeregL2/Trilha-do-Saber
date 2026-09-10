@@ -76,7 +76,7 @@ public class CargaInicialDados implements CommandLineRunner {
             // Fonte vai null: nem toda questao do ENADE tem texto de apoio
             Questao questao = questaoRepository.save(
                     new Questao("Enunciado provisorio da questao numero " + i,
-                            dificuldade, tema, prova, null));
+                            dificuldade, tema, prova, null, i));
 
             // Sorteia qual das cinco alternativas sera a correta
             int posicaoCorreta = sorteio.nextInt(5);
@@ -88,7 +88,7 @@ public class CargaInicialDados implements CommandLineRunner {
                 boolean correta = (j == posicaoCorreta); // So da true na sorteada
 
                 alternativaRepository.save(
-                        new Alternativa("Alternativa " + letra + " da questao " + i, correta, questao));
+                        new Alternativa("Alternativa " + letra + " da questao " + i, correta, questao, letra));
             }
         }
 
