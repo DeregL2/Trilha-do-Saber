@@ -111,7 +111,7 @@ public class SimuladoController {
         }
 
         // Redireciona em vez de devolver a tela: assim o F5 recarrega a questao,
-        // e nao reenvia o formulario.
+        // e não reenvia o form.
         return "redirect:/simulado/" + id + "/questao/" + destino;
     }
 
@@ -125,6 +125,6 @@ public class SimuladoController {
         model.addAttribute("total", simuladoService.totalQuestoes(id));
         model.addAttribute("respondidas", simuladoService.totalRespondidas(id));
 
-        return "simulado-concluido";
+        return "simuladoConcluido";
     }
 }

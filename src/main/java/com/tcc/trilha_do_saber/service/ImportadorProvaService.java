@@ -46,6 +46,7 @@ public class ImportadorProvaService {
             int posicaoAtual = 0;
             int posicaoAnterior = 0;
             int posicaoInicioProximaQuestao = 0;
+            int numeroAtualQuestao = 1;
 
             // Cria e salva a Prova (o PDF inteiro) uma única vez, antes do loop.
             Prova prova = provaRepository.save(new Prova(ano, curso));
@@ -68,6 +69,7 @@ public class ImportadorProvaService {
 
                 // Distância pequena demais para ser uma questão nova de verdade (provável fim do PDF).
                 int posicaoCalculada = indiceB - posicaoAnterior;
+
                 if (posicaoCalculada <= 500){
                     break;
                 }
@@ -76,7 +78,7 @@ public class ImportadorProvaService {
                 if (posicaoInicioProximaQuestao > indiceA){
                     posicaoAtual = indiceB + 1;
                     posicaoAnterior = indiceB;
-                    System.out.println(posicaoInicioProximaQuestao);
+                    numeroAtualQuestao++;
                     continue;
                 }
 
@@ -84,7 +86,7 @@ public class ImportadorProvaService {
                 String enunciado = textoPdfCompleto.substring(posicaoInicioProximaQuestao, indiceA);
 
                 // Salva a Questao já vinculada à Prova e ao Tema.
-                Questao questao = questaoRepository.save(new Questao(enunciado, null, tema, prova, null));
+                Questao questao = questaoRepository.save(new Questao(enunciado, null, tema, prova, null, numeroAtualQuestao));
 
                 // Processa os pares de letras (A-B, B-C, C-D, D-E), recortando o texto entre uma letra e a próxima.
                 while(proximaLetra <= 'E'){
@@ -94,21 +96,24 @@ public class ImportadorProvaService {
                     int localizarSegundoIndice = textoPdfCompleto.indexOf(buscaProximaLetra, posicaoBusca);
                     int localizarPrimeiroIndice = textoPdfCompleto.lastIndexOf(buscaLetraAtual, localizarSegundoIndice);
 
-                    letraAtual ++;
-                    proximaLetra ++;
-                    posicaoBusca = localizarSegundoIndice;
-
                     // Salva a alternativa (A a D) vinculada à Questao;
                     String textoAlternativa = textoPdfCompleto.substring(localizarPrimeiroIndice, localizarSegundoIndice);
                     alternativas.add(textoAlternativa);
-                    alternativaRepository.save(new Alternativa(textoAlternativa, false, questao));
+                    alternativaRepository.save(new Alternativa(textoAlternativa, false, questao,letraAtual));
+
+                    letraAtual ++;
+                    proximaLetra ++;
+                    posicaoBusca = localizarSegundoIndice;
                 }
 
                 // Alternativa E vai até o início da próxima "questão" no texto (mesmo ponto que fecha o enunciado seguinte).
                 int comecaLetraE = textoPdfCompleto.toLowerCase().indexOf("questão", posicaoBusca);
+
                 String textoAlternativaE = textoPdfCompleto.substring(posicaoBusca, comecaLetraE);
+
                 alternativas.add(textoAlternativaE);
-                alternativaRepository.save(new Alternativa(textoAlternativaE, false, questao));
+
+                alternativaRepository.save(new Alternativa(textoAlternativaE, false, questao,letraAtual));
 
                 // Guarda onde a próxima questão deve começar a ler o enunciado.
                 posicaoInicioProximaQuestao = comecaLetraE;
@@ -117,6 +122,7 @@ public class ImportadorProvaService {
 
                 // Só conta se a questão inteira foi processada com sucesso (não caiu no guard acima).
                 questoesImportadas++;
+                numeroAtualQuestao++;
             }
 
             doc.close();
