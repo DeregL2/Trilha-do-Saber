@@ -1,13 +1,49 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Resultado</title>
+    <link rel="stylesheet" th:href="@{/css/simulado.css}">
 </head>
 <body>
 
-    <h1 th:if="${resposta.acertou}">VOCE ACERTOU</h1>
-    <h1 th:unless="${resposta.acertou}">VOCE ERROU</h1>
+<div class="conclusao">
+    <div class="cartao-conclusao">
+
+        <div class="selo-ok">✓</div>
+
+        <h1>Simulado concluído</h1>
+        <p class="subtitulo">Confira seu desempenho e o que precisa reforçar</p>
+
+        <p class="resumo-final">
+            Você acertou <strong th:text="${resultado.acertos}"></strong>
+            de <strong th:text="${resultado.totalQuestoes}"></strong> questões
+            (<span th:text="${#numbers.formatDecimal(resultado.percentualAcerto, 1, 1)}"></span>%)
+        </p>
+        <p class="horario">
+            Erros: <span th:text="${resultado.erros}"></span>
+        </p>
+
+        <div style="text-align: left; margin-top: 24px;">
+            <h3 style="font-size: 15px; margin-bottom: 12px;">O que você precisa estudar mais</h3>
+
+            <p class="subtitulo" th:if="${resultado.temasParaEstudar.isEmpty()}">
+                Você não errou nenhuma questão, parabéns!
+            </p>
+
+            <div class="etiquetas" style="flex-wrap: wrap;" th:unless="${resultado.temasParaEstudar.isEmpty()}">
+                    <span class="etiqueta-tema" th:each="tema : ${resultado.temasParaEstudar}">
+                        <span th:text="${tema.nomeTema}"></span>
+                        (<span th:text="${tema.quantidadeErros}"></span> erro(s))
+                    </span>
+            </div>
+        </div>
+
+        <a class="botao-primario bloco" th:href="@{/simulado/iniciar}">Fazer novo simulado</a>
+
+    </div>
+</div>
 
 </body>
 </html>
