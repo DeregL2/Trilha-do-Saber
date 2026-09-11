@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import com.tcc.trilha_do_saber.dto.ResultadoSimuladoDTO;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -96,7 +97,7 @@ public class SimuladoController {
 
         if ("finalizar".equals(acao)) {
             simuladoService.finalizar(id);
-            return "redirect:/simulado/" + id + "/concluido";
+            return "redirect:/simulado/" + id + "/resultado";
         }
 
         int destino = "anterior".equals(acao) ? ordem - 1 : ordem + 1;
@@ -126,5 +127,12 @@ public class SimuladoController {
         model.addAttribute("respondidas", simuladoService.totalRespondidas(id));
 
         return "simuladoConcluido";
+    }
+
+    @GetMapping("/simulado/{id}/resultado")
+    public String verResultado(@PathVariable Long id, Model model) {
+        ResultadoSimuladoDTO resultado = simuladoService.gerarResultado(id);
+        model.addAttribute("resultado", resultado);
+        return "resultado";
     }
 }
