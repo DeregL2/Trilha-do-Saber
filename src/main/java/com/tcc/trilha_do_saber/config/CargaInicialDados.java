@@ -11,13 +11,14 @@ import com.tcc.trilha_do_saber.repository.QuestaoRepository;
 import com.tcc.trilha_do_saber.repository.TemaRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
+import org.springframework.context.annotation.Profile;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-// Classe temporaria. Gera questoes de teste enquanto o importador de PDF nao fica pronto.
-@Component // Classe como bean
+@Profile("!import")
+@Component
 public class CargaInicialDados implements CommandLineRunner {
 
     private final TemaRepository temaRepository;

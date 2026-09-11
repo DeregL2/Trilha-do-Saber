@@ -9,4 +9,6 @@ public interface QuestaoRepository extends JpaRepository<Questao, Long> {
 
     // Busca as questoes de todas as provas de um curso.
     List<Questao> findByProvaCurso(String curso);
+
+    List<Questao> findByNumero(int numero);
 }
