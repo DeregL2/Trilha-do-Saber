@@ -175,7 +175,9 @@ public class SimuladoService {
         // Agrupa as questoes erradas
         Map<String, Long> errosPorTema = respostas.stream()
                 .filter(r -> !r.isAcertou())
-                .collect(Collectors.groupingBy(r -> r.getQuestao().getTema().getNome(), Collectors.counting()));
+                .collect(Collectors.groupingBy(
+                        r -> r.getQuestao().getTema() != null ? r.getQuestao().getTema().getNome() : "Sem tema definido",
+                        Collectors.counting()));
 
         // Tema com mais erro
         List<TemaErroDTO> temasParaEstudar = errosPorTema.entrySet().stream()
