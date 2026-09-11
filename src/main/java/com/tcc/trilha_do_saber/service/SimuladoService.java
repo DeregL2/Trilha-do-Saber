@@ -10,6 +10,8 @@ import com.tcc.trilha_do_saber.repository.QuestaoRepository;
 import com.tcc.trilha_do_saber.repository.RespostaRepository;
 import com.tcc.trilha_do_saber.repository.SimuladoQuestaoRepository;
 import com.tcc.trilha_do_saber.repository.SimuladoRepository;
+import com.tcc.trilha_do_saber.dto.ResultadoSimuladoDTO;
+import com.tcc.trilha_do_saber.dto.TemaErroDTO;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,6 +20,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service // Contem lógica de negocio e gerencia ela como um bean.
 public class SimuladoService {
@@ -158,4 +162,30 @@ public class SimuladoService {
     public long totalRespondidas(Long simuladoId) {
         return respostaRepository.countBySimuladoId(simuladoId);
     }
+
+    // Gera o resultado do simulado
+    public ResultadoSimuladoDTO gerarResultado(Long simuladoId) {
+        List<Resposta> respostas = respostaRepository.findBySimuladoId(simuladoId);
+
+        int total = respostas.size();
+        int acertos = (int) respostas.stream().filter(Resposta::isAcertou).count();
+        int erros = total - acertos;
+        double percentual = total == 0 ? 0 : (acertos * 100.0) / total;
+
+        // Agrupa as questoes erradas
+        Map<String, Long> errosPorTema = respostas.stream()
+                .filter(r -> !r.isAcertou())
+                .collect(Collectors.groupingBy(
+                        r -> r.getQuestao().getTema() != null ? r.getQuestao().getTema().getNome() : "Sem tema definido",
+                        Collectors.counting()));
+
+        // Tema com mais erro
+        List<TemaErroDTO> temasParaEstudar = errosPorTema.entrySet().stream()
+                .map(e -> new TemaErroDTO(e.getKey(), e.getValue()))
+                .sorted((a, b) -> Long.compare(b.getQuantidadeErros(), a.getQuantidadeErros()))
+                .collect(Collectors.toList());
+
+        return new ResultadoSimuladoDTO(total, acertos, erros, percentual, temasParaEstudar);
+    }
+
 }
