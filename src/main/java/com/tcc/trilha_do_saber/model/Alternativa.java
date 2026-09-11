@@ -33,10 +33,12 @@ public class Alternativa {
     }
 
     public Long getId(){
+
         return id;
     }
 
     public String getTexto(){
+
         return texto;
     }
 
@@ -45,9 +47,16 @@ public class Alternativa {
     }
 
     public Questao getQuestao(){
+
         return questao;
     }
 
-    public char getLetra(){return letra;}
+    public char getLetra(){
+        return letra;
+    }
+
+    public void setCorreta (boolean correta){
+        this.correta = correta;
+    }
 
 }   
