@@ -26,7 +26,6 @@ public class CargaInicialDados implements CommandLineRunner {
     private final QuestaoRepository questaoRepository;
     private final AlternativaRepository alternativaRepository;
 
-    // Construtor da Classe
     public CargaInicialDados(TemaRepository temaRepository,
                              ProvaRepository provaRepository,
                              QuestaoRepository questaoRepository,
@@ -51,12 +50,12 @@ public class CargaInicialDados implements CommandLineRunner {
             return;
         }
 
+        //Listas fake para teste
         List<Tema> temas = new ArrayList<>();
         temas.add(temaRepository.save(new Tema("Engenharia de Software", "Tema provisorio")));
         temas.add(temaRepository.save(new Tema("Banco de Dados", "Tema provisorio")));
         temas.add(temaRepository.save(new Tema("Redes de Computadores", "Tema provisorio")));
 
-        // Duas edicoes do mesmo curso, para testar o simulado misturando anos diferentes
         List<Prova> provas = new ArrayList<>();
         provas.add(provaRepository.save(new Prova(2021, "Sistemas de Informação")));
         provas.add(provaRepository.save(new Prova(2023, "Sistemas de Informação")));;
@@ -69,17 +68,16 @@ public class CargaInicialDados implements CommandLineRunner {
 
         for (int i = 1; i <= totalQuestoes; i++) {
 
-            // O resto da divisao faz o indice girar e distribui as questoes
+            //Distribuição de questões
             Tema tema = temas.get(i % temas.size());
             Dificuldade dificuldade = niveis[i % niveis.length];
             Prova prova = provas.get(i % provas.size());
 
-            // Fonte vai null: nem toda questao do ENADE tem texto de apoio
             Questao questao = questaoRepository.save(
                     new Questao("Enunciado provisorio da questao numero " + i,
                             dificuldade, tema, prova, null, i));
 
-            // Sorteia qual das cinco alternativas sera a correta
+            // Sorteio
             int posicaoCorreta = sorteio.nextInt(5);
 
             for (int j = 0; j < 5; j++) {
