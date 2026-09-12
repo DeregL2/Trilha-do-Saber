@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Usuário</title>
+    <link rel="stylesheet" th:href="@{/css/coordenador.css}">
+</head>
+<body>
+
+<div class="pagina-usuarios">
+    <div class="cartao-form">
+
+        <h1 th:if="${tipo == 'aluno'}" th:text="${alunoForm.id} != null ? 'Editar aluno' : 'Novo aluno'"></h1>
+        <h1 th:if="${tipo == 'professor'}" th:text="${professorForm.id} != null ? 'Editar professor' : 'Novo professor'"></h1>
+
+        <!-- FORM DE ALUNO -->
+        <form th:if="${tipo == 'aluno'}" method="post" th:object="${alunoForm}"
+              th:action="@{|/coordenador/usuarios/aluno${alunoForm.id != null ? '/' + alunoForm.id : ''}|}">
+
+            <input type="hidden" th:field="*{id}">
+
+            <label>Nome</label>
+            <input type="text" th:field="*{nome}">
+            <span class="erro" th:if="${#fields.hasErrors('nome')}" th:errors="*{nome}"></span>
+
+            <label>Email</label>
+            <input type="email" th:field="*{email}">
+            <span class="erro" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></span>
+
+            <label>Senha</label>
+            <input type="password" th:field="*{senha}" placeholder="Deixe em branco para manter a atual">
+
+            <label>RA</label>
+            <input type="text" th:field="*{ra}">
+            <span class="erro" th:if="${#fields.hasErrors('ra')}" th:errors="*{ra}"></span>
+
+            <label>Curso</label>
+            <input type="text" th:field="*{curso}">
+            <span class="erro" th:if="${#fields.hasErrors('curso')}" th:errors="*{curso}"></span>
+
+            <label>Semestre</label>
+            <input type="number" th:field="*{semestre}" min="1" max="12">
+
+            <div class="acoes-form">
+                <a th:href="@{/coordenador/usuarios}" class="botao-secundario">Cancelar</a>
+                <button type="submit" class="botao-primario">Salvar</button>
+            </div>
+        </form>
+
+        <!-- FORM DE PROFESSOR -->
+        <form th:if="${tipo == 'professor'}" method="post" th:object="${professorForm}"
+              th:action="@{|/coordenador/usuarios/professor${professorForm.id != null ? '/' + professorForm.id : ''}|}">
+
+            <input type="hidden" th:field="*{id}">
+
+            <label>Nome</label>
+            <input type="text" th:field="*{nome}">
+            <span class="erro" th:if="${#fields.hasErrors('nome')}" th:errors="*{nome}"></span>
+
+            <label>Email</label>
+            <input type="email" th:field="*{email}">
+            <span class="erro" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></span>
+
+            <label>Senha</label>
+            <input type="password" th:field="*{senha}" placeholder="Deixe em branco para manter a atual">
+
+            <label>Registro profissional</label>
+            <input type="text" th:field="*{registroProfissional}">
+            <span class="erro" th:if="${#fields.hasErrors('registroProfissional')}" th:errors="*{registroProfissional}"></span>
+
+            <label>Disciplina</label>
+            <input type="text" th:field="*{disciplina}">
+            <span class="erro" th:if="${#fields.hasErrors('disciplina')}" th:errors="*{disciplina}"></span>
+
+            <div class="acoes-form">
+                <a th:href="@{/coordenador/usuarios}" class="botao-secundario">Cancelar</a>
+                <button type="submit" class="botao-primario">Salvar</button>
+            </div>
+        </form>
+
+    </div>
+</div>
+
+</body>
+</html>
