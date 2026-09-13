@@ -5,13 +5,12 @@ import jakarta.persistence.*;
 
 @Entity // Representa uma tabela no banco de dados
 public class Tema {
-    @Id // Atributo que vai receber a chave primaria da tabela
-    @GeneratedValue(strategy = GenerationType.IDENTITY) // Atributo para gerar as Chaves automaticas.
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;    
     private String nome;
     private String descricao;
 
-    // Construtor para o JPA
     public Tema(){
     }
 

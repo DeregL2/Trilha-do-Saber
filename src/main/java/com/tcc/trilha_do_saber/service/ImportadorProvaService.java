@@ -3,7 +3,6 @@ package com.tcc.trilha_do_saber.service;
 import com.tcc.trilha_do_saber.model.Alternativa;
 import com.tcc.trilha_do_saber.model.Prova;
 import com.tcc.trilha_do_saber.model.Questao;
-import com.tcc.trilha_do_saber.model.Tema;
 import com.tcc.trilha_do_saber.repository.AlternativaRepository;
 import com.tcc.trilha_do_saber.repository.ProvaRepository;
 import com.tcc.trilha_do_saber.repository.QuestaoRepository;
@@ -30,7 +29,7 @@ public class ImportadorProvaService {
     }
 
     // Lê o PDF, separa cada questão/alternativa e salva no banco. Retorna quantas questões foram importadas.
-    public int provaMontada(String documento, Tema tema, int ano, String curso){
+    public int provaMontada(String documento, int ano, String curso){
 
         String textoPdfCompleto = null;
         int questoesImportadas = 0;
@@ -77,7 +76,7 @@ public class ImportadorProvaService {
 
                 String enunciado = textoPdfCompleto.substring(posicaoInicioProximaQuestao, indiceA);
 
-                Questao questao = questaoRepository.save(new Questao(enunciado, null, tema, prova, null, numeroAtualQuestao));
+                Questao questao = questaoRepository.save(new Questao(enunciado, null, prova, null, numeroAtualQuestao));
 
                 while(proximaLetra <= 'E'){
                     String buscaLetraAtual = "\n" + letraAtual + " ";
