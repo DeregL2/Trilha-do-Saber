@@ -11,7 +11,6 @@ import com.tcc.trilha_do_saber.repository.RespostaRepository;
 import com.tcc.trilha_do_saber.repository.SimuladoQuestaoRepository;
 import com.tcc.trilha_do_saber.repository.SimuladoRepository;
 import com.tcc.trilha_do_saber.dto.ResultadoSimuladoDTO;
-import com.tcc.trilha_do_saber.dto.TemaErroDTO;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,14 +19,12 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.Map;
-import java.util.stream.Collectors;
 
-@Service // Contem lógica de negocio e gerencia ela como um bean.
+@Service
 public class SimuladoService {
 
-    // O ENADE real tem 40 questoes em 4 horas. Aqui usamos metade, mantendo os 6 min por questao.
-    private static final int QUESTOES_POR_SIMULADO = 20;
+    //NÃO MUDAR O MINUTOS_POR_QUESTAO
+    private static final int QUESTOES_POR_SIMULADO = 5;
     private static final int MINUTOS_POR_QUESTAO = 6;
 
     private final SimuladoRepository simuladoRepository;
@@ -50,7 +47,6 @@ public class SimuladoService {
         this.respostaRepository = respostaRepository;
     }
 
-    // Monta um simulado novo: sorteia as questoes do curso, define a duracao e grava a ordem
     @Transactional
     public Simulado iniciar(String nomeUsuario, String curso) {
 
@@ -63,10 +59,8 @@ public class SimuladoService {
 
         Collections.shuffle(disponiveis);
 
-        // Se houver menos questoes que o previsto, usa o que tiver
         int quantidade = Math.min(QUESTOES_POR_SIMULADO, disponiveis.size());
 
-        // Duracao proporcional: se a quantidade mudar, o tempo acompanha
         int duracao = quantidade * MINUTOS_POR_QUESTAO;
 
         Simulado simulado = simuladoRepository.save(
@@ -89,19 +83,16 @@ public class SimuladoService {
         Simulado simulado = simuladoRepository.findById(simuladoId)
                 .orElseThrow(() -> new RuntimeException("Simulado nao encontrado"));
 
-        // A checagem de tempo e feita aqui no servidor porque o cronometro da tela e so visual
         if (!simulado.estaEmAndamento(agora)) {
             throw new RuntimeException("Simulado encerrado");
         }
 
-        // Impede responder uma questao que nao foi sorteada para este simulado
         simuladoQuestaoRepository.findBySimuladoIdAndQuestaoId(simuladoId, questaoId)
                 .orElseThrow(() -> new RuntimeException("Questao nao pertence a este simulado"));
 
         Alternativa alternativa = alternativaRepository.findById(alternativaId)
                 .orElseThrow(() -> new RuntimeException("Alternativa nao encontrada"));
 
-        // Impede enviar a alternativa de outra questao
         if (!alternativa.getQuestao().getId().equals(questaoId)) {
             throw new RuntimeException("Alternativa nao pertence a esta questao");
         }
@@ -110,7 +101,7 @@ public class SimuladoService {
 
         Optional<Resposta> jaRespondida = respostaRepository.findBySimuladoIdAndQuestaoId(simuladoId, questaoId);
 
-        // Caso do botao Anterior: altera a linha existente em vez de criar outra
+        // Botao anterior nao cria linhas novas, altera as que ja existem.
         if (jaRespondida.isPresent()) {
             Resposta resposta = jaRespondida.get();
             resposta.alterarResposta(alternativa, acertou, agora);
@@ -139,7 +130,6 @@ public class SimuladoService {
         return simulado;
     }
 
-    // Busca a questao de uma posicao especifica. Usado para montar a tela.
     public SimuladoQuestao buscarQuestao(Long simuladoId, int ordem) {
         return simuladoQuestaoRepository.findBySimuladoIdAndOrdem(simuladoId, ordem)
                 .orElseThrow(() -> new RuntimeException("Questao nao encontrada no simulado"));
@@ -150,7 +140,6 @@ public class SimuladoService {
                 .orElseThrow(() -> new RuntimeException("Simulado nao encontrado"));
     }
 
-    // Resposta ja dada, se houver. Usado para destacar a alternativa marcada quando o aluno volta.
     public Optional<Resposta> respostaDaQuestao(Long simuladoId, Long questaoId) {
         return respostaRepository.findBySimuladoIdAndQuestaoId(simuladoId, questaoId);
     }
@@ -172,20 +161,7 @@ public class SimuladoService {
         int erros = total - acertos;
         double percentual = total == 0 ? 0 : (acertos * 100.0) / total;
 
-        // Agrupa as questoes erradas
-        Map<String, Long> errosPorTema = respostas.stream()
-                .filter(r -> !r.isAcertou())
-                .collect(Collectors.groupingBy(
-                        r -> r.getQuestao().getTema() != null ? r.getQuestao().getTema().getNome() : "Sem tema definido",
-                        Collectors.counting()));
-
-        // Tema com mais erro
-        List<TemaErroDTO> temasParaEstudar = errosPorTema.entrySet().stream()
-                .map(e -> new TemaErroDTO(e.getKey(), e.getValue()))
-                .sorted((a, b) -> Long.compare(b.getQuantidadeErros(), a.getQuantidadeErros()))
-                .collect(Collectors.toList());
-
-        return new ResultadoSimuladoDTO(total, acertos, erros, percentual, temasParaEstudar);
+        return new ResultadoSimuladoDTO(total, acertos, erros, percentual);
     }
 
 }

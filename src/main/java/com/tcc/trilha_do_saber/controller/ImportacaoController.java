@@ -48,7 +48,7 @@ public class ImportacaoController {
 
             // Importa a prova primeiro (cria Questao e Alternativa, todas com correta=false)
             int questoesImportadas = importadorProvaService.provaMontada(
-                    arquivoProva.getAbsolutePath(), null, ano, curso);
+                    arquivoProva.getAbsolutePath(), ano, curso);
 
             // Depois roda o gabarito por cima: acha a Questao pelo numero e marca a Alternativa certa
             int alternativasCorrigidas = gabaritoService.gabaritoMontado(

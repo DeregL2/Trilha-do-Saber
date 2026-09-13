@@ -16,10 +16,6 @@ public class Questao {
     private Dificuldade dificuldade;
 
     @ManyToOne
-    @JoinColumn(name = "tema_id") // Relacionamento de Questao para Tema (Muitas questoes pertencem a um tema)
-    private Tema tema;
-
-    @ManyToOne
     @JoinColumn(name = "prova_id")
     private Prova prova;
 
@@ -35,16 +31,15 @@ public class Questao {
     }
 
     // Construtor da Classe
-    public Questao(String enunciado, Dificuldade dificuldade, Tema tema, Prova prova, Fonte fonte,  int numero){
+    public Questao(String enunciado, Dificuldade dificuldade, Prova prova, Fonte fonte, int numero){
         this.enunciado = enunciado;
         this.dificuldade = dificuldade;
-        this.tema = tema;
         this.prova = prova;
         this.fonte = fonte;
         this.numero = numero;
     }
 
-    public Long getId() { 
+    public Long getId() {
         return id;
     }
 
@@ -54,10 +49,6 @@ public class Questao {
 
     public Dificuldade getDificuldade(){
         return dificuldade;
-    }
-
-    public Tema getTema(){
-        return tema;
     }
 
     public Prova getProva(){return  prova;}
