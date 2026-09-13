@@ -17,7 +17,6 @@ public class TesteImportacaoConfig {
         return args -> {
             int total = importadorProvaService.provaMontada(
                     "src/main/resources/provas/s1_prova.pdf",
-                    null,
                     2023,
                     "Sistemas de Informação"
             );
