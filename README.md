@@ -43,7 +43,7 @@ O **Trilha do Saber** resolve isso automatizando a importação de provas oficia
 
 | Nome |
 |---|---|
-| **Derick** 
+| **Derick Alves Maschio** 
 | **Isabella Nicoliche Silva** 
 | **Thaíssa Victoria Bianchini de Oliveira** 
 
