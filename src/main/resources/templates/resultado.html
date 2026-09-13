@@ -14,7 +14,7 @@
         <div class="selo-ok">✓</div>
 
         <h1>Simulado concluído</h1>
-        <p class="subtitulo">Confira seu desempenho e o que precisa reforçar</p>
+        <p class="subtitulo">Confira seu desempenho</p>
 
         <p class="resumo-final">
             Você acertou <strong th:text="${resultado.acertos}"></strong>
@@ -24,21 +24,6 @@
         <p class="horario">
             Erros: <span th:text="${resultado.erros}"></span>
         </p>
-
-        <div style="text-align: left; margin-top: 24px;">
-            <h3 style="font-size: 15px; margin-bottom: 12px;">O que você precisa estudar mais</h3>
-
-            <p class="subtitulo" th:if="${resultado.temasParaEstudar.isEmpty()}">
-                Você não errou nenhuma questão, parabéns!
-            </p>
-
-            <div class="etiquetas" style="flex-wrap: wrap;" th:unless="${resultado.temasParaEstudar.isEmpty()}">
-                    <span class="etiqueta-tema" th:each="tema : ${resultado.temasParaEstudar}">
-                        <span th:text="${tema.nomeTema}"></span>
-                        (<span th:text="${tema.quantidadeErros}"></span> erro(s))
-                    </span>
-            </div>
-        </div>
 
         <a class="botao-primario bloco" th:href="@{/simulado/iniciar}">Fazer novo simulado</a>
 
