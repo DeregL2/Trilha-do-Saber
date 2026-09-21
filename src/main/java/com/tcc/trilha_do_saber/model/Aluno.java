@@ -43,4 +43,8 @@ public class Aluno extends Usuario {
     public void setSemestre(int semestre){
         this.semestre = semestre;
     }
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> main

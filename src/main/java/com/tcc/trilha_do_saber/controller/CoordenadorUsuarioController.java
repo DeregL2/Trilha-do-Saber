@@ -12,6 +12,10 @@ import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
+<<<<<<< HEAD
+=======
+// Tela do coordenador pra gerenciar os usuarios de aluno e professor
+>>>>>>> main
 @Controller
 @RequestMapping("/coordenador/usuarios")
 public class CoordenadorUsuarioController {
@@ -24,6 +28,10 @@ public class CoordenadorUsuarioController {
         this.professorService = professorService;
     }
 
+<<<<<<< HEAD
+=======
+    // Lista alunos e professores juntos
+>>>>>>> main
     @GetMapping
     public String listar(Model model){
         model.addAttribute("alunos", alunoService.listarTodos());
@@ -31,7 +39,11 @@ public class CoordenadorUsuarioController {
         return "coordenador/usuarios";
     }
 
+<<<<<<< HEAD
     // Formulario de criacao
+=======
+    // Formulario de criacao. "tipo" na URL decide se e aluno ou professor
+>>>>>>> main
     @GetMapping("/novo")
     public String novoFormulario(@RequestParam String tipo, Model model){
         if ("professor".equals(tipo)) {
@@ -63,7 +75,11 @@ public class CoordenadorUsuarioController {
         return "redirect:/coordenador/usuarios";
     }
 
+<<<<<<< HEAD
     // Formulario de edicao
+=======
+    // Formulario de edicao, ja preenchido com os dados atuais
+>>>>>>> main
     @GetMapping("/{tipo}/{id}/editar")
     public String editarFormulario(@PathVariable String tipo, @PathVariable Long id, Model model){
         if ("professor".equals(tipo)) {

@@ -3,6 +3,10 @@ package com.tcc.trilha_do_saber.dto;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 
+<<<<<<< HEAD
+=======
+// Dados do formulario de aluno. O mesmo DTO serve pra criar e editar.
+>>>>>>> main
 public class AlunoFormDTO {
 
     private Long id;

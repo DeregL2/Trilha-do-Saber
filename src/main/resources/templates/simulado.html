@@ -4,7 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title th:text="${simulado.titulo}">Simulado</title>
-    <link rel="stylesheet" th:href="@{/css/simulado.css}"><body>
+    <link rel="stylesheet" th:href="@{/css/simulado.css}">
+</head>
+<body>
 
 <form th:action="@{'/simulado/' + ${simulado.id} + '/questao/' + ${ordem}}" method="post" class="prova">
 
@@ -30,7 +32,6 @@
     <main class="conteudo">
 
         <div class="etiquetas">
-            <span class="etiqueta-tema" th:text="${questao.tema != null} ? ${questao.tema.nome} : 'Geral'">Tema</span>
             <span class="etiqueta-ordem">Questão <span th:text="${ordem}">1</span></span>
         </div>
 

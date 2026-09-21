@@ -39,4 +39,8 @@ public class ProfessorFormDTO {
 
     public String getDisciplina(){ return disciplina; }
     public void setDisciplina(String disciplina){ this.disciplina = disciplina; }
+<<<<<<< HEAD
 }-
+=======
+}
+>>>>>>> main
