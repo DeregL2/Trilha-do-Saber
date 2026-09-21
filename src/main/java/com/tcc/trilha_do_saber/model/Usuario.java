@@ -6,6 +6,11 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.MappedSuperclass;
 
+<<<<<<< HEAD
+=======
+// Campos comuns de Aluno e Professor. @MappedSuperclass nao vira tabela,
+// so evita repetir esses campos nas duas entidades.
+>>>>>>> main
 @MappedSuperclass
 public abstract class Usuario {
 
@@ -53,6 +58,11 @@ public abstract class Usuario {
         return ativo;
     }
 
+<<<<<<< HEAD
+=======
+    // Tem set aqui (diferente das outras entidades) porque o coordenador
+    // precisa editar esses dados depois que o usuario ja foi criado
+>>>>>>> main
     public void setNome(String nome){
         this.nome = nome;
     }

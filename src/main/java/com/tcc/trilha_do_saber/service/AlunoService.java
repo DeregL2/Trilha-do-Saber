@@ -46,6 +46,10 @@ public class AlunoService {
         aluno.setCurso(dto.getCurso());
         aluno.setSemestre(dto.getSemestre());
 
+<<<<<<< HEAD
+=======
+        // Só troca a senha se o coordenador digitou uma nova
+>>>>>>> main
         if (dto.getSenha() != null && !dto.getSenha().isBlank()) {
             aluno.setSenha(dto.getSenha());
         }
