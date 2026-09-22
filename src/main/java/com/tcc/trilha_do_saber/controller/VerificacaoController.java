@@ -31,13 +31,17 @@ public class VerificacaoController {
             return "redirect:/login";
         }
         model.addAttribute("email", verificacao.getUsuario().getEmail());
+        // Se o envio por e-mail falhou (ex.: Gmail fora do ar), mostra o codigo na tela como alternativa.
+        if (!verificacao.isEmailEnviado()) {
+            model.addAttribute("codigoGerado", verificacao.getCodigo());
+        }
         return "verificacao";
     }
 
     @PostMapping("/verificacao")
     public String confirmar(@RequestParam String d1, @RequestParam String d2, @RequestParam String d3,
-                             @RequestParam String d4, @RequestParam String d5, @RequestParam String d6,
-                             HttpSession session, Model model){
+                            @RequestParam String d4, @RequestParam String d5, @RequestParam String d6,
+                            HttpSession session, Model model){
 
         VerificacaoSessaoDTO verificacao = (VerificacaoSessaoDTO) session.getAttribute("verificacao2FA");
         if (verificacao == null) {
@@ -76,11 +80,14 @@ public class VerificacaoController {
         Instant novaExpiracao = Instant.now().plus(10, ChronoUnit.MINUTES);
         UsuarioSessaoDTO usuario = verificacao.getUsuario();
 
-        session.setAttribute("verificacao2FA", new VerificacaoSessaoDTO(usuario, novoCodigo, novaExpiracao));
-        emailService.enviarCodigoVerificacao(usuario.getNome(), usuario.getEmail(), novoCodigo);
+        boolean emailEnviado = emailService.enviarCodigoVerificacao(usuario.getNome(), usuario.getEmail(), novoCodigo);
+        session.setAttribute("verificacao2FA", new VerificacaoSessaoDTO(usuario, novoCodigo, novaExpiracao, emailEnviado));
 
         model.addAttribute("email", usuario.getEmail());
         model.addAttribute("codigoReenviado", true);
+        if (!emailEnviado) {
+            model.addAttribute("codigoGerado", novoCodigo);
+        }
         return "verificacao";
     }
 

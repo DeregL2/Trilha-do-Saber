@@ -57,3 +57,4 @@ public class CadastroCoordenadorDTO {
         return senha != null && senha.equals(confirmarSenha);
     }
 }
+

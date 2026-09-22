@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Usuários</title>
+    <link rel="stylesheet" th:href="@{/css/painel.css}">
+</head>
+<body>
+
+<header class="topbar">
+    <div class="marca-topbar">
+        <span class="logo-marca">📘</span>
+        <div>
+            <strong>Trilha do Saber</strong>
+            <span>Administrador</span>
+        </div>
+    </div>
+
+    <nav class="menu-topbar">
+        <a th:href="@{/admin/inicio}" class="item-menu"><span>🏠</span> Início</a>
+        <a href="#" class="item-menu"><span>🗄️</span> Banco de Questões</a>
+        <a href="#" class="item-menu"><span>📋</span> Simulados</a>
+        <a th:href="@{/admin/coordenadores}" class="item-menu ativo"><span>👥</span> Usuários</a>
+        <a href="#" class="item-menu"><span>🛡️</span> Logs de Auditoria</a>
+    </nav>
+
+    <div class="perfil-topbar">
+        <div class="avatar-usuario">AD</div>
+        <div>
+            <strong th:text="${usuarioLogado != null} ? ${usuarioLogado.nome} : 'Admin Sistema'">Admin Sistema</strong>
+            <span th:text="${usuarioLogado != null} ? ${usuarioLogado.email} : 'adm@umc.br'">adm@umc.br</span>
+        </div>
+        <a th:href="@{/logout}" class="link-sair">Sair</a>
+    </div>
+</header>
+
+<main class="conteudo">
+
+    <header class="topo-conteudo">
+        <h1>Usuários</h1>
+        <p class="subtitulo-pagina">Aprove os cadastros de coordenador pendentes e gerencie os já ativos</p>
+    </header>
+
+    <section class="grade-cards">
+        <div class="card-estatistica">
+            <span class="rotulo-card">Coordenadores cadastrados</span>
+            <strong class="numero-card" th:text="${coordenadores.size()}"></strong>
+        </div>
+        <div class="card-estatistica">
+            <span class="rotulo-card">Coordenadores ativos</span>
+            <strong class="numero-card" th:text="${coordenadores.?[ativo].size()}"></strong>
+        </div>
+        <div class="card-estatistica">
+            <span class="rotulo-card">Pendentes de aprovação</span>
+            <strong class="numero-card" th:text="${coordenadores.?[!ativo && !isExcluido()].size()}"></strong>
+        </div>
+    </section>
+
+    <div class="cabecalho-usuarios">
+        <h2>Coordenadores</h2>
+    </div>
+
+    <table class="tabela-usuarios">
+        <thead>
+        <tr>
+            <th>Nome</th>
+            <th>Email</th>
+            <th>Registro</th>
+            <th>Curso</th>
+            <th>Status</th>
+            <th></th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="coordenador : ${coordenadores}">
+            <td th:text="${coordenador.nome}"></td>
+            <td th:text="${coordenador.email}"></td>
+            <td th:text="${coordenador.registroFuncional}"></td>
+            <td th:text="${coordenador.curso}"></td>
+            <td>
+                <span class="badge-status" th:classappend="${coordenador.ativo} ? 'badge-ativo' : 'badge-inativo'"
+                      th:text="${coordenador.ativo} ? 'Ativo' : (${coordenador.isExcluido()} ? 'Excluído' : 'Pendente')"></span>
+            </td>
+            <td class="coluna-acoes">
+                <form th:if="${!coordenador.ativo && !coordenador.isExcluido()}"
+                      th:action="@{/admin/coordenadores/{id}/aprovar(id=${coordenador.id})}" method="post" style="display:inline">
+                    <button type="submit" class="botao-primario">Aprovar</button>
+                </form>
+                <a th:href="@{/admin/coordenadores/{id}/editar(id=${coordenador.id})}">Editar</a>
+            </td>
+        </tr>
+        <tr th:if="${coordenadores.isEmpty()}">
+            <td colspan="6" class="linha-vazia">Nenhum coordenador cadastrado</td>
+        </tr>
+        </tbody>
+    </table>
+
+</main>
+
+</body>
+</html>
