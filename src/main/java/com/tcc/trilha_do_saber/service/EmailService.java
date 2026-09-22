@@ -15,12 +15,11 @@ public class EmailService {
     private final String remetente;
     private final boolean apiConfigurada;
 
-    public EmailService(RestClient.Builder restClientBuilder,
-                         @Value("${resend.api-key:}") String apiKey,
+    public EmailService(@Value("${resend.api-key:}") String apiKey,
                          @Value("${resend.from:Trilha do Saber <onboarding@resend.dev>}") String remetente){
         this.apiConfigurada = apiKey != null && !apiKey.isBlank();
         this.remetente = remetente;
-        this.restClient = restClientBuilder
+        this.restClient = RestClient.builder()
                 .baseUrl("https://api.resend.com")
                 .defaultHeader("Authorization", "Bearer " + apiKey)
                 .build();
