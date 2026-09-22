@@ -78,6 +78,11 @@ public class CadastroController {
         return "redirect:/login?cadastroEnviado";
     }
 
+    @GetMapping("/termos-lgpd")
+    public String termosLgpd(){
+        return "cadastro/termosLgpd";
+    }
+
     @GetMapping("/coordenador")
     public String formularioCoordenador(Model model){
         model.addAttribute("cadastroCoordenador", new CadastroCoordenadorDTO());

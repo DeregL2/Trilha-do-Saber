@@ -40,6 +40,8 @@ public class AlunoService {
 
         String senhaComHash = passwordEncoder.encode(dto.getSenha());
         Aluno aluno = new Aluno(dto.getNome(), dto.getEmail(), senhaComHash, dto.getMatricula(), dto.getCurso(), dto.getSemestre());
+        aluno.setConsentimentoLgpd(dto.isAceitouTermos());
+        aluno.setDataConsentimento(LocalDateTime.now());
         return alunoRepository.save(aluno);
     }
     public Aluno atualizar(Long id, AlunoFormDTO dto){

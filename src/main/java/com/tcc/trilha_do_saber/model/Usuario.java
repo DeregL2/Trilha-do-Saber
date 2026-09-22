@@ -28,6 +28,10 @@ public abstract class Usuario {
 
     private boolean anonimizado;
 
+    private boolean consentimentoLgpd;
+
+    private LocalDateTime dataConsentimento;
+
     public Usuario(){
     }
 
@@ -92,6 +96,22 @@ public abstract class Usuario {
 
     public boolean isExcluido(){
         return dataExclusao != null;
+    }
+
+    public boolean isConsentimentoLgpd(){
+        return consentimentoLgpd;
+    }
+
+    public void setConsentimentoLgpd(boolean consentimentoLgpd){
+        this.consentimentoLgpd = consentimentoLgpd;
+    }
+
+    public LocalDateTime getDataConsentimento(){
+        return dataConsentimento;
+    }
+
+    public void setDataConsentimento(LocalDateTime dataConsentimento){
+        this.dataConsentimento = dataConsentimento;
     }
 
 }

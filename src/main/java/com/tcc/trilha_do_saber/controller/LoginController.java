@@ -2,7 +2,9 @@ package com.tcc.trilha_do_saber.controller;
 
 import com.tcc.trilha_do_saber.dto.LoginDTO;
 import com.tcc.trilha_do_saber.dto.UsuarioSessaoDTO;
+import com.tcc.trilha_do_saber.dto.VerificacaoSessaoDTO;
 import com.tcc.trilha_do_saber.service.AuthService;
+import com.tcc.trilha_do_saber.service.EmailService;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import org.springframework.stereotype.Controller;
@@ -12,13 +14,20 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 
+import java.security.SecureRandom;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+
 @Controller
 public class LoginController {
 
     private final AuthService authService;
+    private final EmailService emailService;
+    private final SecureRandom random = new SecureRandom();
 
-    public LoginController(AuthService authService){
+    public LoginController(AuthService authService, EmailService emailService){
         this.authService = authService;
+        this.emailService = emailService;
     }
 
     @GetMapping("/login")
@@ -35,8 +44,14 @@ public class LoginController {
 
         try {
             UsuarioSessaoDTO usuario = authService.autenticar(dto.getEmail(), dto.getSenha());
-            session.setAttribute("usuarioLogado", usuario);
-            return "redirect:" + paginaInicial(usuario.getTipo());
+
+            String codigo = gerarCodigo();
+            Instant expiraEm = Instant.now().plus(10, ChronoUnit.MINUTES);
+            session.setAttribute("verificacao2FA", new VerificacaoSessaoDTO(usuario, codigo, expiraEm));
+
+            emailService.enviarCodigoVerificacao(usuario.getNome(), usuario.getEmail(), codigo);
+
+            return "redirect:/verificacao";
         } catch (IllegalArgumentException e) {
             model.addAttribute("erroLogin", e.getMessage());
             return "login";
@@ -49,13 +64,8 @@ public class LoginController {
         return "redirect:/login";
     }
 
-    private String paginaInicial(String tipo){
-        return switch (tipo) {
-            case "ALUNO" -> "/aluno/inicio";
-            case "PROFESSOR" -> "/professor/inicio";
-            case "COORDENADOR" -> "/coordenador/inicio";
-            case "ADMIN" -> "/admin/inicio";
-            default -> "/login";
-        };
+    private String gerarCodigo(){
+        int numero = random.nextInt(1_000_000);
+        return String.format("%06d", numero);
     }
 }

@@ -40,6 +40,8 @@ public class ProfessorService {
 
         String senhaComHash = passwordEncoder.encode(dto.getSenha());
         Professor professor = new Professor(dto.getNome(), dto.getEmail(), senhaComHash, dto.getRegistroProfissional());
+        professor.setConsentimentoLgpd(dto.isAceitouTermos());
+        professor.setDataConsentimento(LocalDateTime.now());
         return professorRepository.save(professor);
     }
 

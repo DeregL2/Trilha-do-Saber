@@ -1,3 +1,8 @@
 spring.datasource.url=jdbc:postgresql://localhost:5432/trilha_do_saber
 spring.datasource.username=SEU_USUARIO_AQUI
 spring.datasource.password=SUA_SENHA_AQUI
+
+# Chave da API do Resend (https://resend.com) usada para enviar o codigo de verificacao em 2 etapas.
+# Sem conta/dominio verificado no Resend, o "from" precisa continuar sendo onboarding@resend.dev
+# e o envio so funciona para o proprio e-mail cadastrado na conta do Resend.
+resend.api-key=SUA_CHAVE_AQUI

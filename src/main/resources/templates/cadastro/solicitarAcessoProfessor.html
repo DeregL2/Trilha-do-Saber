@@ -41,6 +41,12 @@
             <span class="erro" th:if="${#fields.hasErrors('confirmarSenha')}" th:errors="*{confirmarSenha}"></span>
             <span class="dica-senha">A senha precisa ter letra, número e caractere especial (mín. 8 dígitos)</span>
 
+            <label class="campo-consentimento">
+                <input type="checkbox" th:field="*{aceitouTermos}">
+                <span>Li e aceito o <a th:href="@{/termos-lgpd}" target="_blank">Termo de Consentimento (LGPD)</a> para tratamento dos meus dados.</span>
+            </label>
+            <span class="erro" th:if="${#fields.hasErrors('aceitouTermos')}" th:errors="*{aceitouTermos}"></span>
+
             <button type="submit" class="botao-primario botao-largo">Enviar solicitação</button>
         </form>
 
