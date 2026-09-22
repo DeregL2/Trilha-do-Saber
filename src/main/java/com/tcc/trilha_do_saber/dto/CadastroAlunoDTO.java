@@ -1,5 +1,6 @@
 package com.tcc.trilha_do_saber.dto;
 
+import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
@@ -31,6 +32,9 @@ public class CadastroAlunoDTO {
 
     private Integer semestre;
 
+    @AssertTrue(message = "É necessário aceitar o termo de consentimento (LGPD) para continuar")
+    private boolean aceitouTermos;
+
     public String getNome(){ return nome; }
     public void setNome(String nome){ this.nome = nome; }
 
@@ -51,6 +55,9 @@ public class CadastroAlunoDTO {
 
     public Integer getSemestre(){ return semestre; }
     public void setSemestre(Integer semestre){ this.semestre = semestre; }
+
+    public boolean isAceitouTermos(){ return aceitouTermos; }
+    public void setAceitouTermos(boolean aceitouTermos){ this.aceitouTermos = aceitouTermos; }
 
     public boolean senhasConferem(){
         return senha != null && senha.equals(confirmarSenha);
