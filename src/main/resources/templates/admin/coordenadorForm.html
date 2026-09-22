@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Coordenador</title>
+  <link rel="stylesheet" th:href="@{/css/painel.css}">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="marca-topbar">
+    <span class="logo-marca">📘</span>
+    <div>
+      <strong>Trilha do Saber</strong>
+      <span>Administrador</span>
+    </div>
+  </div>
+
+  <nav class="menu-topbar">
+    <a th:href="@{/admin/inicio}" class="item-menu"><span>🏠</span> Início</a>
+    <a href="#" class="item-menu"><span>🗄️</span> Banco de Questões</a>
+    <a href="#" class="item-menu"><span>📋</span> Simulados</a>
+    <a th:href="@{/admin/coordenadores}" class="item-menu ativo"><span>👥</span> Usuários</a>
+    <a href="#" class="item-menu"><span>🛡️</span> Logs de Auditoria</a>
+  </nav>
+
+  <div class="perfil-topbar">
+    <div class="avatar-usuario">AD</div>
+    <div>
+      <strong th:text="${usuarioLogado != null} ? ${usuarioLogado.nome} : 'Admin Sistema'">Admin Sistema</strong>
+      <span th:text="${usuarioLogado != null} ? ${usuarioLogado.email} : 'adm@umc.br'">adm@umc.br</span>
+    </div>
+    <a th:href="@{/logout}" class="link-sair">Sair</a>
+  </div>
+</header>
+
+<main class="conteudo">
+  <div class="cartao-form">
+
+    <h1>Editar coordenador</h1>
+
+    <form method="post" th:object="${coordenadorForm}"
+          th:action="@{/admin/coordenadores/{id}(id=${coordenadorForm.id})}">
+
+      <input type="hidden" th:field="*{id}">
+
+      <label>Nome</label>
+      <input type="text" th:field="*{nome}">
+      <span class="erro" th:if="${#fields.hasErrors('nome')}" th:errors="*{nome}"></span>
+
+      <label>Email</label>
+      <input type="email" th:field="*{email}">
+      <span class="erro" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></span>
+
+      <label>Registro de funcionário</label>
+      <input type="text" th:field="*{registroFuncional}">
+      <span class="erro" th:if="${#fields.hasErrors('registroFuncional')}" th:errors="*{registroFuncional}"></span>
+
+      <label>Curso</label>
+      <input type="text" th:field="*{curso}">
+      <span class="erro" th:if="${#fields.hasErrors('curso')}" th:errors="*{curso}"></span>
+
+      <label class="campo-checkbox">
+        <input type="checkbox" th:field="*{ativo}">
+        Cadastro aprovado (acesso liberado)
+      </label>
+
+      <div class="acoes-form">
+        <a th:href="@{/admin/coordenadores}" class="botao-secundario">Cancelar</a>
+        <button type="submit" class="botao-primario">Salvar</button>
+      </div>
+    </form>
+
+    <div class="zona-perigo">
+      <h2>Zona de risco</h2>
+
+      <div class="linha-zona-perigo">
+        <div>
+          <strong>Excluir usuário</strong>
+          <p>Remove o acesso e marca como excluído. Os dados continuam no banco.</p>
+        </div>
+        <form th:action="@{/admin/coordenadores/{id}/excluir(id=${coordenadorForm.id})}" method="post">
+          <button type="submit" class="botao-perigo" onclick="return confirm('Excluir este coordenador? Os dados continuam no banco.');">Excluir</button>
+        </form>
+      </div>
+
+      <div class="linha-zona-perigo">
+        <div>
+          <strong>Anonimizar dados (LGPD)</strong>
+          <p>Apaga nome, email e demais dados pessoais definitivamente. Não pode ser desfeito.</p>
+        </div>
+        <form th:action="@{/admin/coordenadores/{id}/anonimizar(id=${coordenadorForm.id})}" method="post">
+          <button type="submit" class="botao-perigo" onclick="return confirm('Essa ação é definitiva. Anonimizar os dados deste coordenador?');">Anonimizar</button>
+        </form>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+</body>
+</html>

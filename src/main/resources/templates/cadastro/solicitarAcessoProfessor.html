@@ -43,7 +43,7 @@
 
             <label class="campo-consentimento">
                 <input type="checkbox" th:field="*{aceitouTermos}">
-                <span>Li e aceito o <a th:href="@{/termos-lgpd}" target="_blank">Termo de Consentimento (LGPD)</a> para tratamento dos meus dados.</span>
+                <span>Li e aceito o <a th:href="@{/cadastro/termos-lgpd}" target="_blank">Termo de Consentimento (LGPD)</a> para tratamento dos meus dados.</span>
             </label>
             <span class="erro" th:if="${#fields.hasErrors('aceitouTermos')}" th:errors="*{aceitouTermos}"></span>
 
