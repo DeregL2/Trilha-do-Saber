@@ -1,7 +1,20 @@
--- Esse arquivo ficou desatualizado: referenciava a tabela "tema" (removida) e a coluna
--- "ra" do aluno (o campo se chama "rgm"), o que quebrava a subida da aplicação porque
--- essas colunas/tabelas nao existem mais no schema atual.
+-- Dados de teste para desenvolvimento local.
 --
--- A carga de dados de teste hoje é feita em Java, na subida da aplicação:
--- - CargaInicialDados: cria uma prova e as questões de exemplo
--- - CargaUsuariosIniciais: cria um admin e um coordenador de teste
+-- A tabela "tema" nao existe mais no schema atual (foi removida do projeto antes), entao os
+-- inserts que dependiam dela foram tirados daqui: as questoes de exemplo (com prova/dificuldade
+-- corretos) ja sao criadas em Java pelo CargaInicialDados na subida da aplicacao.
+--
+-- Os hashes de senha abaixo sao o bcrypt de "Senha@123" (login exige senha com hash, nao texto puro).
+-- ON CONFLICT evita erro de "email duplicado" quando a aplicacao reinicia sem recriar o banco.
+
+INSERT INTO aluno (nome, email, senha, ativo, anonimizado, consentimento_lgpd, data_consentimento, rgm, curso, semestre) VALUES
+    ('Ana Beatriz Souza', 'ana.souza@aluno.umc.br', '$2b$12$vxe32s6/AAeN7CrMeUi5GuIsEfhmJFT8Dse6fcwe.36fhOaGcykrO', true, false, true, now(), '2023001', 'Sistemas de Informação', 8)
+ON CONFLICT (email) DO NOTHING;
+
+INSERT INTO aluno (nome, email, senha, ativo, anonimizado, consentimento_lgpd, data_consentimento, rgm, curso, semestre) VALUES
+    ('João Pedro Lima', 'joao.lima@aluno.umc.br', '$2b$12$vxe32s6/AAeN7CrMeUi5GuIsEfhmJFT8Dse6fcwe.36fhOaGcykrO', true, false, true, now(), '2023002', 'Sistemas de Informação', 6)
+ON CONFLICT (email) DO NOTHING;
+
+INSERT INTO professor (nome, email, senha, ativo, anonimizado, consentimento_lgpd, data_consentimento, registro_profissional, disciplina) VALUES
+    ('Carlos Eduardo Mota', 'carlos.mota@umc.br', '$2b$12$vxe32s6/AAeN7CrMeUi5GuIsEfhmJFT8Dse6fcwe.36fhOaGcykrO', true, false, true, now(), 'PROF-0456', 'Engenharia de Software')
+ON CONFLICT (email) DO NOTHING;
