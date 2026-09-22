@@ -4,111 +4,137 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Usuário</title>
-    <link rel="stylesheet" th:href="@{/css/coordenador.css}">
+    <link rel="stylesheet" th:href="@{/css/painel.css}">
 </head>
 <body>
 
-<div class="app-shell">
+<header class="topbar">
+    <div class="marca-topbar">
+        <span class="logo-marca">📘</span>
+        <div>
+            <strong>Trilha do Saber</strong>
+            <span>Coordenador</span>
+        </div>
+    </div>
 
-    <aside class="sidebar">
-        <div class="marca-sidebar">
-            <span class="logo-marca">📘</span>
-            <div>
-                <strong>Trilha do Saber</strong>
-                <span>Coordenador</span>
+    <nav class="menu-topbar">
+        <a th:href="@{/coordenador/inicio}" class="item-menu"><span>🏠</span> Início</a>
+        <a th:href="@{/coordenador/usuarios}" class="item-menu ativo"><span>👥</span> Usuários</a>
+        <a href="#" class="item-menu"><span>🎓</span> Turmas</a>
+        <a href="#" class="item-menu"><span>📊</span> Relatórios</a>
+        <a href="#" class="item-menu"><span>⚙️</span> Minha Conta</a>
+    </nav>
+
+    <div class="perfil-topbar">
+        <div class="avatar-usuario">CO</div>
+        <div>
+            <strong th:text="${usuarioLogado != null} ? ${usuarioLogado.nome} : 'Coordenação'">Coordenação</strong>
+            <span th:text="${usuarioLogado != null} ? ${usuarioLogado.email} : 'coordenacao@umc.br'">coordenacao@umc.br</span>
+        </div>
+        <a th:href="@{/logout}" class="link-sair">Sair</a>
+    </div>
+</header>
+
+<main class="conteudo">
+    <div class="cartao-form">
+
+        <h1 th:if="${tipo == 'aluno'}">Editar aluno</h1>
+        <h1 th:if="${tipo == 'professor'}">Editar professor</h1>
+
+        <!-- FORM DE ALUNO -->
+        <form th:if="${tipo == 'aluno'}" method="post" th:object="${alunoForm}"
+              th:action="@{/coordenador/usuarios/aluno/{id}(id=${alunoForm.id})}">
+
+            <input type="hidden" th:field="*{id}">
+
+            <label>Nome</label>
+            <input type="text" th:field="*{nome}">
+            <span class="erro" th:if="${#fields.hasErrors('nome')}" th:errors="*{nome}"></span>
+
+            <label>Email</label>
+            <input type="email" th:field="*{email}">
+            <span class="erro" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></span>
+
+            <label>RGM</label>
+            <input type="text" th:field="*{rgm}">
+            <span class="erro" th:if="${#fields.hasErrors('rgm')}" th:errors="*{rgm}"></span>
+
+            <label>Curso</label>
+            <input type="text" th:field="*{curso}">
+            <span class="erro" th:if="${#fields.hasErrors('curso')}" th:errors="*{curso}"></span>
+
+            <label>Semestre</label>
+            <input type="number" th:field="*{semestre}" min="1" max="12">
+
+            <label class="campo-checkbox">
+                <input type="checkbox" th:field="*{ativo}">
+                Usuário ativo (acesso liberado)
+            </label>
+
+            <div class="acoes-form">
+                <a th:href="@{/coordenador/usuarios}" class="botao-secundario">Cancelar</a>
+                <button type="submit" class="botao-primario">Salvar</button>
+            </div>
+        </form>
+
+        <!-- FORM DE PROFESSOR -->
+        <form th:if="${tipo == 'professor'}" method="post" th:object="${professorForm}"
+              th:action="@{/coordenador/usuarios/professor/{id}(id=${professorForm.id})}">
+
+            <input type="hidden" th:field="*{id}">
+
+            <label>Nome</label>
+            <input type="text" th:field="*{nome}">
+            <span class="erro" th:if="${#fields.hasErrors('nome')}" th:errors="*{nome}"></span>
+
+            <label>Email</label>
+            <input type="email" th:field="*{email}">
+            <span class="erro" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></span>
+
+            <label>Registro profissional</label>
+            <input type="text" th:field="*{registroProfissional}">
+            <span class="erro" th:if="${#fields.hasErrors('registroProfissional')}" th:errors="*{registroProfissional}"></span>
+
+            <label>Disciplina</label>
+            <input type="text" th:field="*{disciplina}" placeholder="Ainda não informado pelo professor">
+
+            <label class="campo-checkbox">
+                <input type="checkbox" th:field="*{ativo}">
+                Usuário ativo (acesso liberado)
+            </label>
+
+            <div class="acoes-form">
+                <a th:href="@{/coordenador/usuarios}" class="botao-secundario">Cancelar</a>
+                <button type="submit" class="botao-primario">Salvar</button>
+            </div>
+        </form>
+
+        <div class="zona-perigo">
+            <h2>Zona de risco</h2>
+
+            <div class="linha-zona-perigo">
+                <div>
+                    <strong>Excluir usuário</strong>
+                    <p>Remove o acesso e marca como excluído. Os dados continuam no banco (histórico de simulados, por exemplo).</p>
+                </div>
+                <form th:action="@{/coordenador/usuarios/{tipo}/{id}/excluir(tipo=${tipo}, id=${tipo == 'aluno'} ? ${alunoForm.id} : ${professorForm.id})}" method="post">
+                    <button type="submit" class="botao-perigo" onclick="return confirm('Excluir este usuário? Os dados continuam no banco.');">Excluir</button>
+                </form>
+            </div>
+
+            <div class="linha-zona-perigo">
+                <div>
+                    <strong>Anonimizar dados (LGPD)</strong>
+                    <p>Apaga nome, email e demais dados pessoais definitivamente. Não pode ser desfeito.</p>
+                </div>
+                <form th:action="@{/coordenador/usuarios/{tipo}/{id}/anonimizar(tipo=${tipo}, id=${tipo == 'aluno'} ? ${alunoForm.id} : ${professorForm.id})}" method="post">
+                    <button type="submit" class="botao-perigo" onclick="return confirm('Essa ação é definitiva. Anonimizar os dados deste usuário?');">Anonimizar</button>
+                </form>
             </div>
         </div>
 
-        <nav class="menu-sidebar">
-            <a href="#" class="item-menu"><span>🏠</span> Início</a>
-            <a th:href="@{/coordenador/usuarios}" class="item-menu ativo"><span>👥</span> Usuários</a>
-            <a href="#" class="item-menu"><span>🎓</span> Turmas</a>
-            <a href="#" class="item-menu"><span>📊</span> Relatórios</a>
-            <a href="#" class="item-menu"><span>⚙️</span> Minha Conta</a>
-        </nav>
-
-        <div class="rodape-sidebar">
-            <div class="avatar-usuario">CO</div>
-            <div>
-                <strong>Coordenação</strong>
-                <span>coordenacao@umc.br</span>
-            </div>
-        </div>
-    </aside>
-
-    <main class="conteudo">
-        <div class="cartao-form">
-
-            <h1 th:if="${tipo == 'aluno'}" th:text="${alunoForm.id} != null ? 'Editar aluno' : 'Novo aluno'"></h1>
-            <h1 th:if="${tipo == 'professor'}" th:text="${professorForm.id} != null ? 'Editar professor' : 'Novo professor'"></h1>
-
-            <form th:if="${tipo == 'aluno'}" method="post" th:object="${alunoForm}"
-                  th:action="@{|/coordenador/usuarios/aluno${alunoForm.id != null ? '/' + alunoForm.id : ''}|}">
-
-                <input type="hidden" th:field="*{id}">
-
-                <label>Nome</label>
-                <input type="text" th:field="*{nome}">
-                <span class="erro" th:if="${#fields.hasErrors('nome')}" th:errors="*{nome}"></span>
-
-                <label>Email</label>
-                <input type="email" th:field="*{email}">
-                <span class="erro" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></span>
-
-                <label>Senha</label>
-                <input type="password" th:field="*{senha}" placeholder="Deixe em branco para manter a atual">
-
-                <label>RA</label>
-                <input type="text" th:field="*{ra}">
-                <span class="erro" th:if="${#fields.hasErrors('ra')}" th:errors="*{ra}"></span>
-
-                <label>Curso</label>
-                <input type="text" th:field="*{curso}">
-                <span class="erro" th:if="${#fields.hasErrors('curso')}" th:errors="*{curso}"></span>
-
-                <label>Semestre</label>
-                <input type="number" th:field="*{semestre}" min="1" max="12">
-
-                <div class="acoes-form">
-                    <a th:href="@{/coordenador/usuarios}" class="botao-secundario">Cancelar</a>
-                    <button type="submit" class="botao-primario">Salvar</button>
-                </div>
-            </form>
-
-            <form th:if="${tipo == 'professor'}" method="post" th:object="${professorForm}"
-                  th:action="@{|/coordenador/usuarios/professor${professorForm.id != null ? '/' + professorForm.id : ''}|}">
-
-                <input type="hidden" th:field="*{id}">
-
-                <label>Nome</label>
-                <input type="text" th:field="*{nome}">
-                <span class="erro" th:if="${#fields.hasErrors('nome')}" th:errors="*{nome}"></span>
-
-                <label>Email</label>
-                <input type="email" th:field="*{email}">
-                <span class="erro" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></span>
-
-                <label>Senha</label>
-                <input type="password" th:field="*{senha}" placeholder="Deixe em branco para manter a atual">
-
-                <label>Registro profissional</label>
-                <input type="text" th:field="*{registroProfissional}">
-                <span class="erro" th:if="${#fields.hasErrors('registroProfissional')}" th:errors="*{registroProfissional}"></span>
-
-                <label>Disciplina</label>
-                <input type="text" th:field="*{disciplina}">
-                <span class="erro" th:if="${#fields.hasErrors('disciplina')}" th:errors="*{disciplina}"></span>
-
-                <div class="acoes-form">
-                    <a th:href="@{/coordenador/usuarios}" class="botao-secundario">Cancelar</a>
-                    <button type="submit" class="botao-primario">Salvar</button>
-                </div>
-            </form>
-
-        </div>
-    </main>
-
-</div>
+    </div>
+</main>
 
 </body>
 </html>
