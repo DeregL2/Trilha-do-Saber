@@ -5,23 +5,22 @@ import jakarta.persistence.Entity;
 @Entity
 public class Aluno extends Usuario {
 
-    private String ra;
+    private String rgm;
     private String curso;
     private int semestre;
 
-    // Construtor JPA
     public Aluno(){
     }
 
-    public Aluno(String nome, String email, String senha, String ra, String curso, int semestre){
+    public Aluno(String nome, String email, String senha, String rgm, String curso, int semestre){
         super(nome, email, senha);
-        this.ra = ra;
+        this.rgm = rgm;
         this.curso = curso;
         this.semestre = semestre;
     }
 
-    public String getRa(){
-        return ra;
+    public String getRgm(){
+        return rgm;
     }
 
     public String getCurso(){
@@ -32,8 +31,8 @@ public class Aluno extends Usuario {
         return semestre;
     }
 
-    public void setRa(String ra){
-        this.ra = ra;
+    public void setRgm(String rgm){
+        this.rgm = this.rgm;
     }
 
     public void setCurso(String curso){
@@ -43,8 +42,4 @@ public class Aluno extends Usuario {
     public void setSemestre(int semestre){
         this.semestre = semestre;
     }
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> main

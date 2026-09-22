@@ -8,7 +8,6 @@ public class Professor extends Usuario {
     private String registroProfissional;
     private String disciplina;
 
-    // Construtor JPA
     public Professor(){
     }
 
@@ -16,6 +15,10 @@ public class Professor extends Usuario {
         super(nome, email, senha);
         this.registroProfissional = registroProfissional;
         this.disciplina = disciplina;
+    }
+
+    public Professor(String nome, String email, String senha, String registroProfissional){
+        this(nome, email, senha, registroProfissional, null);
     }
 
     public String getRegistroProfissional(){
@@ -34,3 +37,4 @@ public class Professor extends Usuario {
         this.disciplina = disciplina;
     }
 }
+

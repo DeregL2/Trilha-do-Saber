@@ -1,0 +1,328 @@
+:root {
+    --marca: #6C4CE8;
+    --marca-escura: #5A3FD6;
+    --marca-clara: #EEE9FF;
+    --texto: #202124;
+    --texto-secundario: #5F6368;
+    --borda: #E4E7EC;
+    --fundo: #F5F6FA;
+    --vermelho: #EF4444;
+    --vermelho-fundo: #FEF2F2;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: "Inter", system-ui, sans-serif;
+    color: var(--texto);
+    background: var(--fundo);
+}
+
+/* ---------- Campos e botões (compartilhado entre login e cadastro) ---------- */
+
+label {
+    display: block;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: var(--texto-secundario);
+    margin-top: 18px;
+    margin-bottom: 6px;
+}
+
+input,
+select {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1px solid var(--borda);
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: inherit;
+    background: #fff;
+    color: var(--texto);
+}
+
+input:focus,
+select:focus {
+    outline: none;
+    border-color: var(--marca);
+}
+
+input::placeholder {
+    color: #B4B8C1;
+}
+
+.linha-dois-campos {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+.dica-senha {
+    display: block;
+    margin-top: 6px;
+    font-size: 12px;
+    color: var(--texto-secundario);
+}
+
+.erro {
+    display: block;
+    color: var(--vermelho);
+    font-size: 12px;
+    margin-top: 6px;
+}
+
+.erro-geral {
+    display: block;
+    background: var(--vermelho-fundo);
+    color: var(--vermelho);
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 13px;
+    margin-top: 16px;
+}
+
+.botao-primario {
+    background: var(--marca);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 12px 18px;
+    font-weight: 600;
+    text-decoration: none;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.botao-primario:hover {
+    background: var(--marca-escura);
+}
+
+.botao-largo {
+    width: 100%;
+    display: block;
+    margin-top: 24px;
+    text-align: center;
+}
+
+.link-voltar {
+    display: inline-block;
+    color: var(--texto-secundario);
+    text-decoration: none;
+    font-size: 14px;
+    margin-bottom: 24px;
+}
+
+.link-voltar:hover {
+    color: var(--texto);
+}
+
+/* ---------- Tela de login ---------- */
+
+.pagina-login {
+    min-height: 100vh;
+    display: flex;
+}
+
+.painel-lateral {
+    flex: 1 1 42%;
+    max-width: 480px;
+    background: linear-gradient(160deg, var(--marca-escura) 0%, var(--marca) 55%, #8B6CF5 100%);
+    color: #fff;
+    padding: 40px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.marca-lateral {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.marca-lateral .logo-marca {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.18);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+}
+
+.marca-lateral strong {
+    font-size: 16px;
+}
+
+.painel-lateral h1 {
+    font-size: 32px;
+    line-height: 1.25;
+    margin: 0 0 16px;
+}
+
+.painel-lateral p.descricao {
+    font-size: 15px;
+    opacity: 0.9;
+    line-height: 1.5;
+    margin: 0 0 24px;
+}
+
+.lista-beneficios {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.lista-beneficios li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+}
+
+.lista-beneficios li span.marcador {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+}
+
+.painel-formulario {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 24px;
+}
+
+.cartao-login {
+    width: 100%;
+    max-width: 420px;
+}
+
+.cartao-login h1 {
+    font-size: 26px;
+    margin: 0 0 6px;
+}
+
+.cartao-login .subtitulo {
+    margin: 0;
+    color: var(--texto-secundario);
+    font-size: 14px;
+}
+
+.linha-esqueci {
+    text-align: right;
+    margin-top: 8px;
+}
+
+.linha-esqueci a {
+    color: var(--marca);
+    font-size: 13px;
+    text-decoration: none;
+}
+
+.linha-esqueci a:hover {
+    text-decoration: underline;
+}
+
+.rodape-login {
+    text-align: center;
+    margin-top: 20px;
+    font-size: 14px;
+    color: var(--texto-secundario);
+}
+
+.rodape-login a {
+    color: var(--marca);
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.rodape-login a:hover {
+    text-decoration: underline;
+}
+
+.aviso-info {
+    display: block;
+    background: var(--marca-clara);
+    color: var(--marca-escura);
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 13px;
+    margin-top: 16px;
+}
+
+@media (max-width: 860px) {
+    .pagina-login {
+        flex-direction: column;
+    }
+
+    .painel-lateral {
+        max-width: none;
+        padding: 32px 24px;
+    }
+
+    .painel-lateral h1 {
+        font-size: 24px;
+    }
+
+    .lista-beneficios {
+        display: none;
+    }
+}
+
+/* ---------- Telas de cadastro (solicitar acesso) ---------- */
+
+.pagina-cadastro {
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    padding: 64px 24px;
+}
+
+.cartao-cadastro {
+    width: 100%;
+    max-width: 460px;
+    background: #fff;
+    border: 1px solid var(--borda);
+    border-radius: 16px;
+    padding: 40px;
+    height: fit-content;
+}
+
+.cartao-cadastro h1 {
+    font-size: 24px;
+    margin: 0 0 6px;
+}
+
+.cartao-cadastro .subtitulo {
+    margin: 0;
+    color: var(--texto-secundario);
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+@media (max-width: 540px) {
+    .cartao-cadastro {
+        padding: 28px 20px;
+    }
+
+    .linha-dois-campos {
+        grid-template-columns: 1fr;
+    }
+}
