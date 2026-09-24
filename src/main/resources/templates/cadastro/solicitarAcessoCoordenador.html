@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Solicitar acesso</title>
+    <link rel="stylesheet" th:href="@{/css/auth.css}">
+</head>
+<body>
+
+<div class="pagina-cadastro">
+    <div class="cartao-cadastro">
+
+        <a th:href="@{/login}" class="link-voltar">‹ Voltar ao login</a>
+
+        <h1>Solicitar acesso</h1>
+        <p class="subtitulo">Preencha seus dados institucionais. O acesso será liberado pela administração.</p>
+
+        <span class="erro-geral" th:if="${erroSenha}" th:text="${erroSenha}"></span>
+
+        <form method="post" th:action="@{/cadastro/coordenador}" th:object="${cadastroCoordenador}">
+
+            <label>Nome completo</label>
+            <input type="text" th:field="*{nome}" placeholder="Ana Lima Ferreira">
+            <span class="erro" th:if="${#fields.hasErrors('nome')}" th:errors="*{nome}"></span>
+
+            <label>E-mail institucional</label>
+            <input type="email" th:field="*{email}" placeholder="ana.lima@uni.edu.br">
+            <span class="erro" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></span>
+
+            <label>Registro de funcionário da instituição</label>
+            <input type="text" th:field="*{registroFuncional}" placeholder="20240001">
+            <span class="erro" th:if="${#fields.hasErrors('registroFuncional')}" th:errors="*{registroFuncional}"></span>
+
+            <label>Curso que coordena</label>
+            <select th:field="*{curso}">
+                <option value="">Selecionar curso</option>
+                <option value="Sistemas de Informação">Sistemas de Informação</option>
+                <option value="Engenharia de Software">Engenharia de Software</option>
+                <option value="Análise e Desenvolvimento de Sistemas">Análise e Desenvolvimento de Sistemas</option>
+            </select>
+            <span class="erro" th:if="${#fields.hasErrors('curso')}" th:errors="*{curso}"></span>
+
+            <label>Senha</label>
+            <input type="password" th:field="*{senha}" placeholder="Mínimo 8 caracteres">
+            <span class="erro" th:if="${#fields.hasErrors('senha')}" th:errors="*{senha}"></span>
+
+            <label>Confirme a senha</label>
+            <input type="password" th:field="*{confirmarSenha}" placeholder="Digite a senha novamente">
+            <span class="erro" th:if="${#fields.hasErrors('confirmarSenha')}" th:errors="*{confirmarSenha}"></span>
+            <span class="dica-senha">A senha precisa ter letra, número e caractere especial (mín. 8 dígitos)</span>
+
+            <label class="campo-consentimento">
+                <input type="checkbox" th:field="*{aceitouTermos}">
+                <span>Li e aceito o <a th:href="@{/cadastro/termos-lgpd}" target="_blank">Termo de Consentimento (LGPD)</a> para tratamento dos meus dados.</span>
+            </label>
+            <span class="erro" th:if="${#fields.hasErrors('aceitouTermos')}" th:errors="*{aceitouTermos}"></span>
+
+            <button type="submit" class="botao-primario botao-largo">Enviar solicitação</button>
+        </form>
+
+    </div>
+</div>
+
+</body>
+</html>
