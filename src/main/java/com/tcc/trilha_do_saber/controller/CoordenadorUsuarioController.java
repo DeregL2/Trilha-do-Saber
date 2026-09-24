@@ -6,13 +6,13 @@ import com.tcc.trilha_do_saber.model.Aluno;
 import com.tcc.trilha_do_saber.model.Professor;
 import com.tcc.trilha_do_saber.service.AlunoService;
 import com.tcc.trilha_do_saber.service.ProfessorService;
-import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
+// Tela do coordenador pra gerenciar os usuarios de aluno e professor
 @Controller
 @RequestMapping("/coordenador/usuarios")
 public class CoordenadorUsuarioController {
@@ -25,16 +25,49 @@ public class CoordenadorUsuarioController {
         this.professorService = professorService;
     }
 
+    // Lista alunos e professores juntos
     @GetMapping
-    public String listar(Model model, HttpSession session){
+    public String listar(Model model){
         model.addAttribute("alunos", alunoService.listarTodos());
         model.addAttribute("professores", professorService.listarTodos());
-        model.addAttribute("usuarioLogado", session.getAttribute("usuarioLogado"));
         return "coordenador/usuarios";
     }
 
+    // Formulario de criacao. "tipo" na URL decide se e aluno ou professor
+    @GetMapping("/novo")
+    public String novoFormulario(@RequestParam String tipo, Model model){
+        if ("professor".equals(tipo)) {
+            model.addAttribute("professorForm", new ProfessorFormDTO());
+        } else {
+            model.addAttribute("alunoForm", new AlunoFormDTO());
+        }
+        model.addAttribute("tipo", tipo);
+        return "coordenador/usuarioForm";
+    }
+
+    @PostMapping("/aluno")
+    public String criarAluno(@Valid @ModelAttribute("alunoForm") AlunoFormDTO form, BindingResult result, Model model){
+        if (result.hasErrors()) {
+            model.addAttribute("tipo", "aluno");
+            return "coordenador/usuarioForm";
+        }
+        alunoService.criar(form);
+        return "redirect:/coordenador/usuarios";
+    }
+
+    @PostMapping("/professor")
+    public String criarProfessor(@Valid @ModelAttribute("professorForm") ProfessorFormDTO form, BindingResult result, Model model){
+        if (result.hasErrors()) {
+            model.addAttribute("tipo", "professor");
+            return "coordenador/usuarioForm";
+        }
+        professorService.criar(form);
+        return "redirect:/coordenador/usuarios";
+    }
+
+    // Formulario de edicao, ja preenchido com os dados atuais
     @GetMapping("/{tipo}/{id}/editar")
-    public String editarFormulario(@PathVariable String tipo, @PathVariable Long id, Model model, HttpSession session){
+    public String editarFormulario(@PathVariable String tipo, @PathVariable Long id, Model model){
         if ("professor".equals(tipo)) {
             Professor professor = professorService.buscarPorId(id);
             ProfessorFormDTO form = new ProfessorFormDTO();
@@ -43,7 +76,6 @@ public class CoordenadorUsuarioController {
             form.setEmail(professor.getEmail());
             form.setRegistroProfissional(professor.getRegistroProfissional());
             form.setDisciplina(professor.getDisciplina());
-            form.setAtivo(professor.isAtivo());
             model.addAttribute("professorForm", form);
         } else {
             Aluno aluno = alunoService.buscarPorId(id);
@@ -51,14 +83,12 @@ public class CoordenadorUsuarioController {
             form.setId(aluno.getId());
             form.setNome(aluno.getNome());
             form.setEmail(aluno.getEmail());
-            form.setRgm(aluno.getRgm());
+            form.setRa(aluno.getRa());
             form.setCurso(aluno.getCurso());
             form.setSemestre(aluno.getSemestre());
-            form.setAtivo(aluno.isAtivo());
             model.addAttribute("alunoForm", form);
         }
         model.addAttribute("tipo", tipo);
-        model.addAttribute("usuarioLogado", session.getAttribute("usuarioLogado"));
         return "coordenador/usuarioForm";
     }
 
@@ -88,16 +118,6 @@ public class CoordenadorUsuarioController {
             professorService.excluir(id);
         } else {
             alunoService.excluir(id);
-        }
-        return "redirect:/coordenador/usuarios";
-    }
-
-    @PostMapping("/{tipo}/{id}/anonimizar")
-    public String anonimizar(@PathVariable String tipo, @PathVariable Long id){
-        if ("professor".equals(tipo)) {
-            professorService.anonimizar(id);
-        } else {
-            alunoService.anonimizar(id);
         }
         return "redirect:/coordenador/usuarios";
     }

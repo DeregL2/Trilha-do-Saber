@@ -23,58 +23,66 @@ body {
     color: var(--texto);
 }
 
-/* ---------- Barra superior ---------- */
+/* ---------- Layout geral ---------- */
 
-.topbar {
+.app-shell {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 24px;
-    background: var(--marca);
-    color: #fff;
-    padding: 14px 32px;
-    flex-wrap: wrap;
+    min-height: 100vh;
 }
 
-.marca-topbar {
+/* ---------- Sidebar ---------- */
+
+.sidebar {
+    width: 240px;
+    flex-shrink: 0;
+    background: var(--marca);
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    padding: 24px 16px;
+}
+
+.marca-sidebar {
     display: flex;
     align-items: center;
     gap: 10px;
+    padding: 0 8px 24px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+    margin-bottom: 16px;
 }
 
 .logo-marca {
     font-size: 22px;
 }
 
-.marca-topbar strong {
+.marca-sidebar strong {
     display: block;
     font-size: 14px;
 }
 
-.marca-topbar span {
+.marca-sidebar span {
     display: block;
     font-size: 12px;
     opacity: 0.75;
 }
 
-.menu-topbar {
+.menu-sidebar {
     display: flex;
-    align-items: center;
+    flex-direction: column;
     gap: 4px;
-    flex-wrap: wrap;
+    flex: 1;
 }
 
 .item-menu {
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 8px 14px;
+    gap: 10px;
+    padding: 10px 12px;
     border-radius: 8px;
     color: rgba(255, 255, 255, 0.85);
     text-decoration: none;
     font-size: 14px;
     font-weight: 500;
-    white-space: nowrap;
 }
 
 .item-menu:hover {
@@ -87,10 +95,13 @@ body {
     font-weight: 600;
 }
 
-.perfil-topbar {
+.rodape-sidebar {
     display: flex;
     align-items: center;
     gap: 10px;
+    padding: 12px 8px 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.15);
+    margin-top: 16px;
 }
 
 .avatar-usuario {
@@ -103,26 +114,25 @@ body {
     justify-content: center;
     font-size: 12px;
     font-weight: 700;
-    flex-shrink: 0;
 }
 
-.perfil-topbar strong {
+.rodape-sidebar strong {
     display: block;
     font-size: 13px;
 }
 
-.perfil-topbar span {
+.rodape-sidebar span {
     display: block;
     font-size: 11px;
     opacity: 0.75;
 }
 
-/* ---------- Conteúdo principal (centralizado) ---------- */
+/* ---------- Conteúdo principal ---------- */
 
 .conteudo {
+    flex: 1;
+    padding: 32px 40px;
     max-width: 1100px;
-    margin: 0 auto;
-    padding: 32px 24px 48px;
 }
 
 .topo-conteudo h1 {
@@ -189,7 +199,6 @@ body {
     border: 1px solid var(--borda);
     border-radius: 12px;
     overflow: hidden;
-    table-layout: fixed;
 }
 
 .tabela-usuarios th,
@@ -198,9 +207,6 @@ body {
     padding: 12px 16px;
     border-bottom: 1px solid var(--borda);
     font-size: 14px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
 }
 
 .tabela-usuarios th {
@@ -215,19 +221,6 @@ body {
     border-bottom: none;
 }
 
-/* Coluna de status: largura fixa, não deixa o badge empurrar as outras colunas */
-.tabela-usuarios th:nth-last-child(2),
-.tabela-usuarios td:nth-last-child(2) {
-    width: 110px;
-}
-
-/* Última coluna (ações): largura fixa e alinhada à direita */
-.tabela-usuarios th:last-child,
-.tabela-usuarios td:last-child {
-    width: 90px;
-    text-align: right;
-}
-
 /* ---------- Badge de status ---------- */
 
 .badge-status {
@@ -236,7 +229,6 @@ body {
     border-radius: 999px;
     font-size: 12px;
     font-weight: 600;
-    white-space: nowrap;
 }
 
 .badge-ativo {
@@ -251,6 +243,12 @@ body {
 
 /* ---------- Ações da linha ---------- */
 
+.coluna-acoes {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
 .coluna-acoes a {
     color: var(--marca);
     text-decoration: none;
@@ -258,11 +256,24 @@ body {
     font-size: 13px;
 }
 
+.form-excluir {
+    display: inline;
+}
+
+.form-excluir button {
+    background: none;
+    border: none;
+    color: var(--vermelho);
+    font-weight: 600;
+    cursor: pointer;
+    padding: 0;
+    font-size: 13px;
+}
+
 .linha-vazia {
     text-align: center;
     color: var(--texto-secundario);
     padding: 24px;
-    white-space: normal;
 }
 
 /* ---------- Botões ---------- */
@@ -294,7 +305,6 @@ body {
 
 .cartao-form {
     max-width: 480px;
-    margin: 0 auto;
     background: #fff;
     border: 1px solid var(--borda);
     border-radius: 12px;
@@ -335,77 +345,4 @@ body {
     justify-content: flex-end;
     gap: 12px;
     margin-top: 24px;
-}
-
-.campo-checkbox {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    text-transform: none;
-    font-weight: 500;
-    margin-top: 20px;
-}
-
-.campo-checkbox input {
-    width: auto;
-}
-
-/* ---------- Zona de risco (excluir/anonimizar) ---------- */
-
-.zona-perigo {
-    margin-top: 32px;
-    padding-top: 24px;
-    border-top: 1px solid var(--borda);
-}
-
-.zona-perigo h2 {
-    font-size: 14px;
-    color: var(--vermelho);
-    margin: 0 0 12px;
-}
-
-.linha-zona-perigo {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 16px;
-    padding: 12px 0;
-}
-
-.linha-zona-perigo strong {
-    display: block;
-    font-size: 14px;
-}
-
-.linha-zona-perigo p {
-    margin: 2px 0 0;
-    font-size: 12px;
-    color: var(--texto-secundario);
-    max-width: 320px;
-    white-space: normal;
-}
-
-.botao-perigo {
-    background: var(--vermelho-fundo);
-    color: var(--vermelho);
-    border: 1px solid var(--vermelho);
-    border-radius: 8px;
-    padding: 8px 14px;
-    font-weight: 600;
-    font-size: 13px;
-    cursor: pointer;
-    white-space: nowrap;
-}
-
-/* ---------- Responsivo: telas menores empilham a barra superior ---------- */
-
-@media (max-width: 900px) {
-    .topbar {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-
-    .grade-cards {
-        grid-template-columns: repeat(2, 1fr);
-    }
 }

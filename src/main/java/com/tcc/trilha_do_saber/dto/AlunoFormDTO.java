@@ -3,6 +3,7 @@ package com.tcc.trilha_do_saber.dto;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 
+// Dados do formulario de aluno. O mesmo DTO serve pra criar e editar.
 public class AlunoFormDTO {
 
     private Long id;
@@ -14,15 +15,15 @@ public class AlunoFormDTO {
     @Email(message = "Email inválido")
     private String email;
 
-    @NotBlank(message = "RGM é obrigatório")
-    private String rgm;
+    private String senha; // em branco na edição = mantém a senha atual
+
+    @NotBlank(message = "RA é obrigatório")
+    private String ra;
 
     @NotBlank(message = "Curso é obrigatório")
     private String curso;
 
     private int semestre;
-
-    private boolean ativo;
 
     public Long getId(){ return id; }
     public void setId(Long id){ this.id = id; }
@@ -33,15 +34,15 @@ public class AlunoFormDTO {
     public String getEmail(){ return email; }
     public void setEmail(String email){ this.email = email; }
 
-    public String getRgm(){ return rgm; }
-    public void setRgm(String rgm){ this.rgm = rgm; }
+    public String getSenha(){ return senha; }
+    public void setSenha(String senha){ this.senha = senha; }
+
+    public String getRa(){ return ra; }
+    public void setRa(String ra){ this.ra = ra; }
 
     public String getCurso(){ return curso; }
     public void setCurso(String curso){ this.curso = curso; }
 
     public int getSemestre(){ return semestre; }
     public void setSemestre(int semestre){ this.semestre = semestre; }
-
-    public boolean isAtivo(){ return ativo; }
-    public void setAtivo(boolean ativo){ this.ativo = ativo; }
 }

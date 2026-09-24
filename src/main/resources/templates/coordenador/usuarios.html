@@ -4,136 +4,147 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Usuários</title>
-  <link rel="stylesheet" th:href="@{/css/painel.css}">
+  <link rel="stylesheet" th:href="@{/css/coordenador.css}">
 </head>
 <body>
 
-<header class="topbar">
-  <div class="marca-topbar">
-    <span class="logo-marca">📘</span>
-    <div>
-      <strong>Trilha do Saber</strong>
-      <span>Coordenador</span>
+<div class="app-shell">
+
+  <aside class="sidebar">
+    <div class="marca-sidebar">
+      <span class="logo-marca">📘</span>
+      <div>
+        <strong>Trilha do Saber</strong>
+        <span>Coordenador</span>
+      </div>
     </div>
-  </div>
 
-  <nav class="menu-topbar">
-    <a th:href="@{/coordenador/inicio}" class="item-menu"><span>🏠</span> Início</a>
-    <a th:href="@{/coordenador/usuarios}" class="item-menu ativo"><span>👥</span> Usuários</a>
-    <a href="#" class="item-menu"><span>🎓</span> Turmas</a>
-    <a href="#" class="item-menu"><span>📊</span> Relatórios</a>
-    <a href="#" class="item-menu"><span>⚙️</span> Minha Conta</a>
-  </nav>
+    <nav class="menu-sidebar">
+      <a href="#" class="item-menu"><span>🏠</span> Início</a>
+      <a th:href="@{/coordenador/usuarios}" class="item-menu ativo"><span>👥</span> Usuários</a>
+      <a href="#" class="item-menu"><span>🎓</span> Turmas</a>
+      <a href="#" class="item-menu"><span>📊</span> Relatórios</a>
+      <a href="#" class="item-menu"><span>⚙️</span> Minha Conta</a>
+    </nav>
 
-  <div class="perfil-topbar">
-    <div class="avatar-usuario">CO</div>
-    <div>
-      <strong th:text="${usuarioLogado != null} ? ${usuarioLogado.nome} : 'Coordenação'">Coordenação</strong>
-      <span th:text="${usuarioLogado != null} ? ${usuarioLogado.email} : 'coordenacao@umc.br'">coordenacao@umc.br</span>
+    <div class="rodape-sidebar">
+      <div class="avatar-usuario">CO</div>
+      <div>
+        <strong>Coordenação</strong>
+        <span>coordenacao@umc.br</span>
+      </div>
     </div>
-    <a th:href="@{/logout}" class="link-sair">Sair</a>
-  </div>
-</header>
+  </aside>
 
-<main class="conteudo">
+  <main class="conteudo">
 
-  <header class="topo-conteudo">
-    <h1>Usuários</h1>
-    <p class="subtitulo-pagina">Gerencie os cadastros de alunos e professores da plataforma</p>
-  </header>
+    <header class="topo-conteudo">
+      <h1>Usuários</h1>
+      <p class="subtitulo-pagina">Gerencie os cadastros de alunos e professores da plataforma</p>
+    </header>
 
-  <section class="grade-cards">
-    <div class="card-estatistica">
-      <span class="rotulo-card">Alunos cadastrados</span>
-      <strong class="numero-card" th:text="${alunos.size()}"></strong>
+    <section class="grade-cards">
+      <div class="card-estatistica">
+        <span class="rotulo-card">Alunos cadastrados</span>
+        <strong class="numero-card" th:text="${alunos.size()}"></strong>
+      </div>
+      <div class="card-estatistica">
+        <span class="rotulo-card">Professores cadastrados</span>
+        <strong class="numero-card" th:text="${professores.size()}"></strong>
+      </div>
+      <div class="card-estatistica">
+        <span class="rotulo-card">Alunos ativos</span>
+        <strong class="numero-card" th:text="${alunos.?[ativo].size()}"></strong>
+      </div>
+      <div class="card-estatistica">
+        <span class="rotulo-card">Professores ativos</span>
+        <strong class="numero-card" th:text="${professores.?[ativo].size()}"></strong>
+      </div>
+    </section>
+
+    <div class="cabecalho-usuarios">
+      <h2>Alunos</h2>
+      <a th:href="@{/coordenador/usuarios/novo(tipo='aluno')}" class="botao-primario">+ Novo aluno</a>
     </div>
-    <div class="card-estatistica">
-      <span class="rotulo-card">Professores cadastrados</span>
-      <strong class="numero-card" th:text="${professores.size()}"></strong>
+
+    <table class="tabela-usuarios">
+      <thead>
+      <tr>
+        <th>Nome</th>
+        <th>Email</th>
+        <th>RA</th>
+        <th>Curso</th>
+        <th>Semestre</th>
+        <th>Status</th>
+        <th></th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr th:each="aluno : ${alunos}">
+        <td th:text="${aluno.nome}"></td>
+        <td th:text="${aluno.email}"></td>
+        <td th:text="${aluno.ra}"></td>
+        <td th:text="${aluno.curso}"></td>
+        <td th:text="${aluno.semestre}"></td>
+        <td>
+                    <span class="badge-status" th:classappend="${aluno.ativo} ? 'badge-ativo' : 'badge-inativo'"
+                          th:text="${aluno.ativo} ? 'Ativo' : 'Inativo'"></span>
+        </td>
+        <td class="coluna-acoes">
+          <a th:href="@{/coordenador/usuarios/aluno/{id}/editar(id=${aluno.id})}">Editar</a>
+          <form th:action="@{/coordenador/usuarios/aluno/{id}/excluir(id=${aluno.id})}" method="post" class="form-excluir">
+            <button type="submit" onclick="return confirm('Excluir este aluno?');">Excluir</button>
+          </form>
+        </td>
+      </tr>
+      <tr th:if="${alunos.isEmpty()}">
+        <td colspan="7" class="linha-vazia">Nenhum aluno cadastrado</td>
+      </tr>
+      </tbody>
+    </table>
+
+    <div class="cabecalho-usuarios">
+      <h2>Professores</h2>
+      <a th:href="@{/coordenador/usuarios/novo(tipo='professor')}" class="botao-primario">+ Novo professor</a>
     </div>
-    <div class="card-estatistica">
-      <span class="rotulo-card">Alunos ativos</span>
-      <strong class="numero-card" th:text="${alunos.?[ativo].size()}"></strong>
-    </div>
-    <div class="card-estatistica">
-      <span class="rotulo-card">Professores ativos</span>
-      <strong class="numero-card" th:text="${professores.?[ativo].size()}"></strong>
-    </div>
-  </section>
 
-  <div class="cabecalho-usuarios">
-    <h2>Alunos</h2>
-  </div>
+    <table class="tabela-usuarios">
+      <thead>
+      <tr>
+        <th>Nome</th>
+        <th>Email</th>
+        <th>Registro</th>
+        <th>Disciplina</th>
+        <th>Status</th>
+        <th></th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr th:each="professor : ${professores}">
+        <td th:text="${professor.nome}"></td>
+        <td th:text="${professor.email}"></td>
+        <td th:text="${professor.registroProfissional}"></td>
+        <td th:text="${professor.disciplina}"></td>
+        <td>
+                    <span class="badge-status" th:classappend="${professor.ativo} ? 'badge-ativo' : 'badge-inativo'"
+                          th:text="${professor.ativo} ? 'Ativo' : 'Inativo'"></span>
+        </td>
+        <td class="coluna-acoes">
+          <a th:href="@{/coordenador/usuarios/professor/{id}/editar(id=${professor.id})}">Editar</a>
+          <form th:action="@{/coordenador/usuarios/professor/{id}/excluir(id=${professor.id})}" method="post" class="form-excluir">
+            <button type="submit" onclick="return confirm('Excluir este professor?');">Excluir</button>
+          </form>
+        </td>
+      </tr>
+      <tr th:if="${professores.isEmpty()}">
+        <td colspan="6" class="linha-vazia">Nenhum professor cadastrado</td>
+      </tr>
+      </tbody>
+    </table>
 
-  <table class="tabela-usuarios">
-    <thead>
-    <tr>
-      <th>Nome</th>
-      <th>Email</th>
-      <th>RGM</th>
-      <th>Curso</th>
-      <th>Semestre</th>
-      <th>Status</th>
-      <th></th>
-    </tr>
-    </thead>
-    <tbody>
-    <tr th:each="aluno : ${alunos}">
-      <td th:text="${aluno.nome}"></td>
-      <td th:text="${aluno.email}"></td>
-      <td th:text="${aluno.rgm}"></td>
-      <td th:text="${aluno.curso}"></td>
-      <td th:text="${aluno.semestre}"></td>
-      <td>
-                <span class="badge-status" th:classappend="${aluno.ativo} ? 'badge-ativo' : 'badge-inativo'"
-                      th:text="${aluno.ativo} ? 'Ativo' : (${aluno.isExcluido()} ? 'Excluído' : 'Pendente')"></span>
-      </td>
-      <td class="coluna-acoes">
-        <a th:href="@{/coordenador/usuarios/aluno/{id}/editar(id=${aluno.id})}">Editar</a>
-      </td>
-    </tr>
-    <tr th:if="${alunos.isEmpty()}">
-      <td colspan="7" class="linha-vazia">Nenhum aluno cadastrado</td>
-    </tr>
-    </tbody>
-  </table>
+  </main>
 
-  <div class="cabecalho-usuarios">
-    <h2>Professores</h2>
-  </div>
-
-  <table class="tabela-usuarios">
-    <thead>
-    <tr>
-      <th>Nome</th>
-      <th>Email</th>
-      <th>Registro</th>
-      <th>Disciplina</th>
-      <th>Status</th>
-      <th></th>
-    </tr>
-    </thead>
-    <tbody>
-    <tr th:each="professor : ${professores}">
-      <td th:text="${professor.nome}"></td>
-      <td th:text="${professor.email}"></td>
-      <td th:text="${professor.registroProfissional}"></td>
-      <td th:text="${professor.disciplina}"></td>
-      <td>
-                <span class="badge-status" th:classappend="${professor.ativo} ? 'badge-ativo' : 'badge-inativo'"
-                      th:text="${professor.ativo} ? 'Ativo' : (${professor.isExcluido()} ? 'Excluído' : 'Pendente')"></span>
-      </td>
-      <td class="coluna-acoes">
-        <a th:href="@{/coordenador/usuarios/professor/{id}/editar(id=${professor.id})}">Editar</a>
-      </td>
-    </tr>
-    <tr th:if="${professores.isEmpty()}">
-      <td colspan="6" class="linha-vazia">Nenhum professor cadastrado</td>
-    </tr>
-    </tbody>
-  </table>
-
-</main>
+</div>
 
 </body>
 </html>
