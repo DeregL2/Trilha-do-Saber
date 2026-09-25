@@ -54,7 +54,7 @@ public class LogAuditoria {
 
 
     public String montarConteudoParaHash(){
-        return (dataHora == null ? "" : dataHora.toString())
+        return (dataHora == null ? "" : dataHora.truncatedTo(java.time.temporal.ChronoUnit.SECONDS).toString())
                 + "|" + (usuarioId == null ? "" : usuarioId)
                 + "|" + (usuarioNome == null ? "" : usuarioNome)
                 + "|" + (usuarioTipo == null ? "" : usuarioTipo)
