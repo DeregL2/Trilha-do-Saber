@@ -1,21 +1,29 @@
 package com.tcc.trilha_do_saber.service;
 
-import jakarta.mail.internet.MimeMessage;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestClient;
+import org.springframework.web.client.RestClientException;
+
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 @Service
 public class EmailService {
 
-    private final JavaMailSender mailSender;
+    private final RestClient restClient;
     private final String remetente;
+    private final boolean apiConfigurada;
 
-    public EmailService(JavaMailSender mailSender,
-                        @Value("${mail.remetente:Trilha do Saber <trilhadosaberpfc@gmail.com>}") String remetente){
-        this.mailSender = mailSender;
+    public EmailService(@Value("${resend.api-key:}") String apiKey,
+                        @Value("${resend.from:Trilha do Saber <onboarding@resend.dev>}") String remetente){
+        this.apiConfigurada = apiKey != null && !apiKey.isBlank();
         this.remetente = remetente;
+        this.restClient = RestClient.builder()
+                .baseUrl("https://api.resend.com")
+                .defaultHeader("Authorization", "Bearer " + apiKey)
+                .build();
     }
     public boolean enviarCodigoVerificacao(String nomeDestinatario, String emailDestinatario, String codigo){
         String assunto = "Seu código de verificação - Trilha do Saber";
@@ -28,18 +36,26 @@ public class EmailService {
                 </div>
                 """.formatted(nomeDestinatario, codigo);
 
-        try {
-            MimeMessage mensagem = mailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(mensagem, "UTF-8");
-            helper.setFrom(remetente);
-            helper.setTo(emailDestinatario);
-            helper.setSubject(assunto);
-            helper.setText(html, true);
+        if (!apiConfigurada) {
+            System.out.println("[Resend não configurado] Código de verificação para " + emailDestinatario + ": " + codigo);
+            return false;
+        }
 
-            mailSender.send(mensagem);
+        Map<String, Object> corpo = new LinkedHashMap<>();
+        corpo.put("from", remetente);
+        corpo.put("to", List.of(emailDestinatario));
+        corpo.put("subject", assunto);
+        corpo.put("html", html);
+
+        try {
+            restClient.post()
+                    .uri("/emails")
+                    .body(corpo)
+                    .retrieve()
+                    .toBodilessEntity();
             return true;
-        } catch (Exception e) {
-            System.out.println("[Falha ao enviar e-mail: " + e.getMessage() + "] Código de verificação para " + emailDestinatario + ": " + codigo);
+        } catch (RestClientException e) {
+            System.out.println("[Falha ao enviar pelo Resend: " + e.getMessage() + "] Código de verificação para " + emailDestinatario + ": " + codigo);
             return false;
         }
     }

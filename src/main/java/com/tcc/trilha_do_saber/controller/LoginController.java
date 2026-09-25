@@ -47,8 +47,12 @@ public class LoginController {
 
             String codigo = gerarCodigo();
             Instant expiraEm = Instant.now().plus(10, ChronoUnit.MINUTES);
-            boolean emailEnviado = emailService.enviarCodigoVerificacao(usuario.getNome(), usuario.getEmail(), codigo);
-            session.setAttribute("verificacao2FA", new VerificacaoSessaoDTO(usuario, codigo, expiraEm, emailEnviado));
+
+            boolean emailEnviado = emailService.enviarCodigoVerificacao(
+                    usuario.getNome(), usuario.getEmail(), codigo);
+
+            session.setAttribute("verificacao",
+                    new VerificacaoSessaoDTO(usuario, codigo, expiraEm, emailEnviado));
 
             return "redirect:/verificacao";
         } catch (IllegalArgumentException e) {

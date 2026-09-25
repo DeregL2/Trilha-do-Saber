@@ -31,6 +31,7 @@
             <strong th:text="${usuarioLogado != null} ? ${usuarioLogado.nome} : 'Admin Sistema'">Admin Sistema</strong>
             <span th:text="${usuarioLogado != null} ? ${usuarioLogado.email} : 'adm@umc.br'">adm@umc.br</span>
         </div>
+        <a th:href="@{/cadastro/termos-lgpd}" target="_blank" class="link-sair">Termo de Uso</a>
         <a th:href="@{/logout}" class="link-sair">Sair</a>
     </div>
 </header>

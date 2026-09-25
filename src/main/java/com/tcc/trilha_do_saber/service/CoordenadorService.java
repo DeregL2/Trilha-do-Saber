@@ -1,11 +1,11 @@
 package com.tcc.trilha_do_saber.service;
 
 import com.tcc.trilha_do_saber.dto.CadastroCoordenadorDTO;
+import com.tcc.trilha_do_saber.dto.CoordenadorFormDTO;
 import com.tcc.trilha_do_saber.model.Coordenador;
 import com.tcc.trilha_do_saber.repository.CoordenadorRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import com.tcc.trilha_do_saber.dto.CoordenadorFormDTO;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -57,23 +57,6 @@ public class CoordenadorService {
         return coordenadorRepository.save(coordenador);
     }
 
-    public void anonimizar(Long id){
-        Coordenador coordenador = buscarPorId(id);
-
-        coordenador.setNome("Usuário removido");
-        coordenador.setEmail("removido-" + coordenador.getId() + "@anonimo.local");
-        coordenador.setSenha(null);
-        coordenador.setRegistroFuncional(null);
-        coordenador.setCurso(null);
-        coordenador.setAtivo(false);
-        coordenador.setAnonimizado(true);
-        if (coordenador.getDataExclusao() == null) {
-            coordenador.setDataExclusao(LocalDateTime.now());
-        }
-
-        coordenadorRepository.save(coordenador);
-    }
-
     public void ativar(Long id){
         Coordenador coordenador = buscarPorId(id);
         coordenador.setAtivo(true);
@@ -90,6 +73,23 @@ public class CoordenadorService {
         Coordenador coordenador = buscarPorId(id);
         coordenador.setAtivo(false);
         coordenador.setDataExclusao(LocalDateTime.now());
+        coordenadorRepository.save(coordenador);
+    }
+
+    public void anonimizar(Long id){
+        Coordenador coordenador = buscarPorId(id);
+
+        coordenador.setNome("Usuário removido");
+        coordenador.setEmail("removido-" + coordenador.getId() + "@anonimo.local");
+        coordenador.setSenha(null);
+        coordenador.setRegistroFuncional(null);
+        coordenador.setCurso(null);
+        coordenador.setAtivo(false);
+        coordenador.setAnonimizado(true);
+        if (coordenador.getDataExclusao() == null) {
+            coordenador.setDataExclusao(LocalDateTime.now());
+        }
+
         coordenadorRepository.save(coordenador);
     }
 }

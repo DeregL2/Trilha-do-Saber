@@ -25,13 +25,11 @@ public class VerificacaoController {
     }
 
     @GetMapping("/verificacao")
-    public String tela(HttpSession session, Model model){
-        VerificacaoSessaoDTO verificacao = (VerificacaoSessaoDTO) session.getAttribute("verificacao2FA");
+    public String tela(HttpSession session, Model model) {
+        VerificacaoSessaoDTO verificacao = (VerificacaoSessaoDTO) session.getAttribute("verificacao");
         if (verificacao == null) {
             return "redirect:/login";
         }
-        model.addAttribute("email", verificacao.getUsuario().getEmail());
-        // Se o envio por e-mail falhou (ex.: Gmail fora do ar), mostra o codigo na tela como alternativa.
         if (!verificacao.isEmailEnviado()) {
             model.addAttribute("codigoGerado", verificacao.getCodigo());
         }
@@ -41,29 +39,29 @@ public class VerificacaoController {
     @PostMapping("/verificacao")
     public String confirmar(@RequestParam String d1, @RequestParam String d2, @RequestParam String d3,
                             @RequestParam String d4, @RequestParam String d5, @RequestParam String d6,
-                            HttpSession session, Model model){
-
-        VerificacaoSessaoDTO verificacao = (VerificacaoSessaoDTO) session.getAttribute("verificacao2FA");
+                            HttpSession session, Model model) {
+        VerificacaoSessaoDTO verificacao = (VerificacaoSessaoDTO) session.getAttribute("verificacao");
         if (verificacao == null) {
             return "redirect:/login";
         }
 
-        String codigoDigitado = d1 + d2 + d3 + d4 + d5 + d6;
-
-        if (verificacao.expirado()) {
-            session.removeAttribute("verificacao2FA");
-            model.addAttribute("erroVerificacao", "Código expirado. Faça login novamente.");
-            return "redirect:/login";
+        if (Instant.now().isAfter(verificacao.getExpiraEm())) {
+            model.addAttribute("erroVerificacao", "Código expirado. Clique em \"Reenviar código\".");
+            return "verificacao";
         }
 
-        if (!verificacao.getCodigo().equals(codigoDigitado)) {
-            model.addAttribute("email", verificacao.getUsuario().getEmail());
-            model.addAttribute("erroVerificacao", "Código inválido. Confira e tente novamente.");
+        String codigoDigitado = d1 + d2 + d3 + d4 + d5 + d6;
+
+        if (!codigoDigitado.equals(verificacao.getCodigo())) {
+            if (!verificacao.isEmailEnviado()) {
+                model.addAttribute("codigoGerado", verificacao.getCodigo());
+            }
+            model.addAttribute("erroVerificacao", "Código incorreto. Tente novamente.");
             return "verificacao";
         }
 
         UsuarioSessaoDTO usuario = verificacao.getUsuario();
-        session.removeAttribute("verificacao2FA");
+        session.removeAttribute("verificacao");
         session.setAttribute("usuarioLogado", usuario);
 
         return "redirect:" + paginaInicial(usuario.getTipo());
@@ -71,20 +69,21 @@ public class VerificacaoController {
 
     @PostMapping("/verificacao/reenviar")
     public String reenviar(HttpSession session, Model model){
-        VerificacaoSessaoDTO verificacao = (VerificacaoSessaoDTO) session.getAttribute("verificacao2FA");
+        VerificacaoSessaoDTO verificacao = (VerificacaoSessaoDTO) session.getAttribute("verificacao");
         if (verificacao == null) {
             return "redirect:/login";
         }
 
+        UsuarioSessaoDTO usuario = verificacao.getUsuario();
         String novoCodigo = gerarCodigo();
         Instant novaExpiracao = Instant.now().plus(10, ChronoUnit.MINUTES);
-        UsuarioSessaoDTO usuario = verificacao.getUsuario();
 
         boolean emailEnviado = emailService.enviarCodigoVerificacao(usuario.getNome(), usuario.getEmail(), novoCodigo);
-        session.setAttribute("verificacao2FA", new VerificacaoSessaoDTO(usuario, novoCodigo, novaExpiracao, emailEnviado));
 
-        model.addAttribute("email", usuario.getEmail());
-        model.addAttribute("codigoReenviado", true);
+        session.setAttribute("verificacao",
+                new VerificacaoSessaoDTO(usuario, novoCodigo, novaExpiracao, emailEnviado));
+
+        model.addAttribute("mensagemReenvio", "Código reenviado.");
         if (!emailEnviado) {
             model.addAttribute("codigoGerado", novoCodigo);
         }
