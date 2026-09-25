@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Início</title>
+    <link rel="stylesheet" th:href="@{/css/painel.css}">
+</head>
+<body>
+
+<header class="topbar">
+    <div class="marca-topbar">
+        <span class="logo-marca">📘</span>
+        <div>
+            <strong>Trilha do Saber</strong>
+            <span>Coordenador</span>
+        </div>
+    </div>
+
+    <nav class="menu-topbar">
+        <a th:href="@{/coordenador/inicio}" class="item-menu ativo"><span>🏠</span> Início</a>
+        <a th:href="@{/coordenador/usuarios}" class="item-menu"><span>👥</span> Usuários</a>
+        <a href="#" class="item-menu"><span>🎓</span> Turmas</a>
+        <a href="#" class="item-menu"><span>📊</span> Relatórios</a>
+        <a href="#" class="item-menu"><span>⚙️</span> Minha Conta</a>
+    </nav>
+
+    <div class="perfil-topbar">
+        <div class="avatar-usuario">CO</div>
+        <div>
+            <strong th:text="${usuario.nome}">Coordenação</strong>
+            <span th:text="${usuario.email}">coordenacao@umc.br</span>
+        </div>
+        <a th:href="@{/logout}" class="link-sair">Sair</a>
+    </div>
+</header>
+
+<main class="conteudo">
+
+    <header class="topo-conteudo">
+        <h1>Início</h1>
+        <p class="subtitulo-pagina">Visão geral da coordenação do curso</p>
+    </header>
+
+    <section class="grade-cards">
+        <div class="card-estatistica">
+            <span class="rotulo-card">Alunos cadastrados</span>
+            <strong class="numero-card">-</strong>
+        </div>
+        <div class="card-estatistica">
+            <span class="rotulo-card">Professores cadastrados</span>
+            <strong class="numero-card">-</strong>
+        </div>
+        <div class="card-estatistica">
+            <span class="rotulo-card">Cadastros pendentes</span>
+            <strong class="numero-card">-</strong>
+        </div>
+        <div class="card-estatistica">
+            <span class="rotulo-card">Simulados no período</span>
+            <strong class="numero-card">-</strong>
+        </div>
+    </section>
+
+    <div class="cabecalho-usuarios">
+        <h2>Acesso rápido</h2>
+    </div>
+    <a th:href="@{/coordenador/usuarios}" class="botao-primario">Gerenciar usuários</a>
+
+</main>
+
+</body>
+</html>

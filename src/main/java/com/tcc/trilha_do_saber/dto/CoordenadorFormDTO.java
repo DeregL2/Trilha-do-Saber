@@ -3,7 +3,7 @@ package com.tcc.trilha_do_saber.dto;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 
-public class ProfessorFormDTO {
+public class CoordenadorFormDTO {
 
     private Long id;
 
@@ -14,10 +14,11 @@ public class ProfessorFormDTO {
     @Email(message = "Email inválido")
     private String email;
 
-    @NotBlank(message = "Registro profissional é obrigatório")
-    private String registroProfissional;
+    @NotBlank(message = "Registro de funcionário é obrigatório")
+    private String registroFuncional;
 
-    private String disciplina;
+    @NotBlank(message = "Curso é obrigatório")
+    private String curso;
 
     private boolean ativo;
 
@@ -30,12 +31,13 @@ public class ProfessorFormDTO {
     public String getEmail(){ return email; }
     public void setEmail(String email){ this.email = email; }
 
-    public String getRegistroProfissional(){ return registroProfissional; }
-    public void setRegistroProfissional(String registroProfissional){ this.registroProfissional = registroProfissional; }
+    public String getRegistroFuncional(){ return registroFuncional; }
+    public void setRegistroFuncional(String registroFuncional){ this.registroFuncional = registroFuncional; }
 
-    public String getDisciplina(){ return disciplina; }
-    public void setDisciplina(String disciplina){ this.disciplina = disciplina; }
+    public String getCurso(){ return curso; }
+    public void setCurso(String curso){ this.curso = curso; }
 
     public boolean isAtivo(){ return ativo; }
     public void setAtivo(boolean ativo){ this.ativo = ativo; }
 }
+

@@ -6,8 +6,8 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.MappedSuperclass;
 
-// Campos comuns de Aluno e Professor. @MappedSuperclass nao vira tabela,
-// so evita repetir esses campos nas duas entidades.
+import java.time.LocalDateTime;
+
 @MappedSuperclass
 public abstract class Usuario {
 
@@ -24,7 +24,14 @@ public abstract class Usuario {
 
     private boolean ativo;
 
-    // Construtor JPA
+    private LocalDateTime dataExclusao;
+
+    private boolean anonimizado;
+
+    private boolean consentimentoLgpd;
+
+    private LocalDateTime dataConsentimento;
+
     public Usuario(){
     }
 
@@ -32,7 +39,7 @@ public abstract class Usuario {
         this.nome = nome;
         this.email = email;
         this.senha = senha;
-        this.ativo = true;
+        this.ativo = false;
     }
 
     public Long getId(){
@@ -55,8 +62,6 @@ public abstract class Usuario {
         return ativo;
     }
 
-    // Tem set aqui (diferente das outras entidades) porque o coordenador
-    // precisa editar esses dados depois que o usuario ja foi criado
     public void setNome(String nome){
         this.nome = nome;
     }
@@ -72,4 +77,41 @@ public abstract class Usuario {
     public void setAtivo(boolean ativo){
         this.ativo = ativo;
     }
+
+    public LocalDateTime getDataExclusao(){
+        return dataExclusao;
+    }
+
+    public void setDataExclusao(LocalDateTime dataExclusao){
+        this.dataExclusao = dataExclusao;
+    }
+
+    public boolean isAnonimizado(){
+        return anonimizado;
+    }
+
+    public void setAnonimizado(boolean anonimizado){
+        this.anonimizado = anonimizado;
+    }
+
+    public boolean isExcluido(){
+        return dataExclusao != null;
+    }
+
+    public boolean isConsentimentoLgpd(){
+        return consentimentoLgpd;
+    }
+
+    public void setConsentimentoLgpd(boolean consentimentoLgpd){
+        this.consentimentoLgpd = consentimentoLgpd;
+    }
+
+    public LocalDateTime getDataConsentimento(){
+        return dataConsentimento;
+    }
+
+    public void setDataConsentimento(LocalDateTime dataConsentimento){
+        this.dataConsentimento = dataConsentimento;
+    }
+
 }
