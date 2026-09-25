@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Logs de Auditoria</title>
+    <link rel="stylesheet" th:href="@{/css/painel.css}">
+</head>
+<body>
+
+<header class="topbar">
+    <div class="marca-topbar">
+        <span class="logo-marca">📘</span>
+        <div>
+            <strong>Trilha do Saber</strong>
+            <span>Administrador</span>
+        </div>
+    </div>
+
+    <nav class="menu-topbar">
+        <a th:href="@{/admin/inicio}" class="item-menu"><span>🏠</span> Início</a>
+        <a href="#" class="item-menu"><span>🗄️</span> Banco de Questões</a>
+        <a href="#" class="item-menu"><span>📋</span> Simulados</a>
+        <a th:href="@{/admin/coordenadores}" class="item-menu"><span>👥</span> Usuários</a>
+        <a th:href="" class="item-menu ativo"><span>🛡️</span> Logs de Auditoria</a>
+    </nav>
+
+    <div class="perfil-topbar">
+        <div class="avatar-usuario">AD</div>
+        <div>
+            <strong th:text="${usuarioLogado.nome}">Admin Sistema</strong>
+            <span th:text="${usuarioLogado.email}">adm@umc.br</span>
+        </div>
+        <a th:href="@{/logout}" class="link-sair">Sair</a>
+    </div>
+</header>
+
+<main class="conteudo">
+
+    <header class="topo-conteudo">
+        <h1>Logs de Auditoria</h1>
+        <p class="subtitulo-pagina">Registro de acessos e ações do sistema, conforme Marco Civil da Internet e LGPD</p>
+    </header>
+
+    <section class="grade-cards">
+        <div class="card-estatistica">
+            <span class="rotulo-card">Total de registros</span>
+            <strong class="numero-card" th:text="${logs.size()}"></strong>
+        </div>
+        <div class="card-estatistica">
+            <span class="rotulo-card">Íntegros</span>
+            <strong class="numero-card" th:text="${logs.?[integro].size()}"></strong>
+        </div>
+        <div class="card-estatistica">
+            <span class="rotulo-card">Com adulteração detectada</span>
+            <strong class="numero-card" th:text="${logs.?[!integro].size()}"></strong>
+        </div>
+    </section>
+
+    <div class="cabecalho-usuarios">
+        <h2>Registros</h2>
+    </div>
+
+    <table class="tabela-usuarios">
+        <thead>
+        <tr>
+            <th>Data/Hora</th>
+            <th>Usuário</th>
+            <th>Tipo</th>
+            <th>Ação</th>
+            <th>Entidade</th>
+            <th>IP</th>
+            <th>Duração</th>
+            <th>Integridade</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="log : ${logs}">
+            <td th:text="${#temporals.format(log.dataHora, 'dd/MM/yyyy HH:mm:ss')}"></td>
+            <td th:text="${log.usuarioNome}"></td>
+            <td th:text="${log.usuarioTipo}"></td>
+            <td th:text="${log.acao}"></td>
+            <td th:text="${log.entidadeTipo} + (${log.entidadeId} != null ? (' #' + ${log.entidadeId}) : '')"></td>
+            <td th:text="${log.ip} != null ? ${log.ip} : '-'"></td>
+            <td th:text="${log.duracaoMs} != null ? (${log.duracaoMs} + ' ms') : '-'"></td>
+            <td>
+                <span class="badge-status" th:classappend="${log.integro} ? 'badge-ativo' : 'badge-inativo'"
+                      th:text="${log.integro} ? 'Íntegro' : 'Adulterado'"></span>
+            </td>
+        </tr>
+        <tr th:if="${logs.isEmpty()}">
+            <td colspan="8" class="linha-vazia">Nenhum registro de auditoria ainda</td>
+        </tr>
+        </tbody>
+    </table>
+
+</main>
+
+</body>
+</html>

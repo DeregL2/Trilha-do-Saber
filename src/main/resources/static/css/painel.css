@@ -1,0 +1,426 @@
+:root {
+    --marca: #6C4CE8;
+    --marca-clara: #EEE9FF;
+    --marca-fundo: #F5F2FF;
+    --texto: #202124;
+    --texto-secundario: #5F6368;
+    --borda: #E4E7EC;
+    --fundo: #f5f6fa;
+    --verde: #22C55E;
+    --verde-fundo: #F0FDF4;
+    --vermelho: #EF4444;
+    --vermelho-fundo: #FEF2F2;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: "Inter", system-ui, sans-serif;
+    background: var(--fundo);
+    color: var(--texto);
+}
+
+/* ---------- Barra superior ---------- */
+
+.topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    background: var(--marca);
+    color: #fff;
+    padding: 14px 32px;
+    flex-wrap: wrap;
+}
+
+.marca-topbar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.logo-marca {
+    font-size: 22px;
+}
+
+.marca-topbar strong {
+    display: block;
+    font-size: 14px;
+}
+
+.marca-topbar span {
+    display: block;
+    font-size: 12px;
+    opacity: 0.75;
+}
+
+.menu-topbar {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-wrap: wrap;
+}
+
+.item-menu {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+    border-radius: 8px;
+    color: rgba(255, 255, 255, 0.85);
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.item-menu:hover {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.item-menu.ativo {
+    background: rgba(255, 255, 255, 0.18);
+    color: #fff;
+    font-weight: 600;
+}
+
+.perfil-topbar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.avatar-usuario {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.perfil-topbar strong {
+    display: block;
+    font-size: 13px;
+}
+
+.perfil-topbar span {
+    display: block;
+    font-size: 11px;
+    opacity: 0.75;
+}
+
+.link-sair {
+    margin-left: 8px;
+    padding-left: 12px;
+    border-left: 1px solid rgba(255, 255, 255, 0.25);
+    color: rgba(255, 255, 255, 0.85);
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.link-sair:hover {
+    color: #fff;
+}
+
+/* ---------- Conteúdo principal (centralizado) ---------- */
+
+.conteudo {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 32px 24px 48px;
+}
+
+.topo-conteudo h1 {
+    margin: 0 0 4px;
+    font-size: 22px;
+}
+
+.subtitulo-pagina {
+    margin: 0;
+    color: var(--texto-secundario);
+    font-size: 14px;
+}
+
+/* ---------- Cards de estatística ---------- */
+
+.grade-cards {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin: 24px 0 8px;
+}
+
+.card-estatistica {
+    background: #fff;
+    border: 1px solid var(--borda);
+    border-radius: 12px;
+    padding: 16px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.rotulo-card {
+    font-size: 12px;
+    color: var(--texto-secundario);
+    font-weight: 600;
+}
+
+.numero-card {
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--marca);
+}
+
+/* ---------- Tabelas ---------- */
+
+.cabecalho-usuarios {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 36px;
+    margin-bottom: 12px;
+}
+
+.cabecalho-usuarios h2 {
+    font-size: 18px;
+    margin: 0;
+}
+
+.tabela-usuarios {
+    width: 100%;
+    border-collapse: collapse;
+    background: #fff;
+    border: 1px solid var(--borda);
+    border-radius: 12px;
+    overflow: hidden;
+    table-layout: fixed;
+}
+
+.tabela-usuarios th,
+.tabela-usuarios td {
+    text-align: left;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--borda);
+    font-size: 14px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.tabela-usuarios th {
+    background: var(--marca-fundo);
+    color: var(--texto-secundario);
+    font-weight: 600;
+    font-size: 12px;
+    text-transform: uppercase;
+}
+
+.tabela-usuarios tr:last-child td {
+    border-bottom: none;
+}
+
+/* Coluna de status: largura fixa, não deixa o badge empurrar as outras colunas */
+.tabela-usuarios th:nth-last-child(2),
+.tabela-usuarios td:nth-last-child(2) {
+    width: 110px;
+}
+
+/* Última coluna (ações): largura fixa e alinhada à direita */
+.tabela-usuarios th:last-child,
+.tabela-usuarios td:last-child {
+    width: 90px;
+    text-align: right;
+}
+
+/* ---------- Badge de status ---------- */
+
+.badge-status {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.badge-ativo {
+    background: var(--verde-fundo);
+    color: var(--verde);
+}
+
+.badge-inativo {
+    background: var(--vermelho-fundo);
+    color: var(--vermelho);
+}
+
+/* ---------- Ações da linha ---------- */
+
+.coluna-acoes a {
+    color: var(--marca);
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 13px;
+}
+
+.linha-vazia {
+    text-align: center;
+    color: var(--texto-secundario);
+    padding: 24px;
+    white-space: normal;
+}
+
+/* ---------- Botões ---------- */
+
+.botao-primario {
+    background: var(--marca);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 18px;
+    font-weight: 600;
+    text-decoration: none;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.botao-secundario {
+    background: #fff;
+    color: var(--texto-secundario);
+    border: 1px solid var(--borda);
+    border-radius: 8px;
+    padding: 10px 18px;
+    font-weight: 600;
+    text-decoration: none;
+    font-size: 14px;
+}
+
+/* ---------- Formulário ---------- */
+
+.cartao-form {
+    max-width: 480px;
+    margin: 0 auto;
+    background: #fff;
+    border: 1px solid var(--borda);
+    border-radius: 12px;
+    padding: 32px;
+}
+
+.cartao-form h1 {
+    font-size: 20px;
+    margin-top: 0;
+}
+
+.cartao-form label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--texto-secundario);
+    margin-top: 16px;
+    margin-bottom: 4px;
+}
+
+.cartao-form input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--borda);
+    border-radius: 8px;
+    font-size: 14px;
+}
+
+.erro {
+    display: block;
+    color: var(--vermelho);
+    font-size: 12px;
+    margin-top: 4px;
+}
+
+.acoes-form {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 24px;
+}
+
+.campo-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-transform: none;
+    font-weight: 500;
+    margin-top: 20px;
+}
+
+.campo-checkbox input {
+    width: auto;
+}
+
+/* ---------- Zona de risco (excluir/anonimizar) ---------- */
+
+.zona-perigo {
+    margin-top: 32px;
+    padding-top: 24px;
+    border-top: 1px solid var(--borda);
+}
+
+.zona-perigo h2 {
+    font-size: 14px;
+    color: var(--vermelho);
+    margin: 0 0 12px;
+}
+
+.linha-zona-perigo {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    padding: 12px 0;
+}
+
+.linha-zona-perigo strong {
+    display: block;
+    font-size: 14px;
+}
+
+.linha-zona-perigo p {
+    margin: 2px 0 0;
+    font-size: 12px;
+    color: var(--texto-secundario);
+    max-width: 320px;
+    white-space: normal;
+}
+
+.botao-perigo {
+    background: var(--vermelho-fundo);
+    color: var(--vermelho);
+    border: 1px solid var(--vermelho);
+    border-radius: 8px;
+    padding: 8px 14px;
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+/* ---------- Responsivo: telas menores empilham a barra superior ---------- */
+
+@media (max-width: 900px) {
+    .topbar {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .grade-cards {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
