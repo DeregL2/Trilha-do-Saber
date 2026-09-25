@@ -1,10 +1,73 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
 <head>
-  <meta charset="UTF-8">
-  <title>$Title$</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Entrar</title>
+    <link rel="stylesheet" th:href="@{/css/auth.css}">
 </head>
 <body>
-$END$
+
+<div class="pagina-login">
+
+    <aside class="painel-lateral">
+        <div class="marca-lateral">
+            <span class="logo-marca">🛡️</span>
+            <strong>Trilha do Saber</strong>
+        </div>
+
+        <div>
+            <h1>Prepare-se para o ENADE com confiança</h1>
+            <p class="descricao">Acesse simulados no formato real da prova, identifique suas lacunas e evolua com base em dados de desempenho.</p>
+
+            <ul class="lista-beneficios">
+                <li><span class="marcador">✓</span> Simulados cronometrados no formato ENADE</li>
+                <li><span class="marcador">✓</span> Gabarito comentado por questão</li>
+                <li><span class="marcador">✓</span> Análise de desempenho por competência</li>
+                <li><span class="marcador">✓</span> Material de estudo vinculado aos seus erros</li>
+            </ul>
+        </div>
+
+        <div></div>
+    </aside>
+
+    <div class="painel-formulario">
+        <div class="cartao-login">
+
+            <h1>Acessar plataforma</h1>
+            <p class="subtitulo">Use seu e-mail institucional para entrar.</p>
+
+            <span class="aviso-info" th:if="${param.cadastroEnviado}">Solicitação enviada! Assim que seu acesso for aprovado, você poderá entrar por aqui.</span>
+            <span class="aviso-info" th:if="${param.deslogado}">Você saiu da plataforma.</span>
+            <span class="erro-geral" th:if="${erroLogin}" th:text="${erroLogin}"></span>
+
+            <form method="post" th:action="@{/login}" th:object="${loginDTO}">
+
+                <label>E-mail</label>
+                <input type="email" th:field="*{email}" placeholder="seu@email.edu.br">
+                <span class="erro" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></span>
+
+                <label>Senha</label>
+                <input type="password" th:field="*{senha}" placeholder="••••••••">
+                <span class="erro" th:if="${#fields.hasErrors('senha')}" th:errors="*{senha}"></span>
+
+                <div class="linha-esqueci">
+                    <a href="#">Esqueci minha senha</a>
+                </div>
+
+                <button type="submit" class="botao-primario botao-largo">Entrar</button>
+            </form>
+
+            <p class="rodape-login">
+                Ainda não tem acesso?
+                <a th:href="@{/cadastro/aluno}">Sou aluno</a> ·
+                <a th:href="@{/cadastro/professor}">Sou professor</a> ·
+                <a th:href="@{/cadastro/coordenador}">Sou coordenador</a>
+            </p>
+        </div>
+    </div>
+
+</div>
+
 </body>
 </html>

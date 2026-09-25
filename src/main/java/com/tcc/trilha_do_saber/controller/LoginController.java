@@ -3,8 +3,11 @@ package com.tcc.trilha_do_saber.controller;
 import com.tcc.trilha_do_saber.dto.LoginDTO;
 import com.tcc.trilha_do_saber.dto.UsuarioSessaoDTO;
 import com.tcc.trilha_do_saber.dto.VerificacaoSessaoDTO;
+import com.tcc.trilha_do_saber.model.TipoAcao;
 import com.tcc.trilha_do_saber.service.AuthService;
 import com.tcc.trilha_do_saber.service.EmailService;
+import com.tcc.trilha_do_saber.service.LogAuditoriaService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import org.springframework.stereotype.Controller;
@@ -23,11 +26,13 @@ public class LoginController {
 
     private final AuthService authService;
     private final EmailService emailService;
+    private final LogAuditoriaService logAuditoriaService;
     private final SecureRandom random = new SecureRandom();
 
-    public LoginController(AuthService authService, EmailService emailService){
+    public LoginController(AuthService authService, EmailService emailService, LogAuditoriaService logAuditoriaService){
         this.authService = authService;
         this.emailService = emailService;
+        this.logAuditoriaService = logAuditoriaService;
     }
 
     @GetMapping("/login")
@@ -37,10 +42,13 @@ public class LoginController {
     }
 
     @PostMapping("/login")
-    public String autenticar(@Valid @ModelAttribute("loginDTO") LoginDTO dto, BindingResult result, Model model, HttpSession session){
+    public String autenticar(@Valid @ModelAttribute("loginDTO") LoginDTO dto, BindingResult result,
+                             Model model, HttpSession session, HttpServletRequest request){
         if (result.hasErrors()) {
             return "login";
         }
+
+        long inicio = System.currentTimeMillis();
 
         try {
             UsuarioSessaoDTO usuario = authService.autenticar(dto.getEmail(), dto.getSenha());
@@ -52,6 +60,9 @@ public class LoginController {
 
             return "redirect:/verificacao";
         } catch (IllegalArgumentException e) {
+            long duracao = System.currentTimeMillis() - inicio;
+            logAuditoriaService.registrarSemAtor(dto.getEmail(), TipoAcao.LOGIN_FALHA, "Login",
+                    e.getMessage(), request.getRemoteAddr(), duracao);
             model.addAttribute("erroLogin", e.getMessage());
             return "login";
         }
