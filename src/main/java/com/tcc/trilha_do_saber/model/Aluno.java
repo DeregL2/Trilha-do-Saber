@@ -32,7 +32,7 @@ public class Aluno extends Usuario {
     }
 
     public void setRgm(String rgm){
-        this.rgm = this.rgm;
+        this.rgm = rgm;
     }
 
     public void setCurso(String curso){
