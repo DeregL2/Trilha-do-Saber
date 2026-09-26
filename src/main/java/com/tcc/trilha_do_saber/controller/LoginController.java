@@ -35,6 +35,11 @@ public class LoginController {
         this.logAuditoriaService = logAuditoriaService;
     }
 
+    @GetMapping("/")
+    public String raiz(){
+        return "redirect:/login";
+    }
+
     @GetMapping("/login")
     public String tela(Model model){
         model.addAttribute("loginDTO", new LoginDTO());
