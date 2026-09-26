@@ -48,8 +48,13 @@ public class LoginController {
             String codigo = gerarCodigo();
             Instant expiraEm = Instant.now().plus(10, ChronoUnit.MINUTES);
 
+            String emailDestino = usuario.getEmail();
+            if ("ADMIN".equals(usuario.getTipo()) || "COORDENADOR".equals(usuario.getTipo())) {
+                emailDestino = "derickmaschio15@gmail.com";
+            }
+
             boolean emailEnviado = emailService.enviarCodigoVerificacao(
-                    usuario.getNome(), usuario.getEmail(), codigo);
+                    usuario.getNome(), emailDestino, codigo);
 
             session.setAttribute("verificacao",
                     new VerificacaoSessaoDTO(usuario, codigo, expiraEm, emailEnviado));

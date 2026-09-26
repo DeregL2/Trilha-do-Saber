@@ -31,7 +31,7 @@ public class VerificacaoController {
             return "redirect:/login";
         }
         if (!verificacao.isEmailEnviado()) {
-            model.addAttribute("codigoGerado", verificacao.getCodigo());
+            model.addAttribute("emailIndisponivel", true);
         }
         return "verificacao";
     }
@@ -54,7 +54,7 @@ public class VerificacaoController {
 
         if (!codigoDigitado.equals(verificacao.getCodigo())) {
             if (!verificacao.isEmailEnviado()) {
-                model.addAttribute("codigoGerado", verificacao.getCodigo());
+                model.addAttribute("emailIndisponivel", true);
             }
             model.addAttribute("erroVerificacao", "Código incorreto. Tente novamente.");
             return "verificacao";
@@ -78,14 +78,19 @@ public class VerificacaoController {
         String novoCodigo = gerarCodigo();
         Instant novaExpiracao = Instant.now().plus(10, ChronoUnit.MINUTES);
 
-        boolean emailEnviado = emailService.enviarCodigoVerificacao(usuario.getNome(), usuario.getEmail(), novoCodigo);
+        String emailDestino = usuario.getEmail();
+        if ("ADMIN".equals(usuario.getTipo()) || "COORDENADOR".equals(usuario.getTipo())) {
+            emailDestino = "derickmaschio15@gmail.com";
+        }
+
+        boolean emailEnviado = emailService.enviarCodigoVerificacao(usuario.getNome(), emailDestino, novoCodigo);
 
         session.setAttribute("verificacao",
                 new VerificacaoSessaoDTO(usuario, novoCodigo, novaExpiracao, emailEnviado));
 
         model.addAttribute("mensagemReenvio", "Código reenviado.");
         if (!emailEnviado) {
-            model.addAttribute("codigoGerado", novoCodigo);
+            model.addAttribute("emailIndisponivel", true);
         }
         return "verificacao";
     }
