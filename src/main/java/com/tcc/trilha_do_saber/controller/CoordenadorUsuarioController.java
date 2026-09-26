@@ -2,12 +2,10 @@ package com.tcc.trilha_do_saber.controller;
 
 import com.tcc.trilha_do_saber.dto.AlunoFormDTO;
 import com.tcc.trilha_do_saber.dto.ProfessorFormDTO;
-import com.tcc.trilha_do_saber.dto.UsuarioSessaoDTO;
 import com.tcc.trilha_do_saber.model.Aluno;
 import com.tcc.trilha_do_saber.model.Professor;
 import com.tcc.trilha_do_saber.service.AlunoService;
 import com.tcc.trilha_do_saber.service.ProfessorService;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import org.springframework.stereotype.Controller;
@@ -65,51 +63,41 @@ public class CoordenadorUsuarioController {
     }
 
     @PostMapping("/aluno/{id}")
-    public String atualizarAluno(@PathVariable Long id, @Valid @ModelAttribute("alunoForm") AlunoFormDTO form,
-                                 BindingResult result, Model model, HttpSession session, HttpServletRequest request){
+    public String atualizarAluno(@PathVariable Long id, @Valid @ModelAttribute("alunoForm") AlunoFormDTO form, BindingResult result, Model model){
         if (result.hasErrors()) {
             model.addAttribute("tipo", "aluno");
             return "coordenador/usuarioForm";
         }
-        long inicio = System.currentTimeMillis();
-        UsuarioSessaoDTO ator = (UsuarioSessaoDTO) session.getAttribute("usuarioLogado");
-        alunoService.atualizar(id, form, ator, request.getRemoteAddr(), System.currentTimeMillis() - inicio);
+        alunoService.atualizar(id, form);
         return "redirect:/coordenador/usuarios";
     }
 
     @PostMapping("/professor/{id}")
-    public String atualizarProfessor(@PathVariable Long id, @Valid @ModelAttribute("professorForm") ProfessorFormDTO form,
-                                     BindingResult result, Model model, HttpSession session, HttpServletRequest request){
+    public String atualizarProfessor(@PathVariable Long id, @Valid @ModelAttribute("professorForm") ProfessorFormDTO form, BindingResult result, Model model){
         if (result.hasErrors()) {
             model.addAttribute("tipo", "professor");
             return "coordenador/usuarioForm";
         }
-        long inicio = System.currentTimeMillis();
-        UsuarioSessaoDTO ator = (UsuarioSessaoDTO) session.getAttribute("usuarioLogado");
-        professorService.atualizar(id, form, ator, request.getRemoteAddr(), System.currentTimeMillis() - inicio);
+        professorService.atualizar(id, form);
         return "redirect:/coordenador/usuarios";
     }
 
     @PostMapping("/{tipo}/{id}/excluir")
-    public String excluir(@PathVariable String tipo, @PathVariable Long id, HttpSession session, HttpServletRequest request){
-        long inicio = System.currentTimeMillis();
-        UsuarioSessaoDTO ator = (UsuarioSessaoDTO) session.getAttribute("usuarioLogado");
+    public String excluir(@PathVariable String tipo, @PathVariable Long id){
         if ("professor".equals(tipo)) {
-            professorService.excluir(id, ator, request.getRemoteAddr(), System.currentTimeMillis() - inicio);
+            professorService.excluir(id);
         } else {
-            alunoService.excluir(id, ator, request.getRemoteAddr(), System.currentTimeMillis() - inicio);
+            alunoService.excluir(id);
         }
         return "redirect:/coordenador/usuarios";
     }
 
     @PostMapping("/{tipo}/{id}/anonimizar")
-    public String anonimizar(@PathVariable String tipo, @PathVariable Long id, HttpSession session, HttpServletRequest request){
-        long inicio = System.currentTimeMillis();
-        UsuarioSessaoDTO ator = (UsuarioSessaoDTO) session.getAttribute("usuarioLogado");
+    public String anonimizar(@PathVariable String tipo, @PathVariable Long id){
         if ("professor".equals(tipo)) {
-            professorService.anonimizar(id, ator, request.getRemoteAddr(), System.currentTimeMillis() - inicio);
+            professorService.anonimizar(id);
         } else {
-            alunoService.anonimizar(id, ator, request.getRemoteAddr(), System.currentTimeMillis() - inicio);
+            alunoService.anonimizar(id);
         }
         return "redirect:/coordenador/usuarios";
     }

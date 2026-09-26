@@ -2,9 +2,7 @@ package com.tcc.trilha_do_saber.service;
 
 import com.tcc.trilha_do_saber.dto.CadastroCoordenadorDTO;
 import com.tcc.trilha_do_saber.dto.CoordenadorFormDTO;
-import com.tcc.trilha_do_saber.dto.UsuarioSessaoDTO;
 import com.tcc.trilha_do_saber.model.Coordenador;
-import com.tcc.trilha_do_saber.model.TipoAcao;
 import com.tcc.trilha_do_saber.repository.CoordenadorRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -17,13 +15,10 @@ public class CoordenadorService {
 
     private final CoordenadorRepository coordenadorRepository;
     private final PasswordEncoder passwordEncoder;
-    private final LogAuditoriaService logAuditoriaService;
 
-    public CoordenadorService(CoordenadorRepository coordenadorRepository, PasswordEncoder passwordEncoder,
-                              LogAuditoriaService logAuditoriaService){
+    public CoordenadorService(CoordenadorRepository coordenadorRepository, PasswordEncoder passwordEncoder){
         this.coordenadorRepository = coordenadorRepository;
         this.passwordEncoder = passwordEncoder;
-        this.logAuditoriaService = logAuditoriaService;
     }
 
     public List<Coordenador> listarTodos(){
@@ -47,16 +42,10 @@ public class CoordenadorService {
         Coordenador coordenador = new Coordenador(dto.getNome(), dto.getEmail(), senhaComHash, dto.getRegistroFuncional(), dto.getCurso());
         coordenador.setConsentimentoLgpd(dto.isAceitouTermos());
         coordenador.setDataConsentimento(LocalDateTime.now());
-        coordenador = coordenadorRepository.save(coordenador);
-
-        logAuditoriaService.registrar(coordenador.getId(), coordenador.getNome(), "COORDENADOR",
-                TipoAcao.CADASTRO, "Coordenador", coordenador.getId(), "Solicitacao de cadastro enviada",
-                null, null);
-
-        return coordenador;
+        return coordenadorRepository.save(coordenador);
     }
 
-    public Coordenador atualizar(Long id, CoordenadorFormDTO dto, UsuarioSessaoDTO ator, String ip, long duracaoMs){
+    public Coordenador atualizar(Long id, CoordenadorFormDTO dto){
         Coordenador coordenador = buscarPorId(id);
 
         coordenador.setNome(dto.getNome());
@@ -65,44 +54,29 @@ public class CoordenadorService {
         coordenador.setCurso(dto.getCurso());
         coordenador.setAtivo(dto.isAtivo());
 
-        coordenador = coordenadorRepository.save(coordenador);
-
-        logAuditoriaService.registrar(ator.getId(), ator.getNome(), ator.getTipo(),
-                TipoAcao.ATUALIZACAO, "Coordenador", coordenador.getId(), "Dados do coordenador atualizados",
-                ip, duracaoMs);
-
-        return coordenador;
+        return coordenadorRepository.save(coordenador);
     }
 
-    public void ativar(Long id, UsuarioSessaoDTO ator, String ip, long duracaoMs){
+    public void ativar(Long id){
         Coordenador coordenador = buscarPorId(id);
         coordenador.setAtivo(true);
         coordenadorRepository.save(coordenador);
-
-        logAuditoriaService.registrar(ator.getId(), ator.getNome(), ator.getTipo(),
-                TipoAcao.ATIVACAO, "Coordenador", id, "Cadastro aprovado", ip, duracaoMs);
     }
 
-    public void desativar(Long id, UsuarioSessaoDTO ator, String ip, long duracaoMs){
+    public void desativar(Long id){
         Coordenador coordenador = buscarPorId(id);
         coordenador.setAtivo(false);
         coordenadorRepository.save(coordenador);
-
-        logAuditoriaService.registrar(ator.getId(), ator.getNome(), ator.getTipo(),
-                TipoAcao.DESATIVACAO, "Coordenador", id, null, ip, duracaoMs);
     }
 
-    public void excluir(Long id, UsuarioSessaoDTO ator, String ip, long duracaoMs){
+    public void excluir(Long id){
         Coordenador coordenador = buscarPorId(id);
         coordenador.setAtivo(false);
         coordenador.setDataExclusao(LocalDateTime.now());
         coordenadorRepository.save(coordenador);
-
-        logAuditoriaService.registrar(ator.getId(), ator.getNome(), ator.getTipo(),
-                TipoAcao.EXCLUSAO, "Coordenador", id, null, ip, duracaoMs);
     }
 
-    public void anonimizar(Long id, UsuarioSessaoDTO ator, String ip, long duracaoMs){
+    public void anonimizar(Long id){
         Coordenador coordenador = buscarPorId(id);
 
         coordenador.setNome("Usuário removido");
@@ -117,8 +91,5 @@ public class CoordenadorService {
         }
 
         coordenadorRepository.save(coordenador);
-
-        logAuditoriaService.registrar(ator.getId(), ator.getNome(), ator.getTipo(),
-                TipoAcao.ANONIMIZACAO, "Coordenador", id, null, ip, duracaoMs);
     }
 }

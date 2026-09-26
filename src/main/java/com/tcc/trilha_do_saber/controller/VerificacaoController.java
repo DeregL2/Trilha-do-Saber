@@ -2,10 +2,7 @@ package com.tcc.trilha_do_saber.controller;
 
 import com.tcc.trilha_do_saber.dto.UsuarioSessaoDTO;
 import com.tcc.trilha_do_saber.dto.VerificacaoSessaoDTO;
-import com.tcc.trilha_do_saber.model.TipoAcao;
 import com.tcc.trilha_do_saber.service.EmailService;
-import com.tcc.trilha_do_saber.service.LogAuditoriaService;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -21,21 +18,18 @@ import java.time.temporal.ChronoUnit;
 public class VerificacaoController {
 
     private final EmailService emailService;
-    private final LogAuditoriaService logAuditoriaService;
     private final SecureRandom random = new SecureRandom();
 
-    public VerificacaoController(EmailService emailService, LogAuditoriaService logAuditoriaService){
+    public VerificacaoController(EmailService emailService){
         this.emailService = emailService;
-        this.logAuditoriaService = logAuditoriaService;
     }
 
     @GetMapping("/verificacao")
-    public String tela(HttpSession session, Model model){
-        VerificacaoSessaoDTO verificacao = (VerificacaoSessaoDTO) session.getAttribute("verificacao2FA");
+    public String tela(HttpSession session, Model model) {
+        VerificacaoSessaoDTO verificacao = (VerificacaoSessaoDTO) session.getAttribute("verificacao");
         if (verificacao == null) {
             return "redirect:/login";
         }
-        model.addAttribute("email", verificacao.getUsuario().getEmail());
         if (!verificacao.isEmailEnviado()) {
             model.addAttribute("codigoGerado", verificacao.getCodigo());
         }
@@ -45,59 +39,51 @@ public class VerificacaoController {
     @PostMapping("/verificacao")
     public String confirmar(@RequestParam String d1, @RequestParam String d2, @RequestParam String d3,
                             @RequestParam String d4, @RequestParam String d5, @RequestParam String d6,
-                            HttpSession session, Model model, HttpServletRequest request){
-
-        VerificacaoSessaoDTO verificacao = (VerificacaoSessaoDTO) session.getAttribute("verificacao2FA");
+                            HttpSession session, Model model) {
+        VerificacaoSessaoDTO verificacao = (VerificacaoSessaoDTO) session.getAttribute("verificacao");
         if (verificacao == null) {
             return "redirect:/login";
         }
 
-        long inicio = System.currentTimeMillis();
-        String codigoDigitado = d1 + d2 + d3 + d4 + d5 + d6;
-
-        if (verificacao.expirado()) {
-            session.removeAttribute("verificacao2FA");
-            model.addAttribute("erroVerificacao", "Código expirado. Faça login novamente.");
-            return "redirect:/login";
+        if (Instant.now().isAfter(verificacao.getExpiraEm())) {
+            model.addAttribute("erroVerificacao", "Código expirado. Clique em \"Reenviar código\".");
+            return "verificacao";
         }
 
-        if (!verificacao.getCodigo().equals(codigoDigitado)) {
-            long duracao = System.currentTimeMillis() - inicio;
-            logAuditoriaService.registrarSemAtor(verificacao.getUsuario().getEmail(), TipoAcao.LOGIN_FALHA,
-                    "Login", "Código de verificação incorreto", request.getRemoteAddr(), duracao);
-            model.addAttribute("email", verificacao.getUsuario().getEmail());
-            model.addAttribute("erroVerificacao", "Código inválido. Confira e tente novamente.");
+        String codigoDigitado = d1 + d2 + d3 + d4 + d5 + d6;
+
+        if (!codigoDigitado.equals(verificacao.getCodigo())) {
+            if (!verificacao.isEmailEnviado()) {
+                model.addAttribute("codigoGerado", verificacao.getCodigo());
+            }
+            model.addAttribute("erroVerificacao", "Código incorreto. Tente novamente.");
             return "verificacao";
         }
 
         UsuarioSessaoDTO usuario = verificacao.getUsuario();
-        session.removeAttribute("verificacao2FA");
+        session.removeAttribute("verificacao");
         session.setAttribute("usuarioLogado", usuario);
-
-        long duracao = System.currentTimeMillis() - inicio;
-        logAuditoriaService.registrar(usuario.getId(), usuario.getNome(), usuario.getTipo(),
-                TipoAcao.LOGIN_SUCESSO, "Login", usuario.getId(), null,
-                request.getRemoteAddr(), duracao);
 
         return "redirect:" + paginaInicial(usuario.getTipo());
     }
 
     @PostMapping("/verificacao/reenviar")
     public String reenviar(HttpSession session, Model model){
-        VerificacaoSessaoDTO verificacao = (VerificacaoSessaoDTO) session.getAttribute("verificacao2FA");
+        VerificacaoSessaoDTO verificacao = (VerificacaoSessaoDTO) session.getAttribute("verificacao");
         if (verificacao == null) {
             return "redirect:/login";
         }
 
+        UsuarioSessaoDTO usuario = verificacao.getUsuario();
         String novoCodigo = gerarCodigo();
         Instant novaExpiracao = Instant.now().plus(10, ChronoUnit.MINUTES);
-        UsuarioSessaoDTO usuario = verificacao.getUsuario();
 
         boolean emailEnviado = emailService.enviarCodigoVerificacao(usuario.getNome(), usuario.getEmail(), novoCodigo);
-        session.setAttribute("verificacao2FA", new VerificacaoSessaoDTO(usuario, novoCodigo, novaExpiracao, emailEnviado));
 
-        model.addAttribute("email", usuario.getEmail());
-        model.addAttribute("codigoReenviado", true);
+        session.setAttribute("verificacao",
+                new VerificacaoSessaoDTO(usuario, novoCodigo, novaExpiracao, emailEnviado));
+
+        model.addAttribute("mensagemReenvio", "Código reenviado.");
         if (!emailEnviado) {
             model.addAttribute("codigoGerado", novoCodigo);
         }

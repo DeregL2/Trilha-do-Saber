@@ -3,11 +3,8 @@ package com.tcc.trilha_do_saber.controller;
 import com.tcc.trilha_do_saber.dto.LoginDTO;
 import com.tcc.trilha_do_saber.dto.UsuarioSessaoDTO;
 import com.tcc.trilha_do_saber.dto.VerificacaoSessaoDTO;
-import com.tcc.trilha_do_saber.model.TipoAcao;
 import com.tcc.trilha_do_saber.service.AuthService;
 import com.tcc.trilha_do_saber.service.EmailService;
-import com.tcc.trilha_do_saber.service.LogAuditoriaService;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import org.springframework.stereotype.Controller;
@@ -26,13 +23,11 @@ public class LoginController {
 
     private final AuthService authService;
     private final EmailService emailService;
-    private final LogAuditoriaService logAuditoriaService;
     private final SecureRandom random = new SecureRandom();
 
-    public LoginController(AuthService authService, EmailService emailService, LogAuditoriaService logAuditoriaService){
+    public LoginController(AuthService authService, EmailService emailService){
         this.authService = authService;
         this.emailService = emailService;
-        this.logAuditoriaService = logAuditoriaService;
     }
 
     @GetMapping("/login")
@@ -42,27 +37,25 @@ public class LoginController {
     }
 
     @PostMapping("/login")
-    public String autenticar(@Valid @ModelAttribute("loginDTO") LoginDTO dto, BindingResult result,
-                             Model model, HttpSession session, HttpServletRequest request){
+    public String autenticar(@Valid @ModelAttribute("loginDTO") LoginDTO dto, BindingResult result, Model model, HttpSession session){
         if (result.hasErrors()) {
             return "login";
         }
-
-        long inicio = System.currentTimeMillis();
 
         try {
             UsuarioSessaoDTO usuario = authService.autenticar(dto.getEmail(), dto.getSenha());
 
             String codigo = gerarCodigo();
             Instant expiraEm = Instant.now().plus(10, ChronoUnit.MINUTES);
-            boolean emailEnviado = emailService.enviarCodigoVerificacao(usuario.getNome(), usuario.getEmail(), codigo);
-            session.setAttribute("verificacao2FA", new VerificacaoSessaoDTO(usuario, codigo, expiraEm, emailEnviado));
+
+            boolean emailEnviado = emailService.enviarCodigoVerificacao(
+                    usuario.getNome(), usuario.getEmail(), codigo);
+
+            session.setAttribute("verificacao",
+                    new VerificacaoSessaoDTO(usuario, codigo, expiraEm, emailEnviado));
 
             return "redirect:/verificacao";
         } catch (IllegalArgumentException e) {
-            long duracao = System.currentTimeMillis() - inicio;
-            logAuditoriaService.registrarSemAtor(dto.getEmail(), TipoAcao.LOGIN_FALHA, "Login",
-                    e.getMessage(), request.getRemoteAddr(), duracao);
             model.addAttribute("erroLogin", e.getMessage());
             return "login";
         }

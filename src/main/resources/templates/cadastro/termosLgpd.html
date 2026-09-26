@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Termo de Consentimento (LGPD)</title>
+    <title>Política de Privacidade (LGPD)</title>
     <link rel="stylesheet" th:href="@{/css/auth.css}">
 </head>
 <body>
@@ -11,51 +11,63 @@
 <div class="pagina-cadastro">
     <div class="cartao-cadastro cartao-termos">
 
-        <a href="javascript:window.close()" class="link-voltar">‹ Voltar</a>
+        <a href="javascript:history.back()" class="link-voltar">‹ Voltar</a>
 
-        <h1>Termo de Consentimento para Tratamento de Dados Pessoais</h1>
-        <p class="subtitulo">Em conformidade com a Lei Geral de Proteção de Dados Pessoais (Lei nº 13.709/2018 - LGPD)</p>
+        <h1>Política de Privacidade e Termo de Consentimento</h1>
+        <p class="subtitulo">Em conformidade com a Lei Geral de Proteção de Dados Pessoais (Lei nº 13.709/2018 - LGPD). Este documento reúne a Política de Privacidade da plataforma; o aceite dela é feito através do Termo de Consentimento marcado no formulário de cadastro.</p>
 
         <h2>1. Quem trata os seus dados</h2>
-        <p>A plataforma <strong>Trilha do Saber</strong> é uma ferramenta acadêmica de apoio à preparação para o ENADE. O tratamento dos dados pessoais cadastrados é feito pela coordenação do curso ao qual você está vinculado, responsável por autorizar e gerenciar os acessos de alunos, professores e coordenadores.</p>
+        <p>A plataforma <strong>Trilha do Saber</strong> é uma ferramenta acadêmica (Projeto Final de Curso) de apoio à preparação para o ENADE. Dentro da plataforma, o tratamento dos seus dados pessoais é feito por dois perfis internos, cada um responsável por uma parte do cadastro:</p>
+        <ul>
+            <li>A <strong>coordenação do curso</strong> ao qual você está vinculado, responsável por aprovar e gerenciar os acessos de alunos e professores;</li>
+            <li>A <strong>administração geral</strong> da plataforma, responsável por aprovar e gerenciar os acessos de coordenadores.</li>
+        </ul>
+        <p>Por ser um projeto acadêmico, esta plataforma não é um sistema oficial da instituição de ensino citada nos formulários: os dados ficam armazenados no banco de dados do próprio projeto, controlado pelos autores do PFC.</p>
 
         <h2>2. Quais dados são coletados</h2>
         <ul>
-            <li><strong>Todos os perfis:</strong> nome completo, e-mail institucional e senha (armazenada de forma criptografada, nunca em texto puro).</li>
+            <li><strong>Todos os perfis:</strong> nome completo, e-mail e senha (armazenada de forma criptografada, nunca em texto puro).</li>
             <li><strong>Alunos:</strong> matrícula, curso e semestre.</li>
-            <li><strong>Professores:</strong> registro profissional na instituição e disciplina lecionada.</li>
-            <li><strong>Coordenadores:</strong> registro funcional na instituição e curso coordenado.</li>
-            <li><strong>Uso da plataforma:</strong> resultados e respostas de simulados, para fins de acompanhamento pedagógico.</li>
+            <li><strong>Professores:</strong> registro de funcionário na instituição. A disciplina lecionada não é informada no cadastro; quando necessário, é preenchida posteriormente pela coordenação.</li>
+            <li><strong>Coordenadores:</strong> registro de funcionário na instituição e curso coordenado.</li>
+            <li><strong>Uso da plataforma:</strong> resultados e respostas de simulados, vinculados à sua conta, para fins de acompanhamento pedagógico.</li>
+            <li><strong>Verificação de login:</strong> um código numérico de 6 dígitos, gerado a cada tentativa de login e válido por apenas 10 minutos. Esse código não fica salvo de forma permanente: existe só durante a sua sessão de login e é descartado depois de usado ou de expirar.</li>
         </ul>
 
         <h2>3. Para que os dados são usados</h2>
         <ul>
-            <li>Criar e autenticar sua conta, incluindo o envio de código de verificação em duas etapas por e-mail durante o login;</li>
-            <li>Liberar o acesso ao perfil correto (aluno, professor ou coordenador) após aprovação da coordenação;</li>
+            <li>Criar e autenticar sua conta, incluindo o envio do código de verificação em duas etapas por e-mail a cada login;</li>
+            <li>Liberar o acesso ao perfil correto após aprovação da coordenação (no caso de alunos e professores) ou da administração geral (no caso de coordenadores);</li>
             <li>Disponibilizar simulados no formato ENADE e apresentar seu desempenho e evolução;</li>
             <li>Gerar estatísticas agregadas de desempenho para professores e coordenação.</li>
         </ul>
 
         <h2>4. Base legal</h2>
-        <p>O tratamento é realizado com base no seu <strong>consentimento</strong> (art. 7º, I, da LGPD), manifestado ao marcar a opção de aceite neste cadastro, e na necessidade de execução de procedimentos vinculados ao seu vínculo acadêmico com a instituição (art. 7º, V).</p>
+        <p>O tratamento é realizado com base no seu <strong>consentimento</strong> (art. 7º, I, da LGPD), manifestado ao marcar a opção de aceite neste cadastro, e na necessidade de execução de procedimentos preparatórios vinculados ao seu vínculo acadêmico com a instituição (art. 7º, V).</p>
 
-        <h2>5. Compartilhamento</h2>
-        <p>        <p>Seus dados não são vendidos nem compartilhados com terceiros para fins comerciais. O e-mail cadastrado é utilizado para identificar sua conta e para o envio do código de verificação de login.</p></p>
-        <h2>6. Seus direitos como titular dos dados</h2>
-        <p>A qualquer momento, você pode solicitar à coordenação do seu curso:</p>
+                <h2>5. Compartilhamento com terceiros</h2>
+        <p>Seus dados não são vendidos nem compartilhados com terceiros para fins comerciais ou de publicidade. O envio do código de verificação de login é feito por e-mail, através do Resend, um provedor de envio de e-mails transacionais; isso significa que, no momento do envio, seu nome e e-mail passam pelos servidores do Resend apenas para essa entrega, sem qualquer outro uso por parte da plataforma.</p>
+
+        <h2>6. Por quanto tempo os dados são guardados</h2>
+        <p>Seus dados pessoais são mantidos enquanto sua conta estiver ativa e vinculada à instituição. Se você solicitar a exclusão da conta, ela passa a ficar inativa, mas os dados continuam guardados; se você solicitar a anonimização, os dados que te identificam são apagados de forma definitiva, conforme descrito no item 7 abaixo.</p>
+
+        <h2>7. Seus direitos como titular dos dados</h2>
+        <p>A qualquer momento, você pode solicitar à coordenação do seu curso (ou à administração geral, no caso de coordenadores):</p>
         <ul>
             <li>Confirmação da existência de tratamento e acesso aos seus dados;</li>
             <li>Correção de dados incompletos, inexatos ou desatualizados;</li>
             <li><strong>Exclusão da sua conta</strong>, que passa a ficar inativa e marcada como excluída;</li>
-            <li><strong>Anonimização definitiva dos seus dados pessoais</strong> (nome, e-mail e demais identificadores são apagados permanentemente, mantendo-se apenas registros acadêmicos não identificáveis);</li>
+            <li><strong>Anonimização definitiva dos seus dados pessoais</strong> (nome, e-mail, senha e demais identificadores são apagados permanentemente e não podem ser recuperados, mantendo-se apenas registros acadêmicos não identificáveis);</li>
             <li>Revogação deste consentimento, o que pode levar à desativação do seu acesso à plataforma.</li>
         </ul>
 
-        <h2>7. Armazenamento e segurança</h2>
-        <p>Os dados ficam armazenados em banco de dados da instituição, com senhas protegidas por criptografia (hash) e sem exibição em texto puro em nenhuma tela do sistema.</p>
+        <h2>8. Armazenamento e segurança</h2>
+        <p>Os dados ficam armazenados no banco de dados da plataforma, com senhas protegidas por criptografia (hash) e sem exibição em texto puro em nenhuma tela do sistema. O código de verificação de login também nunca é armazenado de forma permanente nem em texto puro fora da sua sessão ativa.</p>
 
-        <h2>8. Aceite</h2>
-        <p>Ao marcar a opção "Li e aceito o Termo de Consentimento (LGPD)" no formulário de cadastro, você declara estar ciente e de acordo com os termos descritos acima.</p>
+        <h2>9. Aceite</h2>
+        <p>Ao marcar a opção "Li e aceito o Termo de Consentimento (LGPD)" no formulário de cadastro, você declara estar ciente e de acordo com esta Política de Privacidade.</p>
+
+        <p class="subtitulo">Observação: este documento foi elaborado para fins acadêmicos, como parte de um Trabalho de Conclusão de Curso, e não substitui a análise de um profissional jurídico caso a plataforma venha a ser usada fora desse contexto.</p>
 
     </div>
 </div>

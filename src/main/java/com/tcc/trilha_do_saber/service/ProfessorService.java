@@ -2,9 +2,7 @@ package com.tcc.trilha_do_saber.service;
 
 import com.tcc.trilha_do_saber.dto.CadastroProfessorDTO;
 import com.tcc.trilha_do_saber.dto.ProfessorFormDTO;
-import com.tcc.trilha_do_saber.dto.UsuarioSessaoDTO;
 import com.tcc.trilha_do_saber.model.Professor;
-import com.tcc.trilha_do_saber.model.TipoAcao;
 import com.tcc.trilha_do_saber.repository.ProfessorRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -17,13 +15,10 @@ public class ProfessorService {
 
     private final ProfessorRepository professorRepository;
     private final PasswordEncoder passwordEncoder;
-    private final LogAuditoriaService logAuditoriaService;
 
-    public ProfessorService(ProfessorRepository professorRepository, PasswordEncoder passwordEncoder,
-                            LogAuditoriaService logAuditoriaService){
+    public ProfessorService(ProfessorRepository professorRepository, PasswordEncoder passwordEncoder){
         this.professorRepository = professorRepository;
         this.passwordEncoder = passwordEncoder;
-        this.logAuditoriaService = logAuditoriaService;
     }
 
     public List<Professor> listarTodos(){
@@ -47,16 +42,10 @@ public class ProfessorService {
         Professor professor = new Professor(dto.getNome(), dto.getEmail(), senhaComHash, dto.getRegistroProfissional());
         professor.setConsentimentoLgpd(dto.isAceitouTermos());
         professor.setDataConsentimento(LocalDateTime.now());
-        professor = professorRepository.save(professor);
-
-        logAuditoriaService.registrar(professor.getId(), professor.getNome(), "PROFESSOR",
-                TipoAcao.CADASTRO, "Professor", professor.getId(), "Solicitacao de cadastro enviada",
-                null, null);
-
-        return professor;
+        return professorRepository.save(professor);
     }
 
-    public Professor atualizar(Long id, ProfessorFormDTO dto, UsuarioSessaoDTO ator, String ip, long duracaoMs){
+    public Professor atualizar(Long id, ProfessorFormDTO dto){
         Professor professor = buscarPorId(id);
 
         professor.setNome(dto.getNome());
@@ -65,43 +54,29 @@ public class ProfessorService {
         professor.setDisciplina(dto.getDisciplina());
         professor.setAtivo(dto.isAtivo());
 
-        professor = professorRepository.save(professor);
-
-        logAuditoriaService.registrar(ator.getId(), ator.getNome(), ator.getTipo(),
-                TipoAcao.ATUALIZACAO, "Professor", professor.getId(), "Dados do professor atualizados", ip, duracaoMs);
-
-        return professor;
+        return professorRepository.save(professor);
     }
 
-    public void ativar(Long id, UsuarioSessaoDTO ator, String ip, long duracaoMs){
+    public void ativar(Long id){
         Professor professor = buscarPorId(id);
         professor.setAtivo(true);
         professorRepository.save(professor);
-
-        logAuditoriaService.registrar(ator.getId(), ator.getNome(), ator.getTipo(),
-                TipoAcao.ATIVACAO, "Professor", id, null, ip, duracaoMs);
     }
 
-    public void desativar(Long id, UsuarioSessaoDTO ator, String ip, long duracaoMs){
+    public void desativar(Long id){
         Professor professor = buscarPorId(id);
         professor.setAtivo(false);
         professorRepository.save(professor);
-
-        logAuditoriaService.registrar(ator.getId(), ator.getNome(), ator.getTipo(),
-                TipoAcao.DESATIVACAO, "Professor", id, null, ip, duracaoMs);
     }
 
-    public void excluir(Long id, UsuarioSessaoDTO ator, String ip, long duracaoMs){
+    public void excluir(Long id){
         Professor professor = buscarPorId(id);
         professor.setAtivo(false);
         professor.setDataExclusao(LocalDateTime.now());
         professorRepository.save(professor);
-
-        logAuditoriaService.registrar(ator.getId(), ator.getNome(), ator.getTipo(),
-                TipoAcao.EXCLUSAO, "Professor", id, null, ip, duracaoMs);
     }
 
-    public void anonimizar(Long id, UsuarioSessaoDTO ator, String ip, long duracaoMs){
+    public void anonimizar(Long id){
         Professor professor = buscarPorId(id);
 
         professor.setNome("Usuário removido");
@@ -116,8 +91,5 @@ public class ProfessorService {
         }
 
         professorRepository.save(professor);
-
-        logAuditoriaService.registrar(ator.getId(), ator.getNome(), ator.getTipo(),
-                TipoAcao.ANONIMIZACAO, "Professor", id, null, ip, duracaoMs);
     }
 }
