@@ -41,7 +41,7 @@
             <span class="aviso-info" th:if="${param.deslogado}">Você saiu da plataforma.</span>
             <span class="erro-geral" th:if="${erroLogin}" th:text="${erroLogin}"></span>
 
-            <form method="post" th:action="@{/login}" th:object="${loginDTO}">
+            <form method="post" th:action="@{/login}" th:object="${loginDTO}" id="formLogin">
 
                 <label>E-mail</label>
                 <input type="email" th:field="*{email}" placeholder="seu@email.edu.br">
@@ -55,7 +55,7 @@
                     <a href="#">Esqueci minha senha</a>
                 </div>
 
-                <button type="submit" class="botao-primario botao-largo">Entrar</button>
+                <button type="submit" class="botao-primario botao-largo" id="botaoEntrar">Entrar</button>
             </form>
 
             <p class="rodape-login">
@@ -68,6 +68,15 @@
     </div>
 
 </div>
+
+<script>
+    const formLogin = document.getElementById("formLogin");
+    const botaoEntrar = document.getElementById("botaoEntrar");
+    formLogin.addEventListener("submit", () => {
+        botaoEntrar.disabled = true;
+        botaoEntrar.textContent = "Entrando...";
+    });
+</script>
 
 </body>
 </html>
