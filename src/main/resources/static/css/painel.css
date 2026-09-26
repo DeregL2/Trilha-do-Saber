@@ -424,3 +424,14 @@ body {
         grid-template-columns: repeat(2, 1fr);
     }
 }
+
+/* Tabela de Logs de Auditoria: mais colunas com dados variados, entao usa largura por conteudo em vez de largura fixa igual pra todas */
+.tabela-logs {
+    table-layout: auto;
+}
+
+.tabela-logs td,
+.tabela-logs th {
+    white-space: normal;
+    overflow-wrap: break-word;
+}
