@@ -2,6 +2,7 @@ package com.tcc.trilha_do_saber.model;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 
 @Entity
 public class LogAuditoria {
@@ -12,20 +13,18 @@ public class LogAuditoria {
 
     private LocalDateTime dataHora;
 
-
     private Long usuarioId;
     private String usuarioNome;
-    private String usuarioTipo; // ALUNO, PROFESSOR, COORDENADOR, ADMIN ou DESCONHECIDO
+    private String usuarioTipo;
 
     @Enumerated(EnumType.STRING)
     private TipoAcao acao;
 
-    private String entidadeTipo; // Aluno, Professor, Coordenador, Login...
+    private String entidadeTipo;
     private Long entidadeId;
 
     @Column(columnDefinition = "TEXT")
-    private String detalhes; // nunca guarda senha, nem antiga nem nova
-
+    private String detalhes;
 
     private String ip;
 
@@ -40,7 +39,8 @@ public class LogAuditoria {
     public LogAuditoria(Long usuarioId, String usuarioNome, String usuarioTipo,
                         TipoAcao acao, String entidadeTipo, Long entidadeId, String detalhes,
                         String ip, Long duracaoMs){
-        this.dataHora = LocalDateTime.now();
+
+        this.dataHora = LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS);
         this.usuarioId = usuarioId;
         this.usuarioNome = usuarioNome;
         this.usuarioTipo = usuarioTipo;
@@ -51,7 +51,6 @@ public class LogAuditoria {
         this.ip = ip;
         this.duracaoMs = duracaoMs;
     }
-
 
     public String montarConteudoParaHash(){
         return (dataHora == null ? "" : dataHora.toString())

@@ -50,14 +50,31 @@ public class AlunoService {
         aluno = alunoRepository.save(aluno);
 
         logAuditoriaService.registrar(aluno.getId(), aluno.getNome(), "ALUNO",
-                TipoAcao.CADASTRO, "Aluno", aluno.getId(), "Solicitacao de cadastro enviada",
+                TipoAcao.CADASTRO, "Aluno", aluno.getId(),
+                "Solicitacao de cadastro enviada por " + aluno.getNome() + " (" + aluno.getEmail() + "), aguardando aprovacao",
                 null, null);
 
         return aluno;
     }
 
+    private void compararCampo(StringBuilder mudancas, String nomeCampo, String valorAntigo, String valorNovo){
+        boolean mudou = valorAntigo == null ? valorNovo != null : !valorAntigo.equals(valorNovo);
+        if (mudou) {
+            if (mudancas.length() > 0) mudancas.append("; ");
+            mudancas.append(nomeCampo).append(" de '").append(valorAntigo).append("' para '").append(valorNovo).append("'");
+        }
+    }
+
     public Aluno atualizar(Long id, AlunoFormDTO dto, UsuarioSessaoDTO ator, String ip, long duracaoMs){
         Aluno aluno = buscarPorId(id);
+
+        StringBuilder mudancas = new StringBuilder();
+        compararCampo(mudancas, "nome", aluno.getNome(), dto.getNome());
+        compararCampo(mudancas, "email", aluno.getEmail(), dto.getEmail());
+        compararCampo(mudancas, "RGM", aluno.getRgm(), dto.getRgm());
+        compararCampo(mudancas, "curso", aluno.getCurso(), dto.getCurso());
+        compararCampo(mudancas, "semestre", String.valueOf(aluno.getSemestre()), String.valueOf(dto.getSemestre()));
+        compararCampo(mudancas, "status", aluno.isAtivo() ? "ativo" : "inativo", dto.isAtivo() ? "ativo" : "inativo");
 
         aluno.setNome(dto.getNome());
         aluno.setEmail(dto.getEmail());
@@ -68,8 +85,12 @@ public class AlunoService {
 
         aluno = alunoRepository.save(aluno);
 
+        String detalhes = mudancas.length() > 0
+                ? "Alteracoes em " + aluno.getNome() + ": " + mudancas
+                : "Formulario salvo sem alteracoes em " + aluno.getNome();
+
         logAuditoriaService.registrar(ator.getId(), ator.getNome(), ator.getTipo(),
-                TipoAcao.ATUALIZACAO, "Aluno", aluno.getId(), "Dados do aluno atualizados", ip, duracaoMs);
+                TipoAcao.ATUALIZACAO, "Aluno", aluno.getId(), detalhes, ip, duracaoMs);
 
         return aluno;
     }
@@ -80,7 +101,9 @@ public class AlunoService {
         alunoRepository.save(aluno);
 
         logAuditoriaService.registrar(ator.getId(), ator.getNome(), ator.getTipo(),
-                TipoAcao.ATIVACAO, "Aluno", id, null, ip, duracaoMs);
+                TipoAcao.ATIVACAO, "Aluno", id,
+                "Aluno " + aluno.getNome() + " (" + aluno.getEmail() + ") ativado, acesso liberado",
+                ip, duracaoMs);
     }
 
     public void desativar(Long id, UsuarioSessaoDTO ator, String ip, long duracaoMs){
@@ -89,17 +112,24 @@ public class AlunoService {
         alunoRepository.save(aluno);
 
         logAuditoriaService.registrar(ator.getId(), ator.getNome(), ator.getTipo(),
-                TipoAcao.DESATIVACAO, "Aluno", id, null, ip, duracaoMs);
+                TipoAcao.DESATIVACAO, "Aluno", id,
+                "Aluno " + aluno.getNome() + " (" + aluno.getEmail() + ") desativado, acesso bloqueado",
+                ip, duracaoMs);
     }
 
     public void excluir(Long id, UsuarioSessaoDTO ator, String ip, long duracaoMs){
         Aluno aluno = buscarPorId(id);
+        String nomeParaLog = aluno.getNome();
+        String emailParaLog = aluno.getEmail();
+
         aluno.setAtivo(false);
         aluno.setDataExclusao(LocalDateTime.now());
         alunoRepository.save(aluno);
 
         logAuditoriaService.registrar(ator.getId(), ator.getNome(), ator.getTipo(),
-                TipoAcao.EXCLUSAO, "Aluno", id, null, ip, duracaoMs);
+                TipoAcao.EXCLUSAO, "Aluno", id,
+                "Aluno excluido: " + nomeParaLog + " (" + emailParaLog + "). Dados academicos mantidos no banco.",
+                ip, duracaoMs);
     }
 
     public void anonimizar(Long id, UsuarioSessaoDTO ator, String ip, long duracaoMs){
@@ -117,7 +147,10 @@ public class AlunoService {
 
         alunoRepository.save(aluno);
 
+        // Nunca guardar nome/email antigo aqui.
         logAuditoriaService.registrar(ator.getId(), ator.getNome(), ator.getTipo(),
-                TipoAcao.ANONIMIZACAO, "Aluno", id, null, ip, duracaoMs);
+                TipoAcao.ANONIMIZACAO, "Aluno", id,
+                "Dados pessoais do aluno (id " + id + ") anonimizados definitivamente: nome, email, senha e RGM apagados",
+                ip, duracaoMs);
     }
 }

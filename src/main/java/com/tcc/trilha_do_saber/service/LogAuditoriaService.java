@@ -13,7 +13,6 @@ import java.util.List;
 @Service
 public class LogAuditoriaService {
 
-
     private static final int DIAS_RETENCAO = 365;
 
     private final LogAuditoriaRepository logAuditoriaRepository;
@@ -21,7 +20,6 @@ public class LogAuditoriaService {
     public LogAuditoriaService(LogAuditoriaRepository logAuditoriaRepository){
         this.logAuditoriaRepository = logAuditoriaRepository;
     }
-
 
     public void registrar(Long usuarioId, String usuarioNome, String usuarioTipo,
                           TipoAcao acao, String entidadeTipo, Long entidadeId, String detalhes,
@@ -35,7 +33,6 @@ public class LogAuditoriaService {
         logAuditoriaRepository.save(log);
     }
 
-
     public void registrarSemAtor(String usuarioNomeTentado, TipoAcao acao, String entidadeTipo,
                                  String detalhes, String ip, Long duracaoMs){
 
@@ -46,7 +43,6 @@ public class LogAuditoriaService {
 
         logAuditoriaRepository.save(log);
     }
-
 
     public boolean verificarIntegridade(LogAuditoria log){
         String hashRecalculado = calcularHash(log.montarConteudoParaHash());
@@ -79,5 +75,21 @@ public class LogAuditoriaService {
         List<LogAuditoria> antigos = logAuditoriaRepository.findByDataHoraBefore(limite);
         logAuditoriaRepository.deleteAll(antigos);
         return antigos.size();
+    }
+
+    public int recalcularTodosOsHashes(){
+        List<LogAuditoria> todos = logAuditoriaRepository.findAll();
+        int atualizados = 0;
+
+        for (LogAuditoria log : todos) {
+            String hashAtual = calcularHash(log.montarConteudoParaHash());
+            if (!hashAtual.equals(log.getHashIntegridade())) {
+                log.setHashIntegridade(hashAtual);
+                logAuditoriaRepository.save(log);
+                atualizados++;
+            }
+        }
+
+        return atualizados;
     }
 }

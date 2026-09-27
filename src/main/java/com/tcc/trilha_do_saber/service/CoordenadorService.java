@@ -50,14 +50,30 @@ public class CoordenadorService {
         coordenador = coordenadorRepository.save(coordenador);
 
         logAuditoriaService.registrar(coordenador.getId(), coordenador.getNome(), "COORDENADOR",
-                TipoAcao.CADASTRO, "Coordenador", coordenador.getId(), "Solicitacao de cadastro enviada",
+                TipoAcao.CADASTRO, "Coordenador", coordenador.getId(),
+                "Solicitacao de cadastro enviada por " + coordenador.getNome() + " (" + coordenador.getEmail() + "), aguardando aprovacao",
                 null, null);
 
         return coordenador;
     }
 
+    private void compararCampo(StringBuilder mudancas, String nomeCampo, String valorAntigo, String valorNovo){
+        boolean mudou = valorAntigo == null ? valorNovo != null : !valorAntigo.equals(valorNovo);
+        if (mudou) {
+            if (mudancas.length() > 0) mudancas.append("; ");
+            mudancas.append(nomeCampo).append(" de '").append(valorAntigo).append("' para '").append(valorNovo).append("'");
+        }
+    }
+
     public Coordenador atualizar(Long id, CoordenadorFormDTO dto, UsuarioSessaoDTO ator, String ip, long duracaoMs){
         Coordenador coordenador = buscarPorId(id);
+
+        StringBuilder mudancas = new StringBuilder();
+        compararCampo(mudancas, "nome", coordenador.getNome(), dto.getNome());
+        compararCampo(mudancas, "email", coordenador.getEmail(), dto.getEmail());
+        compararCampo(mudancas, "registro funcional", coordenador.getRegistroFuncional(), dto.getRegistroFuncional());
+        compararCampo(mudancas, "curso", coordenador.getCurso(), dto.getCurso());
+        compararCampo(mudancas, "status", coordenador.isAtivo() ? "ativo" : "inativo", dto.isAtivo() ? "ativo" : "inativo");
 
         coordenador.setNome(dto.getNome());
         coordenador.setEmail(dto.getEmail());
@@ -67,9 +83,12 @@ public class CoordenadorService {
 
         coordenador = coordenadorRepository.save(coordenador);
 
+        String detalhes = mudancas.length() > 0
+                ? "Alteracoes em " + coordenador.getNome() + ": " + mudancas
+                : "Formulario salvo sem alteracoes em " + coordenador.getNome();
+
         logAuditoriaService.registrar(ator.getId(), ator.getNome(), ator.getTipo(),
-                TipoAcao.ATUALIZACAO, "Coordenador", coordenador.getId(), "Dados do coordenador atualizados",
-                ip, duracaoMs);
+                TipoAcao.ATUALIZACAO, "Coordenador", coordenador.getId(), detalhes, ip, duracaoMs);
 
         return coordenador;
     }
@@ -80,7 +99,9 @@ public class CoordenadorService {
         coordenadorRepository.save(coordenador);
 
         logAuditoriaService.registrar(ator.getId(), ator.getNome(), ator.getTipo(),
-                TipoAcao.ATIVACAO, "Coordenador", id, "Cadastro aprovado", ip, duracaoMs);
+                TipoAcao.ATIVACAO, "Coordenador", id,
+                "Coordenador " + coordenador.getNome() + " (" + coordenador.getEmail() + ") aprovado, acesso liberado",
+                ip, duracaoMs);
     }
 
     public void desativar(Long id, UsuarioSessaoDTO ator, String ip, long duracaoMs){
@@ -89,17 +110,25 @@ public class CoordenadorService {
         coordenadorRepository.save(coordenador);
 
         logAuditoriaService.registrar(ator.getId(), ator.getNome(), ator.getTipo(),
-                TipoAcao.DESATIVACAO, "Coordenador", id, null, ip, duracaoMs);
+                TipoAcao.DESATIVACAO, "Coordenador", id,
+                "Coordenador " + coordenador.getNome() + " (" + coordenador.getEmail() + ") desativado, acesso bloqueado",
+                ip, duracaoMs);
     }
 
     public void excluir(Long id, UsuarioSessaoDTO ator, String ip, long duracaoMs){
         Coordenador coordenador = buscarPorId(id);
+
+        String nomeParaLog = coordenador.getNome();
+        String emailParaLog = coordenador.getEmail();
+
         coordenador.setAtivo(false);
         coordenador.setDataExclusao(LocalDateTime.now());
         coordenadorRepository.save(coordenador);
 
         logAuditoriaService.registrar(ator.getId(), ator.getNome(), ator.getTipo(),
-                TipoAcao.EXCLUSAO, "Coordenador", id, null, ip, duracaoMs);
+                TipoAcao.EXCLUSAO, "Coordenador", id,
+                "Coordenador excluido: " + nomeParaLog + " (" + emailParaLog + "). Dados academicos mantidos no banco.",
+                ip, duracaoMs);
     }
 
     public void anonimizar(Long id, UsuarioSessaoDTO ator, String ip, long duracaoMs){
@@ -119,6 +148,8 @@ public class CoordenadorService {
         coordenadorRepository.save(coordenador);
 
         logAuditoriaService.registrar(ator.getId(), ator.getNome(), ator.getTipo(),
-                TipoAcao.ANONIMIZACAO, "Coordenador", id, null, ip, duracaoMs);
+                TipoAcao.ANONIMIZACAO, "Coordenador", id,
+                "Dados pessoais do coordenador (id " + id + ") anonimizados definitivamente: nome, email, senha, registro e curso apagados",
+                ip, duracaoMs);
     }
 }
