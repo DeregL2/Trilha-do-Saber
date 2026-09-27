@@ -1,8 +1,10 @@
 package com.tcc.trilha_do_saber.controller;
 
 import com.tcc.trilha_do_saber.dto.CoordenadorFormDTO;
+import com.tcc.trilha_do_saber.dto.UsuarioSessaoDTO;
 import com.tcc.trilha_do_saber.model.Coordenador;
 import com.tcc.trilha_do_saber.service.CoordenadorService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import org.springframework.stereotype.Controller;
@@ -16,10 +18,12 @@ public class AdminUsuarioController {
 
     private final CoordenadorService coordenadorService;
 
+    // Construtor
     public AdminUsuarioController(CoordenadorService coordenadorService){
         this.coordenadorService = coordenadorService;
     }
 
+    // Lista os coordenadores na tela do admin
     @GetMapping
     public String listar(Model model, HttpSession session){
         model.addAttribute("coordenadores", coordenadorService.listarTodos());
@@ -27,6 +31,7 @@ public class AdminUsuarioController {
         return "admin/coordenadores";
     }
 
+    // Monta o formulario de edicao ja preenchido com os dados atuais do coordenador
     @GetMapping("/{id}/editar")
     public String editarFormulario(@PathVariable Long id, Model model, HttpSession session){
         Coordenador coordenador = coordenadorService.buscarPorId(id);
@@ -44,36 +49,68 @@ public class AdminUsuarioController {
         return "admin/coordenadorForm";
     }
 
+    // Salva as alteracoes do formulario; exige usuario logado, senao manda pro login em vez de quebrar
     @PostMapping("/{id}")
-    public String atualizar(@PathVariable Long id, @Valid @ModelAttribute("coordenadorForm") CoordenadorFormDTO form, BindingResult result){
+    public String atualizar(@PathVariable Long id, @Valid @ModelAttribute("coordenadorForm") CoordenadorFormDTO form,
+                            BindingResult result, HttpSession session, HttpServletRequest request){
         if (result.hasErrors()) {
             return "admin/coordenadorForm";
         }
-        coordenadorService.atualizar(id, form);
+        UsuarioSessaoDTO ator = (UsuarioSessaoDTO) session.getAttribute("usuarioLogado");
+        if (ator == null) {
+            return "redirect:/login";
+        }
+        // Mede o tempo da operacao pra registrar no log de auditoria junto com quem fez e de onde
+        long inicio = System.currentTimeMillis();
+        coordenadorService.atualizar(id, form, ator, request.getRemoteAddr(), System.currentTimeMillis() - inicio);
         return "redirect:/admin/coordenadores";
     }
 
+    // Aprova o cadastro do coordenador
     @PostMapping("/{id}/aprovar")
-    public String aprovar(@PathVariable Long id){
-        coordenadorService.ativar(id);
+    public String aprovar(@PathVariable Long id, HttpSession session, HttpServletRequest request){
+        UsuarioSessaoDTO ator = (UsuarioSessaoDTO) session.getAttribute("usuarioLogado");
+        if (ator == null) {
+            return "redirect:/login";
+        }
+        long inicio = System.currentTimeMillis();
+        coordenadorService.ativar(id, ator, request.getRemoteAddr(), System.currentTimeMillis() - inicio);
         return "redirect:/admin/coordenadores";
     }
 
+    // Bloqueia o acesso do coordenador
     @PostMapping("/{id}/desativar")
-    public String desativar(@PathVariable Long id){
-        coordenadorService.desativar(id);
+    public String desativar(@PathVariable Long id, HttpSession session, HttpServletRequest request){
+        UsuarioSessaoDTO ator = (UsuarioSessaoDTO) session.getAttribute("usuarioLogado");
+        if (ator == null) {
+            return "redirect:/login";
+        }
+        long inicio = System.currentTimeMillis();
+        coordenadorService.desativar(id, ator, request.getRemoteAddr(), System.currentTimeMillis() - inicio);
         return "redirect:/admin/coordenadores";
     }
 
+    // Exclui (soft delete) o coordenador
     @PostMapping("/{id}/excluir")
-    public String excluir(@PathVariable Long id){
-        coordenadorService.excluir(id);
+    public String excluir(@PathVariable Long id, HttpSession session, HttpServletRequest request){
+        UsuarioSessaoDTO ator = (UsuarioSessaoDTO) session.getAttribute("usuarioLogado");
+        if (ator == null) {
+            return "redirect:/login";
+        }
+        long inicio = System.currentTimeMillis();
+        coordenadorService.excluir(id, ator, request.getRemoteAddr(), System.currentTimeMillis() - inicio);
         return "redirect:/admin/coordenadores";
     }
 
+    // Anonimiza definitivamente os dados pessoais do coordenador
     @PostMapping("/{id}/anonimizar")
-    public String anonimizar(@PathVariable Long id){
-        coordenadorService.anonimizar(id);
+    public String anonimizar(@PathVariable Long id, HttpSession session, HttpServletRequest request){
+        UsuarioSessaoDTO ator = (UsuarioSessaoDTO) session.getAttribute("usuarioLogado");
+        if (ator == null) {
+            return "redirect:/login";
+        }
+        long inicio = System.currentTimeMillis();
+        coordenadorService.anonimizar(id, ator, request.getRemoteAddr(), System.currentTimeMillis() - inicio);
         return "redirect:/admin/coordenadores";
     }
 }
