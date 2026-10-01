@@ -199,4 +199,18 @@ public class ImportadorProvaService {
 
         return questoesImportadas;
     }
+
+    private int acharMarcador (String texto, char letra, int posicaoInicial){
+
+        Pattern padraoAlternativa = Pattern.compile("\n" + letra + "\\s");
+        Matcher matcherAlternativa = padraoAlternativa.matcher(texto);
+
+        boolean achouMarcador = matcherAlternativa.find(posicaoInicial);
+
+        if(achouMarcador){
+            return matcherAlternativa.start();
+        }
+
+        return -1;
+    }
 }

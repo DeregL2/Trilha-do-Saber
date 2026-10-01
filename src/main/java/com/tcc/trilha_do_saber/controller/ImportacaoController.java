@@ -1,7 +1,7 @@
 package com.tcc.trilha_do_saber.controller;
 
 import com.tcc.trilha_do_saber.service.GabaritoService;
-import com.tcc.trilha_do_saber.service.ImportadorProvaService;
+import com.tcc.trilha_do_saber.service.ImportadorProvaServiceV2;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -15,11 +15,11 @@ import java.io.IOException;
 @Controller
 public class ImportacaoController {
 
-    private final ImportadorProvaService importadorProvaService;
+    private final ImportadorProvaServiceV2 importadorProvaService;
     private final GabaritoService gabaritoService;
 
     // Construtor
-    public ImportacaoController(ImportadorProvaService importadorProvaService, GabaritoService gabaritoService) {
+    public ImportacaoController(ImportadorProvaServiceV2 importadorProvaService, GabaritoService gabaritoService) {
         this.importadorProvaService = importadorProvaService;
         this.gabaritoService = gabaritoService;
     }
