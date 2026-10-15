@@ -19,8 +19,10 @@
             </div>
             <div class="topo-direita">
                 <span class="cronometro" id="cronometro" th:data-segundos="${segundosRestantes}">--:--:--</span>
+                <!-- numero real da questao na prova, e ao lado a posicao dentro do simulado -->
                 <span class="contador">
-                    Questão <strong th:text="${ordem}">1</strong> de <span th:text="${total}">20</span>
+                    Questão <strong th:text="${questao.numero}">1</strong> &middot;
+                    <span th:text="${ordem}">1</span> de <span th:text="${total}">20</span>
                 </span>
             </div>
         </div>
@@ -32,7 +34,7 @@
     <main class="conteudo">
 
         <div class="etiquetas">
-            <span class="etiqueta-ordem">Questão <span th:text="${ordem}">1</span></span>
+            <span class="etiqueta-ordem">Questão <span th:text="${questao.numero}">1</span></span>
         </div>
 
         <!-- Texto de apoio: so aparece quando a questao tem fonte cadastrada -->
@@ -42,6 +44,12 @@
 
         <div class="cartao-enunciado">
             <p th:text="${questao.enunciado}">Enunciado da questão</p>
+        </div>
+
+        <!-- Imagem de apoio: vem DEPOIS do enunciado, e so aparece quando a questao tem imagem capturada do PDF -->
+        <div class="cartao-imagem" th:if="${questao.imagem != null}">
+            <img th:src="@{'/questao/' + ${questao.id} + '/imagem'}"
+                 alt="Imagem de apoio da questão" class="imagem-questao">
         </div>
 
         <div class="alternativas">

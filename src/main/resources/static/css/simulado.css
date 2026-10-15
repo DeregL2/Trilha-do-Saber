@@ -478,3 +478,25 @@ body {
     background: var(--vermelho-fundo);
     color: var(--vermelho);
 }
+
+/* ---------- Imagem de apoio da questao ---------- */
+
+.cartao-imagem {
+    background: #fff;
+    border: 1px solid var(--borda);
+    border-radius: 16px;
+    padding: 16px;
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: center;
+}
+
+.imagem-questao {
+    max-width: 100%;
+    max-height: 420px;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    border-radius: 8px;
+    display: block;
+}

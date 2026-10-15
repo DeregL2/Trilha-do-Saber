@@ -34,3 +34,5 @@ build/
 .vscode/
 
 application-local.properties
+
+Claude outputs/
