@@ -1,47 +1,56 @@
 package com.tcc.trilha_do_saber.controller;
 
+import com.tcc.trilha_do_saber.dto.ResultadoSimuladoDTO;
+import com.tcc.trilha_do_saber.dto.UsuarioSessaoDTO;
 import com.tcc.trilha_do_saber.model.Alternativa;
 import com.tcc.trilha_do_saber.model.Questao;
 import com.tcc.trilha_do_saber.model.Simulado;
 import com.tcc.trilha_do_saber.model.SimuladoQuestao;
 import com.tcc.trilha_do_saber.repository.AlternativaRepository;
 import com.tcc.trilha_do_saber.service.SimuladoService;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import com.tcc.trilha_do_saber.dto.ResultadoSimuladoDTO;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 
-@Controller // Diz ao Spring que essa classe atende requisições HTTP e devolve páginas
+@Controller
 public class SimuladoController {
 
     private final SimuladoService simuladoService;
     private final AlternativaRepository alternativaRepository;
 
-    // Construtor da Classe
     public SimuladoController(SimuladoService simuladoService, AlternativaRepository alternativaRepository) {
         this.simuladoService = simuladoService;
         this.alternativaRepository = alternativaRepository;
     }
 
-    // Cria o simulado e manda o aluno direto para a primeira questao.
     @GetMapping("/simulado/iniciar")
-    public String iniciar(@RequestParam(defaultValue = "Sistemas de Informação") String curso) {
+    public String iniciar(HttpSession session) {
 
-        Simulado simulado = simuladoService.iniciar("Aluno", curso);
+        UsuarioSessaoDTO aluno = alunoLogado(session);
+        if (aluno == null) {
+            return "redirect:/login";
+        }
+
+        Simulado simulado = simuladoService.iniciar(aluno.getId());
 
         return "redirect:/simulado/" + simulado.getId() + "/questao/1";
     }
 
-    // Mostra uma questao do simulado. A ordem e a posicao dela: 1, 2, 3...
     @GetMapping("/simulado/{id}/questao/{ordem}")
-    public String questao(@PathVariable Long id, @PathVariable int ordem, Model model) {
+    public String questao(@PathVariable Long id, @PathVariable int ordem, Model model, HttpSession session) {
+
+        String bloqueio = verificarAcesso(id, session);
+        if (bloqueio != null) {
+            return bloqueio;
+        }
 
         Simulado simulado = simuladoService.buscarSimulado(id);
 
@@ -60,7 +69,6 @@ public class SimuladoController {
 
         long total = simuladoService.totalQuestoes(id);
         long respondidas = simuladoService.totalRespondidas(id);
-
 
         long segundosRestantes = Duration.between(LocalDateTime.now(), simulado.getDataLimite()).getSeconds();
         if (segundosRestantes < 0) {
@@ -81,16 +89,20 @@ public class SimuladoController {
         return "simulado";
     }
 
-    // Recebe o envio do formulario. O botao clicado chega no parametro "acao".
     @PostMapping("/simulado/{id}/questao/{ordem}")
     public String responder(@PathVariable Long id,
                             @PathVariable int ordem,
                             @RequestParam(required = false) Long alternativaId,
-                            @RequestParam String acao) {
+                            @RequestParam String acao,
+                            HttpSession session) {
+
+        String bloqueio = verificarAcesso(id, session);
+        if (bloqueio != null) {
+            return bloqueio;
+        }
 
         SimuladoQuestao simuladoQuestao = simuladoService.buscarQuestao(id, ordem);
 
-        // required = false permite avancar sem marcar nada, deixando a questao em branco
         if (alternativaId != null) {
             simuladoService.responder(id, simuladoQuestao.getQuestao().getId(), alternativaId);
         }
@@ -102,7 +114,6 @@ public class SimuladoController {
 
         int destino = "anterior".equals(acao) ? ordem - 1 : ordem + 1;
 
-        // Trava de seguranca caso o destino saia do intervalo valido
         long total = simuladoService.totalQuestoes(id);
         if (destino < 1) {
             destino = 1;
@@ -111,14 +122,16 @@ public class SimuladoController {
             destino = (int) total;
         }
 
-        // Redireciona em vez de devolver a tela: assim o F5 recarrega a questao,
-        // e não reenvia o form.
         return "redirect:/simulado/" + id + "/questao/" + destino;
     }
 
-    // Tela de encerramento. O calculo de acertos e os graficos sao a regra de negocio do retorno.
     @GetMapping("/simulado/{id}/concluido")
-    public String concluido(@PathVariable Long id, Model model) {
+    public String concluido(@PathVariable Long id, Model model, HttpSession session) {
+
+        String bloqueio = verificarAcesso(id, session);
+        if (bloqueio != null) {
+            return bloqueio;
+        }
 
         Simulado simulado = simuladoService.buscarSimulado(id);
 
@@ -130,9 +143,38 @@ public class SimuladoController {
     }
 
     @GetMapping("/simulado/{id}/resultado")
-    public String verResultado(@PathVariable Long id, Model model) {
+    public String verResultado(@PathVariable Long id, Model model, HttpSession session) {
+
+        String bloqueio = verificarAcesso(id, session);
+        if (bloqueio != null) {
+            return bloqueio;
+        }
+
+        if (!simuladoService.buscarSimulado(id).isFinalizado()) {
+            return "redirect:/simulado/" + id + "/questao/1";
+        }
+
         ResultadoSimuladoDTO resultado = simuladoService.gerarResultado(id);
         model.addAttribute("resultado", resultado);
         return "resultado";
+    }
+
+    private UsuarioSessaoDTO alunoLogado(HttpSession session) {
+        Object logado = session.getAttribute("usuarioLogado");
+        if (logado instanceof UsuarioSessaoDTO usuario && "ALUNO".equals(usuario.getTipo())) {
+            return usuario;
+        }
+        return null;
+    }
+
+    private String verificarAcesso(Long simuladoId, HttpSession session) {
+        UsuarioSessaoDTO aluno = alunoLogado(session);
+        if (aluno == null) {
+            return "redirect:/login";
+        }
+        if (!simuladoService.pertenceAoAluno(simuladoId, aluno.getId())) {
+            return "redirect:/aluno/dashboard";
+        }
+        return null;
     }
 }
