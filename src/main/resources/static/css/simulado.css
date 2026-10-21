@@ -443,7 +443,8 @@ body {
 
 .campo input[type="text"],
 .campo input[type="number"],
-.campo input[type="file"] {
+.campo input[type="file"],
+.campo select {
     width: 100%;
     padding: 10px 12px;
     border: 1px solid var(--borda);
@@ -455,7 +456,8 @@ body {
 }
 
 .campo input[type="text"]:focus,
-.campo input[type="number"]:focus {
+.campo input[type="number"]:focus,
+.campo select:focus {
     outline: none;
     border-color: var(--marca);
 }

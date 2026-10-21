@@ -31,8 +31,7 @@ build/
 !**/src/test/**/build/
 
 ### VS Code ###
+
 .vscode/
-
 application-local.properties
-
 Claude outputs/

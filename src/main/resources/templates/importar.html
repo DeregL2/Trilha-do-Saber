@@ -27,7 +27,11 @@
 
             <div class="campo">
                 <label for="curso">Curso</label>
-                <input type="text" id="curso" name="curso" required>
+                <select id="curso" name="curso" required>
+                    <option value="">Selecionar curso</option>
+                    <option th:each="c : ${T(com.tcc.trilha_do_saber.model.Curso).values()}"
+                            th:value="${c.nomeExibicao}" th:text="${c.nomeExibicao}"></option>
+                </select>
             </div>
 
             <div class="campo">
