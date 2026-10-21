@@ -1,11 +1,13 @@
 package com.tcc.trilha_do_saber.service;
 
+import com.tcc.trilha_do_saber.model.Aluno;
 import com.tcc.trilha_do_saber.model.Alternativa;
 import com.tcc.trilha_do_saber.model.Questao;
 import com.tcc.trilha_do_saber.model.Resposta;
 import com.tcc.trilha_do_saber.model.Simulado;
 import com.tcc.trilha_do_saber.model.SimuladoQuestao;
 import com.tcc.trilha_do_saber.repository.AlternativaRepository;
+import com.tcc.trilha_do_saber.repository.AlunoRepository;
 import com.tcc.trilha_do_saber.repository.QuestaoRepository;
 import com.tcc.trilha_do_saber.repository.RespostaRepository;
 import com.tcc.trilha_do_saber.repository.SimuladoQuestaoRepository;
@@ -32,25 +34,31 @@ public class SimuladoService {
     private final QuestaoRepository questaoRepository;
     private final AlternativaRepository alternativaRepository;
     private final RespostaRepository respostaRepository;
+    private final AlunoRepository alunoRepository;
 
-    // Construtor da Classe
     public SimuladoService(SimuladoRepository simuladoRepository,
                            SimuladoQuestaoRepository simuladoQuestaoRepository,
                            QuestaoRepository questaoRepository,
                            AlternativaRepository alternativaRepository,
-                           RespostaRepository respostaRepository) {
+                           RespostaRepository respostaRepository,
+                           AlunoRepository alunoRepository) {
 
         this.simuladoRepository = simuladoRepository;
         this.simuladoQuestaoRepository = simuladoQuestaoRepository;
         this.questaoRepository = questaoRepository;
         this.alternativaRepository = alternativaRepository;
         this.respostaRepository = respostaRepository;
+        this.alunoRepository = alunoRepository;
     }
 
     @Transactional
-    public Simulado iniciar(String nomeUsuario, String curso) {
+    public Simulado iniciar(Long alunoId) {
 
-        // Busca so as questoes das provas desse curso, de qualquer ano.
+        Aluno aluno = alunoRepository.findById(alunoId)
+                .orElseThrow(() -> new RuntimeException("Aluno nao encontrado"));
+
+        String curso = aluno.getCurso();
+
         List<Questao> disponiveis = new ArrayList<>(questaoRepository.findByProvaCurso(curso));
 
         if (disponiveis.isEmpty()) {
@@ -64,9 +72,8 @@ public class SimuladoService {
         int duracao = quantidade * MINUTOS_POR_QUESTAO;
 
         Simulado simulado = simuladoRepository.save(
-                new Simulado(nomeUsuario, "Simulado ENADE - " + curso, duracao, LocalDateTime.now()));
+                new Simulado(aluno, "Simulado ENADE - " + curso, duracao, LocalDateTime.now()));
 
-        // Grava quais questoes cairam e em que posicao. A ordem comeca em 1.
         for (int i = 0; i < quantidade; i++) {
             simuladoQuestaoRepository.save(new SimuladoQuestao(simulado, disponiveis.get(i), i + 1));
         }
@@ -74,7 +81,10 @@ public class SimuladoService {
         return simulado;
     }
 
-    // Registra a resposta. Se o aluno ja tinha respondido essa questao, atualiza em vez de duplicar.
+    public boolean pertenceAoAluno(Long simuladoId, Long alunoId) {
+        return simuladoRepository.existsByIdAndAlunoId(simuladoId, alunoId);
+    }
+
     @Transactional
     public Resposta responder(Long simuladoId, Long questaoId, Long alternativaId) {
 
@@ -101,7 +111,6 @@ public class SimuladoService {
 
         Optional<Resposta> jaRespondida = respostaRepository.findBySimuladoIdAndQuestaoId(simuladoId, questaoId);
 
-        // Botao anterior nao cria linhas novas, altera as que ja existem.
         if (jaRespondida.isPresent()) {
             Resposta resposta = jaRespondida.get();
             resposta.alterarResposta(alternativa, acertou, agora);
@@ -115,7 +124,6 @@ public class SimuladoService {
                 new Resposta(simulado.getNomeUsuario(), questao, alternativa, acertou, agora, simulado));
     }
 
-    // Encerra o simulado. A partir daqui nenhuma resposta e aceita.
     @Transactional
     public Simulado finalizar(Long simuladoId) {
 
@@ -152,12 +160,9 @@ public class SimuladoService {
         return respostaRepository.countBySimuladoId(simuladoId);
     }
 
-    // Gera o resultado do simulado
     public ResultadoSimuladoDTO gerarResultado(Long simuladoId) {
-        List<Resposta> respostas = respostaRepository.findBySimuladoId(simuladoId);
-
-        int total = respostas.size();
-        int acertos = (int) respostas.stream().filter(Resposta::isAcertou).count();
+        int total = (int) simuladoQuestaoRepository.countBySimuladoId(simuladoId);
+        int acertos = (int) respostaRepository.countBySimuladoIdAndAcertouTrue(simuladoId);
         int erros = total - acertos;
         double percentual = total == 0 ? 0 : (acertos * 100.0) / total;
 

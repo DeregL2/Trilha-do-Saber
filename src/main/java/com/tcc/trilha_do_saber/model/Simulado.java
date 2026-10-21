@@ -1,63 +1,67 @@
 package com.tcc.trilha_do_saber.model;
 
-// Todos os importes do JPA
+
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
-@Entity // Representa uma tabela no banco de dados
+@Entity
 public class Simulado {
 
-    @Id // Atributo que vai receber a chave primaria da tabela
-    @GeneratedValue(strategy = GenerationType.IDENTITY) // Atributo para gerar as Chaves automaticas.
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+
+    @ManyToOne
+    @JoinColumn(name = "aluno_id")
+    private Aluno aluno;
 
     private String nomeUsuario;
 
-    private String titulo; // Nome que aparece no topo da tela
+    private String titulo;
 
-    private int duracaoMinutos; // Tempo total do simulado
+    private int duracaoMinutos;
 
     private LocalDateTime dataInicio;
-    private LocalDateTime dataFim; // Fica null enquanto nao entregou
+    private LocalDateTime dataFim;
     private boolean finalizado;
 
-    // Construtor JPA
     public Simulado() {
 
     }
 
-    // Construtor da Classe
-    public Simulado(String nomeUsuario, String titulo, int duracaoMinutos, LocalDateTime dataInicio) {
-        this.nomeUsuario = nomeUsuario;
+    public Simulado(Aluno aluno, String titulo, int duracaoMinutos, LocalDateTime dataInicio) {
+        this.aluno = aluno;
+        this.nomeUsuario = aluno.getNome();
         this.titulo = titulo;
         this.duracaoMinutos = duracaoMinutos;
         this.dataInicio = dataInicio;
         this.finalizado = false; // Todo simulado comeca em andamento
     }
 
-    // Encerra o simulado: grava a data e marca como finalizado
     public void finalizar(LocalDateTime dataFim) {
         this.dataFim = dataFim;
         this.finalizado = true;
     }
 
-    // Calcula a hora limite. Nao vira coluna porque o Hibernate mapeia so os atributos.
     public LocalDateTime getDataLimite() {
         return dataInicio.plusMinutes(duracaoMinutos);
     }
 
-    // Verifica se o tempo ja acabou
     public boolean expirou(LocalDateTime agora) {
         return agora.isAfter(getDataLimite());
     }
 
-    // So permite responder se nao finalizou e nao estourou o tempo
     public boolean estaEmAndamento(LocalDateTime agora) {
         return !finalizado && !expirou(agora);
     }
 
     public Long getId() {
         return id;
+    }
+
+    public Aluno getAluno() {
+        return aluno;
     }
 
     public String getNomeUsuario() {
