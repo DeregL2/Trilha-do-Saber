@@ -48,8 +48,7 @@ public class CoordenadorService {
         }
 
         String senhaComHash = passwordEncoder.encode(dto.getSenha());
-        Coordenador coordenador = new Coordenador(dto.getNome(), dto.getEmail(), senhaComHash, dto.getRegistroFuncional(), dto.getCurso());
-        coordenador.setConsentimentoLgpd(dto.isAceitouTermos());
+        Coordenador coordenador = new Coordenador(dto.getNome(), dto.getEmail(), senhaComHash, dto.getRegistroFuncional(), dto.cursosJuntos());        coordenador.setConsentimentoLgpd(dto.isAceitouTermos());
         coordenador.setDataConsentimento(LocalDateTime.now());
         coordenador = coordenadorRepository.save(coordenador);
 
