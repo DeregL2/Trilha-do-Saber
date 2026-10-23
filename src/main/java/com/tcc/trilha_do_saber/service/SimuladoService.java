@@ -1,5 +1,6 @@
 package com.tcc.trilha_do_saber.service;
 
+import com.tcc.trilha_do_saber.exception.SemQuestoesException;
 import com.tcc.trilha_do_saber.model.Aluno;
 import com.tcc.trilha_do_saber.model.Alternativa;
 import com.tcc.trilha_do_saber.model.Questao;
@@ -62,7 +63,7 @@ public class SimuladoService {
         List<Questao> disponiveis = new ArrayList<>(questaoRepository.findByProvaCurso(curso));
 
         if (disponiveis.isEmpty()) {
-            throw new RuntimeException("Nao ha questoes cadastradas para o curso " + curso);
+            throw new SemQuestoesException(curso);
         }
 
         Collections.shuffle(disponiveis);
