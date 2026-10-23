@@ -14,6 +14,7 @@ import org.apache.pdfbox.text.PDFTextStripper;
 import org.apache.pdfbox.text.TextPosition;
 import org.springframework.stereotype.Service;
 import org.apache.pdfbox.contentstream.PDFStreamEngine;
+import org.apache.pdfbox.contentstream.PDFGraphicsStreamEngine;
 import org.apache.pdfbox.util.Matrix;
 import java.awt.geom.Point2D;
 import org.apache.pdfbox.contentstream.operator.Operator;
@@ -21,6 +22,7 @@ import org.apache.pdfbox.cos.COSBase;
 import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.graphics.PDXObject;
 import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
+import org.apache.pdfbox.pdmodel.graphics.image.PDImage;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.apache.pdfbox.contentstream.operator.state.Concatenate;
 import org.apache.pdfbox.contentstream.operator.state.Restore;
@@ -51,11 +53,22 @@ public class ImportadorProvaServiceV2 {
 
     private static final float PADDING_PONTOS = 15f;
 
+    private static final float Y_MINIMO_CONTEUDO = 120f;
+
+    private static final float Y_MAXIMO_CONTEUDO = 690f;
+
+    private static final int NUMERO_DE_FAIXAS = 20;
+
+    private static final int PONTOS_MINIMOS_POR_FAIXA = 5;
+
+    private static final int PONTOS_MINIMOS_NA_QUESTAO = 25;
+
     public ImportadorProvaServiceV2(QuestaoRepository questaoRepository, AlternativaRepository alternativaRepository, ProvaRepository provaRepository) {
         this.questaoRepository = questaoRepository;
         this.alternativaRepository = alternativaRepository;
         this.provaRepository = provaRepository;
     }
+
 
     private static class CabecalhoQuestao {
         int numero;
@@ -98,6 +111,7 @@ public class ImportadorProvaServiceV2 {
         }
     }
 
+
     private static class LocalizadorDeImagens extends PDFStreamEngine {
 
         Map<Integer, List<float[]>> imagensPorPagina = new HashMap<>();
@@ -114,6 +128,7 @@ public class ImportadorProvaServiceV2 {
             this.paginaAtual = numeroPagina;
             processPage(pagina);
         }
+
 
         @Override
         protected void processOperator(Operator operator, List<COSBase> operands) throws IOException {
@@ -155,7 +170,61 @@ public class ImportadorProvaServiceV2 {
         }
     }
 
+    private static class LocalizadorDeDesenhos extends PDFGraphicsStreamEngine {
+
+        final List<float[]> pontos = new ArrayList<>();
+        private Point2D.Float pontoAtual = new Point2D.Float();
+
+        LocalizadorDeDesenhos(PDPage pagina) {
+            super(pagina);
+        }
+
+        private void registrar(float x, float y) {
+            float alturaPagina = getCurrentPage().getMediaBox().getHeight();
+            pontos.add(new float[]{x, alturaPagina - y});
+        }
+
+        @Override
+        public void moveTo(float x, float y) {
+            pontoAtual = new Point2D.Float(x, y);
+            registrar(x, y);
+        }
+
+        @Override
+        public void lineTo(float x, float y) {
+            pontoAtual = new Point2D.Float(x, y);
+            registrar(x, y);
+        }
+
+        @Override
+        public void curveTo(float x1, float y1, float x2, float y2, float x3, float y3) {
+            pontoAtual = new Point2D.Float(x3, y3);
+            registrar(x3, y3);
+        }
+
+        @Override
+        public void appendRectangle(Point2D p0, Point2D p1, Point2D p2, Point2D p3) {
+            registrar((float) p0.getX(), (float) p0.getY());
+            registrar((float) p2.getX(), (float) p2.getY());
+        }
+
+        @Override
+        public Point2D getCurrentPoint() {
+            return pontoAtual;
+        }
+
+        @Override public void drawImage(PDImage pdImage) { }
+        @Override public void clip(int windingRule) { }
+        @Override public void closePath() { }
+        @Override public void endPath() { }
+        @Override public void strokePath() { }
+        @Override public void fillPath(int windingRule) { }
+        @Override public void fillAndStrokePath(int windingRule) { }
+        @Override public void shadingFill(COSName shadingName) { }
+    }
+
     public int provaMontada(String documento, int ano, String curso){
+
 
         Pattern padraoQuestao = Pattern.compile("(?ius)quest[ãa]o\\s+(\\d+)((?:(?!quest[ãa]o\\s+\\d+).){100,})\\n(?-i:A)\\s+((?:(?!quest[ãa]o\\s+\\d+).)*?)\\n(?-i:B)\\s+((?:(?!quest[ãa]o\\s+\\d+).)*?)\\n(?-i:C)\\s+((?:(?!quest[ãa]o\\s+\\d+).)*?)\\n(?-i:D)\\s+((?:(?!quest[ãa]o\\s+\\d+).)*?)\\n(?-i:E)\\s+(.*?)(?=quest[ãa]o\\s+\\d+|[áa]rea\\s+livre|\\*[\\d*]*R\\s*\\d+|$)");
 
@@ -273,6 +342,14 @@ public class ImportadorProvaServiceV2 {
             }
             Map<Integer, List<float[]>> imagensPorPagina = localizadorImagens.imagensPorPagina;
 
+            Map<Integer, List<float[]>> desenhosPorPagina = new HashMap<>();
+            for (int i = 1; i <= doc.getNumberOfPages(); i++) {
+                PDPage paginaDesenho = doc.getPage(i - 1);
+                LocalizadorDeDesenhos localizadorDesenhos = new LocalizadorDeDesenhos(paginaDesenho);
+                localizadorDesenhos.processPage(paginaDesenho);
+                desenhosPorPagina.put(i, localizadorDesenhos.pontos);
+            }
+
             Prova prova = provaRepository.save(new Prova(ano, curso));
 
             Matcher matcherQuestao =  padraoQuestao.matcher(textoPdfCompleto);
@@ -299,7 +376,16 @@ public class ImportadorProvaServiceV2 {
 
                 byte[] imagemRecortada = null;
                 CabecalhoQuestao cabecalho = cabecalhoPorNumero.get(numeroQuestao);
-                float[] faixaImagem = cabecalho != null ? faixaDaImagemNaQuestao(imagensPorPagina, cabecalho) : null;
+                float[] faixaImagem = null;
+
+                if (cabecalho != null) {
+                    faixaImagem = faixaDaImagemNaQuestao(imagensPorPagina, cabecalho);
+
+                    if (faixaImagem == null) {
+                        float alturaDaPagina = doc.getPage(cabecalho.pagina - 1).getMediaBox().getHeight();
+                        faixaImagem = faixaDoDesenhoNaQuestao(desenhosPorPagina, cabecalho, alturaDaPagina);
+                    }
+                }
 
                 if (faixaImagem != null) {
                     imagemRecortada = recortarImagemDaQuestao(renderer, cachePaginas, cabecalho, faixaImagem);
@@ -349,6 +435,55 @@ public class ImportadorProvaServiceV2 {
         }
 
         return encontrou ? new float[]{yTopo, yBase} : null;
+    }
+
+    private float[] faixaDoDesenhoNaQuestao(Map<Integer, List<float[]>> desenhosPorPagina, CabecalhoQuestao cabecalho, float alturaPagina) {
+        List<float[]> pontosDaPagina = desenhosPorPagina.get(cabecalho.pagina);
+        if (pontosDaPagina == null) {
+            return null;
+        }
+
+        float alturaDaFaixa = alturaPagina / NUMERO_DE_FAIXAS;
+        int[] contagem = new int[NUMERO_DE_FAIXAS];
+        int totalNaQuestao = 0;
+
+        for (float[] ponto : pontosDaPagina) {
+            float y = ponto[1];
+
+            if (y < Y_MINIMO_CONTEUDO || y > Y_MAXIMO_CONTEUDO) {
+                continue;
+            }
+            if (y < cabecalho.y || y > cabecalho.yFim) {
+                continue;
+            }
+
+            int faixa = (int) (y / alturaDaFaixa);
+            if (faixa >= 0 && faixa < NUMERO_DE_FAIXAS) {
+                contagem[faixa]++;
+                totalNaQuestao++;
+            }
+        }
+
+        if (totalNaQuestao < PONTOS_MINIMOS_NA_QUESTAO) {
+            return null;
+        }
+
+        int primeiraFaixa = -1;
+        int ultimaFaixa = -1;
+        for (int f = 0; f < NUMERO_DE_FAIXAS; f++) {
+            if (contagem[f] >= PONTOS_MINIMOS_POR_FAIXA) {
+                if (primeiraFaixa == -1) {
+                    primeiraFaixa = f;
+                }
+                ultimaFaixa = f;
+            }
+        }
+
+        if (primeiraFaixa == -1) {
+            return null;
+        }
+
+        return new float[]{primeiraFaixa * alturaDaFaixa, (ultimaFaixa + 1) * alturaDaFaixa};
     }
 
     private byte[] recortarImagemDaQuestao(PDFRenderer renderer, Map<Integer, BufferedImage> cachePaginas, CabecalhoQuestao cabecalho, float[] faixaImagem) throws IOException {

@@ -48,8 +48,7 @@ public class CoordenadorService {
         }
 
         String senhaComHash = passwordEncoder.encode(dto.getSenha());
-        Coordenador coordenador = new Coordenador(dto.getNome(), dto.getEmail(), senhaComHash, dto.getRegistroFuncional(), dto.getCurso());
-        coordenador.setConsentimentoLgpd(dto.isAceitouTermos());
+        Coordenador coordenador = new Coordenador(dto.getNome(), dto.getEmail(), senhaComHash, dto.getRegistroFuncional(), dto.cursosJuntos());        coordenador.setConsentimentoLgpd(dto.isAceitouTermos());
         coordenador.setDataConsentimento(LocalDateTime.now());
         coordenador = coordenadorRepository.save(coordenador);
 
@@ -79,13 +78,13 @@ public class CoordenadorService {
         compararCampo(mudancas, "nome", coordenador.getNome(), dto.getNome());
         compararCampo(mudancas, "email", coordenador.getEmail(), dto.getEmail());
         compararCampo(mudancas, "registro funcional", coordenador.getRegistroFuncional(), dto.getRegistroFuncional());
-        compararCampo(mudancas, "curso", coordenador.getCurso(), dto.getCurso());
+        compararCampo(mudancas, "curso", coordenador.getCurso(), dto.cursosJuntos());
         compararCampo(mudancas, "status", coordenador.isAtivo() ? "ativo" : "inativo", dto.isAtivo() ? "ativo" : "inativo");
 
         coordenador.setNome(dto.getNome());
         coordenador.setEmail(dto.getEmail());
         coordenador.setRegistroFuncional(dto.getRegistroFuncional());
-        coordenador.setCurso(dto.getCurso());
+        coordenador.setCurso(dto.cursosJuntos());
         coordenador.setAtivo(dto.isAtivo());
 
         coordenador = coordenadorRepository.save(coordenador);

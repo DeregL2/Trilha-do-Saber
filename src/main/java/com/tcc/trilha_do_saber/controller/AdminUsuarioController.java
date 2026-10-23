@@ -12,6 +12,9 @@ import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Controller
 @RequestMapping("/admin/coordenadores")
 public class AdminUsuarioController {
@@ -36,12 +39,17 @@ public class AdminUsuarioController {
     public String editarFormulario(@PathVariable Long id, Model model, HttpSession session){
         Coordenador coordenador = coordenadorService.buscarPorId(id);
 
+        // O curso fica salvo como uma string unica ("Curso A; Curso B"); aqui ela e separada
+        // de volta em curso principal (primeiro) + adicionais (resto), pra preencher o form
+        List<String> cursos = coordenador.getCursos();
+
         CoordenadorFormDTO form = new CoordenadorFormDTO();
         form.setId(coordenador.getId());
         form.setNome(coordenador.getNome());
         form.setEmail(coordenador.getEmail());
         form.setRegistroFuncional(coordenador.getRegistroFuncional());
-        form.setCurso(coordenador.getCurso());
+        form.setCurso(cursos.isEmpty() ? null : cursos.get(0));
+        form.setCursosAdicionais(cursos.size() > 1 ? new ArrayList<>(cursos.subList(1, cursos.size())) : new ArrayList<>());
         form.setAtivo(coordenador.isAtivo());
 
         model.addAttribute("coordenadorForm", form);
