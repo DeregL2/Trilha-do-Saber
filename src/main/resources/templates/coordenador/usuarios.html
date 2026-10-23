@@ -74,6 +74,8 @@
       <th>RGM</th>
       <th>Curso</th>
       <th>Semestre</th>
+      <th>Turma</th>
+      <th>Período</th>
       <th>Status</th>
       <th></th>
     </tr>
@@ -85,6 +87,8 @@
       <td th:text="${aluno.rgm}"></td>
       <td th:text="${aluno.curso}"></td>
       <td th:text="${aluno.semestre}"></td>
+      <td th:text="${aluno.turma} ?: '—'"></td>
+      <td th:text="${aluno.turno} ?: '—'"></td>
       <td>
                 <span class="badge-status" th:classappend="${aluno.ativo} ? 'badge-ativo' : 'badge-inativo'"
                       th:text="${aluno.ativo} ? 'Ativo' : (${aluno.isExcluido()} ? 'Excluído' : 'Pendente')"></span>
@@ -94,7 +98,7 @@
       </td>
     </tr>
     <tr th:if="${alunos.isEmpty()}">
-      <td colspan="7" class="linha-vazia">Nenhum aluno cadastrado</td>
+      <td colspan="9" class="linha-vazia">Nenhum aluno cadastrado</td>
     </tr>
     </tbody>
   </table>

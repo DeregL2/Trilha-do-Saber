@@ -2,6 +2,7 @@ package com.tcc.trilha_do_saber.controller;
 
 import com.tcc.trilha_do_saber.dto.ResultadoSimuladoDTO;
 import com.tcc.trilha_do_saber.dto.UsuarioSessaoDTO;
+import com.tcc.trilha_do_saber.exception.SemQuestoesException;
 import com.tcc.trilha_do_saber.model.Alternativa;
 import com.tcc.trilha_do_saber.model.Questao;
 import com.tcc.trilha_do_saber.model.Simulado;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -32,16 +34,21 @@ public class SimuladoController {
     }
 
     @GetMapping("/simulado/iniciar")
-    public String iniciar(HttpSession session) {
+    public String iniciar(HttpSession session, RedirectAttributes redirectAttributes) {
 
         UsuarioSessaoDTO aluno = alunoLogado(session);
         if (aluno == null) {
             return "redirect:/login";
         }
 
-        Simulado simulado = simuladoService.iniciar(aluno.getId());
-
-        return "redirect:/simulado/" + simulado.getId() + "/questao/1";
+        try {
+            Simulado simulado = simuladoService.iniciar(aluno.getId());
+            return "redirect:/simulado/" + simulado.getId() + "/questao/1";
+        } catch (SemQuestoesException e) {
+            redirectAttributes.addFlashAttribute("erroSimulado",
+                    "Ainda não há questões cadastradas para o curso " + e.getCurso() + ". Fale com a coordenação.");
+            return "redirect:/aluno/dashboard";
+        }
     }
 
     @GetMapping("/simulado/{id}/questao/{ordem}")
