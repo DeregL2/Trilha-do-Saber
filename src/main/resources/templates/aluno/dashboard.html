@@ -44,6 +44,8 @@
 
     <div class="palco">
 
+        <div class="alerta-erro" th:if="${erroSimulado}" th:text="${erroSimulado}"></div>
+
         <section th:if="${dashboard.semSimulados}" class="estado-vazio">
             <span class="icone-vazio">📝</span>
             <h2>Você ainda não realizou nenhum simulado</h2>
