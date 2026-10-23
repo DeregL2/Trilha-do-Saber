@@ -21,7 +21,7 @@
         <a th:href="@{/coordenador/inicio}" class="item-menu ativo"><span>🏠</span> Início</a>
         <a th:href="@{/coordenador/usuarios}" class="item-menu"><span>👥</span> Usuários</a>
         <a th:href="@{/coordenador/turmas}" class="item-menu"><span>🎓</span> Turmas</a>
-        <a href="#" class="item-menu"><span>📊</span> Relatórios</a>
+        <a th:href="@{/coordenador/dashboard}" class="item-menu"><span>📊</span> Desempenho</a>
         <a href="#" class="item-menu"><span>⚙️</span> Minha Conta</a>
     </nav>
 
@@ -66,6 +66,7 @@
         <h2>Acesso rápido</h2>
     </div>
     <a th:href="@{/coordenador/usuarios}" class="botao-primario">Gerenciar usuários</a>
+    <a th:href="@{/coordenador/turmas}" class="botao-primario">Turmas e professores</a>
 
 </main>
 

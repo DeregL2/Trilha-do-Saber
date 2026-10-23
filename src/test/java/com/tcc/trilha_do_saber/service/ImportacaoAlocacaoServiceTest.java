@@ -24,13 +24,13 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -79,7 +79,7 @@ class ImportacaoAlocacaoServiceTest {
         assertEquals("B", salva.getValue().getTurma());
         assertEquals("Noturno", salva.getValue().getTurno());
         assertEquals("Engenharia de Software", salva.getValue().getDisciplina());
-        assertSame(ana, salva.getValue().getProfessor());
+        assertEquals(List.of(ana), List.copyOf(salva.getValue().getProfessores()));
     }
 
     @Test
@@ -111,7 +111,7 @@ class ImportacaoAlocacaoServiceTest {
 
         assertEquals(Status.ATUALIZADA, resultado.getLinhas().get(0).getStatus());
         assertTrue(resultado.getLinhas().get(0).getMensagem().contains("de Ana para Bia"));
-        assertSame(bia, existente.getProfessor());
+        assertEquals(List.of(bia), List.copyOf(existente.getProfessores()));
         verify(alocacaoRepository).save(existente);
     }
 
@@ -382,6 +382,118 @@ class ImportacaoAlocacaoServiceTest {
     }
 
     @Test
+    void duasLinhasDaMesmaDisciplinaComProfessoresDiferentesDevemDividirADisciplina() {
+        Professor alessandro = professor(1L, "Alessandro", true, false);
+        Professor leonardo = professor(2L, "Leonardo", true, false);
+        professorExiste("alessandro@umc.br", alessandro);
+        professorExiste("leonardo@umc.br", leonardo);
+        naoExisteAlocacao();
+
+        ResultadoImportacaoDTO resultado = importar(List.of(SI),
+                "Sistemas de Informação;8;B;Noturno;Aplicativos Web;alessandro@umc.br",
+                "Sistemas de Informação;8;B;Noturno;Aplicativos Web;leonardo@umc.br");
+
+        assertEquals(2, resultado.getCriadas());
+        assertTrue(resultado.getLinhas().get(1).getMensagem().contains("Professor adicional cadastrado: Leonardo"));
+        ArgumentCaptor<AlocacaoDisciplina> salva = ArgumentCaptor.forClass(AlocacaoDisciplina.class);
+        verify(alocacaoRepository, times(1)).save(salva.capture());
+        assertEquals(List.of(alessandro, leonardo), List.copyOf(salva.getValue().getProfessores()));
+    }
+
+    @Test
+    void reenviarPlanilhaComOsDoisProfessoresNaoDeveAlterarNada() {
+        Professor ana = professor(1L, "Ana", true, false);
+        Professor bia = professor(2L, "Bia", true, false);
+        professorExiste("ana@umc.br", ana);
+        professorExiste("bia@umc.br", bia);
+        AlocacaoDisciplina existente = new AlocacaoDisciplina(PERIODO, SI, 8, "B", "Noturno", "Aplicativos Web",
+                List.of(ana, bia));
+        when(alocacaoRepository.findByPeriodoLetivoAndCursoAndSemestreAndTurmaAndTurnoAndDisciplinaIgnoreCase(
+                PERIODO, SI, 8, "B", "Noturno", "Aplicativos Web")).thenReturn(Optional.of(existente));
+
+        ResultadoImportacaoDTO resultado = importar(List.of(SI),
+                "Sistemas de Informação;8;B;Noturno;Aplicativos Web;ana@umc.br",
+                "Sistemas de Informação;8;B;Noturno;Aplicativos Web;bia@umc.br");
+
+        assertEquals(2, resultado.getSemAlteracao());
+        verify(alocacaoRepository, never()).save(any());
+    }
+
+    @Test
+    void acrescentarUmSegundoProfessorADisciplinaJaCadastrada() {
+        Professor ana = professor(1L, "Ana", true, false);
+        Professor bia = professor(2L, "Bia", true, false);
+        professorExiste("ana@umc.br", ana);
+        professorExiste("bia@umc.br", bia);
+        AlocacaoDisciplina existente = new AlocacaoDisciplina(PERIODO, SI, 8, "B", "Noturno", "Aplicativos Web", ana);
+        when(alocacaoRepository.findByPeriodoLetivoAndCursoAndSemestreAndTurmaAndTurnoAndDisciplinaIgnoreCase(
+                PERIODO, SI, 8, "B", "Noturno", "Aplicativos Web")).thenReturn(Optional.of(existente));
+
+        ResultadoImportacaoDTO resultado = importar(List.of(SI),
+                "Sistemas de Informação;8;B;Noturno;Aplicativos Web;ana@umc.br",
+                "Sistemas de Informação;8;B;Noturno;Aplicativos Web;bia@umc.br");
+
+        assertEquals(Status.SEM_ALTERACAO, resultado.getLinhas().get(0).getStatus());
+        assertEquals(Status.ATUALIZADA, resultado.getLinhas().get(1).getStatus());
+        assertTrue(resultado.getLinhas().get(1).getMensagem().contains("Professor adicionado: Bia"));
+        assertEquals(List.of(ana, bia), List.copyOf(existente.getProfessores()));
+        verify(alocacaoRepository, times(1)).save(existente);
+    }
+
+    @Test
+    void planilhaSemUmDosProfessoresDeveRemoverEsseProfessorDaDisciplina() {
+        Professor ana = professor(1L, "Ana", true, false);
+        Professor bia = professor(2L, "Bia", true, false);
+        professorExiste("ana@umc.br", ana);
+        AlocacaoDisciplina existente = new AlocacaoDisciplina(PERIODO, SI, 8, "B", "Noturno", "Aplicativos Web",
+                List.of(ana, bia));
+        when(alocacaoRepository.findByPeriodoLetivoAndCursoAndSemestreAndTurmaAndTurnoAndDisciplinaIgnoreCase(
+                PERIODO, SI, 8, "B", "Noturno", "Aplicativos Web")).thenReturn(Optional.of(existente));
+
+        ResultadoImportacaoDTO resultado = importar(List.of(SI),
+                "Sistemas de Informação;8;B;Noturno;Aplicativos Web;ana@umc.br");
+
+        assertEquals(Status.ATUALIZADA, resultado.getLinhas().get(0).getStatus());
+        assertTrue(resultado.getLinhas().get(0).getMensagem().contains("Professor removido: Bia"));
+        assertEquals(List.of(ana), List.copyOf(existente.getProfessores()));
+    }
+
+    @Test
+    void erroNaLinhaDeUmDosProfessoresNaoDeveRemoverOutrosProfessoresDaDisciplina() {
+        Professor ana = professor(1L, "Ana", true, false);
+        Professor bia = professor(2L, "Bia", true, false);
+        professorExiste("ana@umc.br", ana);
+        doReturn(Optional.empty()).when(professorRepository).findByEmailIgnoreCase("bia.errada@umc.br");
+        AlocacaoDisciplina existente = new AlocacaoDisciplina(PERIODO, SI, 8, "B", "Noturno", "Aplicativos Web",
+                List.of(ana, bia));
+        when(alocacaoRepository.findByPeriodoLetivoAndCursoAndSemestreAndTurmaAndTurnoAndDisciplinaIgnoreCase(
+                PERIODO, SI, 8, "B", "Noturno", "Aplicativos Web")).thenReturn(Optional.of(existente));
+
+        ResultadoImportacaoDTO resultado = importar(List.of(SI),
+                "Sistemas de Informação;8;B;Noturno;Aplicativos Web;ana@umc.br",
+                "Sistemas de Informação;8;B;Noturno;Aplicativos Web;bia.errada@umc.br");
+
+        assertEquals(Status.SEM_ALTERACAO, resultado.getLinhas().get(0).getStatus());
+        assertEquals(Status.ERRO, resultado.getLinhas().get(1).getStatus());
+        assertEquals(List.of(ana, bia), List.copyOf(existente.getProfessores()));
+        verify(alocacaoRepository, never()).save(any());
+    }
+
+    @Test
+    void mesmoProfessorRepetidoNaMesmaDisciplinaDeveSerRejeitado() {
+        professorExiste("ana@umc.br", professor(1L, "Ana", true, false));
+        naoExisteAlocacao();
+
+        ResultadoImportacaoDTO resultado = importar(List.of(SI),
+                "Sistemas de Informação;8;B;Noturno;Aplicativos Web;ana@umc.br",
+                "Sistemas de Informação;8;B;Noturno;Aplicativos Web;ANA@umc.br");
+
+        assertEquals(Status.CRIADA, resultado.getLinhas().get(0).getStatus());
+        assertEquals(Status.ERRO, resultado.getLinhas().get(1).getStatus());
+        assertTrue(resultado.getLinhas().get(1).getMensagem().contains("da linha 1"));
+    }
+
+    @Test
     void periodoLetivoSugeridoDeveSeguirOSemestreDoAno() {
         assertEquals("2026/2", importacaoService.sugerirPeriodoLetivo(LocalDate.of(2026, 10, 22)));
         assertEquals("2026/1", importacaoService.sugerirPeriodoLetivo(LocalDate.of(2026, 3, 10)));
@@ -407,7 +519,7 @@ class ImportacaoAlocacaoServiceTest {
     }
 
     private void professorExiste(String email, Professor professor) {
-        when(professorRepository.findByEmailIgnoreCase(email)).thenReturn(Optional.of(professor));
+        doReturn(Optional.of(professor)).when(professorRepository).findByEmailIgnoreCase(email);
     }
 
     private void naoExisteAlocacao() {

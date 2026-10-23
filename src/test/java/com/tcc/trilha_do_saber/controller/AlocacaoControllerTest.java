@@ -1,6 +1,7 @@
 package com.tcc.trilha_do_saber.controller;
 
 import com.tcc.trilha_do_saber.dto.AlocacaoFormDTO;
+import com.tcc.trilha_do_saber.dto.NovaAlocacaoFormDTO;
 import com.tcc.trilha_do_saber.dto.ResultadoImportacaoDTO;
 import com.tcc.trilha_do_saber.dto.UsuarioSessaoDTO;
 import com.tcc.trilha_do_saber.model.AlocacaoDisciplina;
@@ -29,6 +30,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.lenient;
@@ -192,6 +194,25 @@ class AlocacaoControllerTest {
     }
 
     @Test
+    void formularioDeEdicaoDeveTrazerTodosOsProfessoresDaDisciplinaMarcados() {
+        entrarComoCoordenadorDeSI();
+        Professor alessandro = mock(Professor.class);
+        Professor leonardo = mock(Professor.class);
+        lenient().when(alessandro.getId()).thenReturn(1L);
+        lenient().when(leonardo.getId()).thenReturn(2L);
+        AlocacaoDisciplina alocacao = mock(AlocacaoDisciplina.class);
+        lenient().when(alocacao.getSemestre()).thenReturn(8);
+        lenient().when(alocacao.getProfessoresOrdenados()).thenReturn(List.of(alessandro, leonardo));
+        when(alocacaoService.buscarPermitida(eq(5L), any())).thenReturn(alocacao);
+
+        alocacaoController.editar(5L, session, model, redirectAttributes);
+
+        ArgumentCaptor<Object> form = ArgumentCaptor.forClass(Object.class);
+        verify(model).addAttribute(eq("form"), form.capture());
+        assertEquals(List.of(1L, 2L), ((AlocacaoFormDTO) form.getValue()).getProfessorIds());
+    }
+
+    @Test
     void turmaDeOutroCursoDeveVoltarParaAListaComAviso() {
         entrarComoCoordenadorDeSI();
         when(alocacaoService.buscarPermitida(eq(5L), any()))
@@ -271,6 +292,152 @@ class AlocacaoControllerTest {
         verifyNoInteractions(alocacaoService);
     }
 
+    @Test
+    void formularioNovoDeveVirComCursoUnicoSelecionadoEPeriodoSugerido() {
+        entrarComoCoordenadorDeSI();
+
+        String tela = alocacaoController.nova(null, null, null, null, null, session, model, redirectAttributes);
+
+        assertEquals("coordenador/turmaNova", tela);
+        NovaAlocacaoFormDTO form = formularioEnviadoParaATela();
+        assertEquals("Sistemas de Informação", form.getCurso());
+        assertEquals("2026/2", form.getPeriodoLetivo());
+    }
+
+    @Test
+    void formularioNovoDeveReaproveitarOsDadosDaUltimaDisciplina() {
+        entrarComoCoordenadorDeSI();
+
+        alocacaoController.nova("2026/1", "Sistemas de Informação", 8, "B", "Noturno", session, model, redirectAttributes);
+
+        NovaAlocacaoFormDTO form = formularioEnviadoParaATela();
+        assertEquals("2026/1", form.getPeriodoLetivo());
+        assertEquals(8, form.getSemestre());
+        assertEquals("B", form.getTurma());
+        assertEquals("Noturno", form.getTurno());
+    }
+
+    @Test
+    void formularioNovoDeveIgnorarCursoForaDosPermitidos() {
+        entrarComo(new UsuarioSessaoDTO(9L, "Coordenação", "coord@umc.br", "COORDENADOR"));
+        Coordenador coordenador = mock(Coordenador.class);
+        when(coordenador.getCurso()).thenReturn("Sistemas de Informação; Engenharia de Software");
+        when(coordenadorRepository.findById(9L)).thenReturn(Optional.of(coordenador));
+
+        alocacaoController.nova(null, "Direito", null, null, null, session, model, redirectAttributes);
+
+        assertEquals(null, formularioEnviadoParaATela().getCurso());
+    }
+
+    @Test
+    void coordenadorSemCursoNaoPodeAbrirOFormularioNovo() {
+        entrarComo(new UsuarioSessaoDTO(9L, "Coordenação", "coord@umc.br", "COORDENADOR"));
+        Coordenador coordenador = mock(Coordenador.class);
+        when(coordenador.getCurso()).thenReturn("");
+        when(coordenadorRepository.findById(9L)).thenReturn(Optional.of(coordenador));
+
+        String tela = alocacaoController.nova(null, null, null, null, null, session, model, redirectAttributes);
+
+        assertEquals("redirect:/coordenador/turmas", tela);
+        verify(redirectAttributes).addFlashAttribute("erro", "Seu cadastro não tem um curso vinculado.");
+    }
+
+    @Test
+    void cadastroComErrosDeValidacaoDeveReexibirOFormulario() {
+        entrarComoCoordenadorDeSI();
+        when(resultadoValidacao.hasErrors()).thenReturn(true);
+
+        String tela = alocacaoController.criar(new NovaAlocacaoFormDTO(), resultadoValidacao, "salvar",
+                session, request, model, redirectAttributes);
+
+        assertEquals("coordenador/turmaNova", tela);
+        verify(alocacaoService, never()).criar(any(), any(), any(), any());
+    }
+
+    @Test
+    void cadastroComErroDeRegraDeveMostrarAMensagemNoFormulario() {
+        entrarComoCoordenadorDeSI();
+        when(resultadoValidacao.hasErrors()).thenReturn(false);
+        when(alocacaoService.criar(any(), any(), any(), any()))
+                .thenThrow(new IllegalArgumentException("Já existe a disciplina Redes nesta turma."));
+
+        String tela = alocacaoController.criar(new NovaAlocacaoFormDTO(), resultadoValidacao, "salvar",
+                session, request, model, redirectAttributes);
+
+        assertEquals("coordenador/turmaNova", tela);
+        verify(model).addAttribute("erro", "Já existe a disciplina Redes nesta turma.");
+    }
+
+    @Test
+    void cadastroComSucessoDeveVoltarParaAListaDoPeriodo() {
+        entrarComoCoordenadorDeSI();
+        AlocacaoDisciplina criada = alocacaoCriada();
+        when(resultadoValidacao.hasErrors()).thenReturn(false);
+        when(alocacaoService.criar(any(), any(), any(), any())).thenReturn(criada);
+
+        String tela = alocacaoController.criar(new NovaAlocacaoFormDTO(), resultadoValidacao, "salvar",
+                session, request, model, redirectAttributes);
+
+        assertEquals("redirect:/coordenador/turmas?periodo=2026/2", tela);
+        ArgumentCaptor<Object> mensagem = ArgumentCaptor.forClass(Object.class);
+        verify(redirectAttributes).addFlashAttribute(eq("mensagem"), mensagem.capture());
+        assertTrue(mensagem.getValue().toString().contains("Redes"));
+    }
+
+    @Test
+    void salvarEAdicionarOutraDeveVoltarAoFormularioComOsDadosDaTurma() {
+        entrarComoCoordenadorDeSI();
+        AlocacaoDisciplina criada = alocacaoCriada();
+        when(resultadoValidacao.hasErrors()).thenReturn(false);
+        when(alocacaoService.criar(any(), any(), any(), any())).thenReturn(criada);
+
+        String tela = alocacaoController.criar(new NovaAlocacaoFormDTO(), resultadoValidacao, "outra",
+                session, request, model, redirectAttributes);
+
+        assertEquals("redirect:/coordenador/turmas/nova?periodo=2026%2F2&curso=Sistemas+de+Informa%C3%A7%C3%A3o"
+                + "&semestre=8&turma=B&turno=Noturno", tela);
+    }
+
+    @Test
+    void administradorCadastraPeloEnderecoDeAdmin() {
+        entrarComo(new UsuarioSessaoDTO(1L, "Admin", "adm@umc.br", "ADMIN"));
+        AlocacaoDisciplina criada = alocacaoCriada();
+        when(resultadoValidacao.hasErrors()).thenReturn(false);
+        when(alocacaoService.criar(any(), any(), any(), any())).thenReturn(criada);
+
+        String tela = alocacaoController.criar(new NovaAlocacaoFormDTO(), resultadoValidacao, "salvar",
+                session, request, model, redirectAttributes);
+
+        assertEquals("redirect:/admin/turmas?periodo=2026/2", tela);
+    }
+
+    @Test
+    void alunoNaoPodeCadastrarTurmas() {
+        entrarComo(new UsuarioSessaoDTO(5L, "Fulano", "f@umc.br", "ALUNO"));
+
+        assertEquals("redirect:/login", alocacaoController.nova(null, null, null, null, null, session, model, redirectAttributes));
+        assertEquals("redirect:/login", alocacaoController.criar(new NovaAlocacaoFormDTO(), resultadoValidacao, "salvar",
+                session, request, model, redirectAttributes));
+        verifyNoInteractions(alocacaoService);
+    }
+
+    private NovaAlocacaoFormDTO formularioEnviadoParaATela() {
+        ArgumentCaptor<Object> form = ArgumentCaptor.forClass(Object.class);
+        verify(model).addAttribute(eq("form"), form.capture());
+        return (NovaAlocacaoFormDTO) form.getValue();
+    }
+
+    private AlocacaoDisciplina alocacaoCriada() {
+        AlocacaoDisciplina criada = mock(AlocacaoDisciplina.class);
+        lenient().when(criada.getPeriodoLetivo()).thenReturn("2026/2");
+        lenient().when(criada.getCurso()).thenReturn("Sistemas de Informação");
+        lenient().when(criada.getSemestre()).thenReturn(8);
+        lenient().when(criada.getTurma()).thenReturn("B");
+        lenient().when(criada.getTurno()).thenReturn("Noturno");
+        lenient().when(criada.getDisciplina()).thenReturn("Redes");
+        return criada;
+    }
+
     private void entrarComoCoordenadorDeSI() {
         entrarComo(new UsuarioSessaoDTO(9L, "Coordenação", "coord@umc.br", "COORDENADOR"));
         Coordenador coordenador = mock(Coordenador.class);
@@ -287,7 +454,7 @@ class AlocacaoControllerTest {
         lenient().when(alocacao.getTurma()).thenReturn("B");
         lenient().when(alocacao.getTurno()).thenReturn("Noturno");
         lenient().when(alocacao.getDisciplina()).thenReturn("Banco de Dados");
-        lenient().when(alocacao.getProfessor()).thenReturn(professor);
+        lenient().when(alocacao.getProfessoresOrdenados()).thenReturn(List.of(professor));
         return alocacao;
     }
 
