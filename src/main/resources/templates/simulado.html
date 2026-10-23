@@ -19,7 +19,6 @@
             </div>
             <div class="topo-direita">
                 <span class="cronometro" id="cronometro" th:data-segundos="${segundosRestantes}">--:--:--</span>
-                <!-- numero real da questao na prova, e ao lado a posicao dentro do simulado -->
                 <span class="contador">
                     Questão <strong th:text="${questao.numero}">1</strong> &middot;
                     <span th:text="${ordem}">1</span> de <span th:text="${total}">20</span>
@@ -39,11 +38,11 @@
 
         <!-- Texto de apoio: so aparece quando a questao tem fonte cadastrada -->
         <div class="cartao-fonte" th:if="${questao.fonte != null}">
-            <p th:text="${questao.fonte.texto}">Texto de apoio</p>
+            <p th:text="${#strings.trim(questao.fonte.texto)}">Texto de apoio</p>
         </div>
 
         <div class="cartao-enunciado">
-            <p th:text="${questao.enunciado}">Enunciado da questão</p>
+            <p th:text="${#strings.trim(questao.enunciado)}">Enunciado da questão</p>
         </div>
 
         <!-- Imagem de apoio: vem DEPOIS do enunciado, e so aparece quando a questao tem imagem capturada do PDF -->
@@ -58,7 +57,7 @@
                 <input type="radio" name="alternativaId" th:value="${alt.id}"
                        th:checked="${alternativaSelecionadaId != null and alternativaSelecionadaId == alt.id}">
                 <span class="letra" th:text="${#strings.substring('ABCDE', iter.index, iter.index + 1)}">A</span>
-                <span class="texto-alternativa" th:text="${alt.texto}">Texto da alternativa</span>
+                <span class="texto-alternativa" th:text="${#strings.trim(alt.texto)}">Texto da alternativa</span>
             </label>
         </div>
 
