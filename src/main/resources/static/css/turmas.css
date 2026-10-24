@@ -289,3 +289,18 @@
 .acoes-nova .botao-primario {
     order: 3;
 }
+
+.nota-turma {
+    margin: 0 0 16px;
+    color: var(--texto-secundario);
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.nota-turma strong {
+    color: var(--texto);
+}
+
+.topo-conteudo .filtro-periodo {
+    margin: 12px 0 4px;
+}
