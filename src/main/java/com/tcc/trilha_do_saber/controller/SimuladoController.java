@@ -48,6 +48,10 @@ public class SimuladoController {
             redirectAttributes.addFlashAttribute("erroSimulado",
                     "Ainda não há questões cadastradas para o curso " + e.getCurso() + ". Fale com a coordenação.");
             return "redirect:/aluno/dashboard";
+        } catch (RuntimeException e) {
+            redirectAttributes.addFlashAttribute("erroSimulado",
+                    "Não foi possível iniciar o simulado agora. Tente novamente em alguns instantes.");
+            return "redirect:/aluno/dashboard";
         }
     }
 

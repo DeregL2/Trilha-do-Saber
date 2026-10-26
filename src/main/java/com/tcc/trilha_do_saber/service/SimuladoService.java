@@ -27,7 +27,7 @@ import java.util.Optional;
 public class SimuladoService {
 
     //NÃO MUDAR O MINUTOS_POR_QUESTAO
-    private static final int QUESTOES_POR_SIMULADO = 5;
+    private static final int QUESTOES_POR_SIMULADO = 35;
     private static final int MINUTOS_POR_QUESTAO = 6;
 
     private final SimuladoRepository simuladoRepository;

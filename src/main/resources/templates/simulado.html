@@ -20,9 +20,8 @@
             <div class="topo-direita">
                 <span class="cronometro" id="cronometro" th:data-segundos="${segundosRestantes}">--:--:--</span>
                 <span class="contador">
-                    Questão <strong th:text="${questao.numero}">1</strong> &middot;
-                    <span th:text="${ordem}">1</span> de <span th:text="${total}">20</span>
-                </span>
+    Questão <span th:text="${ordem}">1</span> de <span th:text="${total}">20</span>
+</span>
             </div>
         </div>
         <div class="barra-progresso">
@@ -33,7 +32,7 @@
     <main class="conteudo">
 
         <div class="etiquetas">
-            <span class="etiqueta-ordem">Questão <span th:text="${questao.numero}">1</span></span>
+            <span class="etiqueta-ordem">Questão <span th:text="${ordem}">1</span></span>
         </div>
 
         <!-- Texto de apoio: so aparece quando a questao tem fonte cadastrada -->

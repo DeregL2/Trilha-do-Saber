@@ -1,5 +1,6 @@
 package com.tcc.trilha_do_saber.service;
 
+import com.tcc.trilha_do_saber.exception.ProvaDuplicadaException;
 import com.tcc.trilha_do_saber.model.Alternativa;
 import com.tcc.trilha_do_saber.model.Prova;
 import com.tcc.trilha_do_saber.model.Questao;
@@ -34,10 +35,15 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -223,7 +229,27 @@ public class ImportadorProvaServiceV2 {
         @Override public void shadingFill(COSName shadingName) { }
     }
 
-    public int provaMontada(String documento, int ano, String curso){
+    private String calcularHashArquivo(File file) throws IOException {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] bytesArquivo = Files.readAllBytes(file.toPath());
+            byte[] hashBytes = digest.digest(bytesArquivo);
+
+            StringBuilder hexString = new StringBuilder();
+            for (byte b : hashBytes) {
+                String hex = Integer.toHexString(0xff & b);
+                if (hex.length() == 1) {
+                    hexString.append('0');
+                }
+                hexString.append(hex);
+            }
+            return hexString.toString();
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException("Algoritmo SHA-256 indisponivel nessa JVM", e);
+        }
+    }
+
+    public int provaMontada(String documento, int ano, String curso, Long importadoPorId, String importadoPorNome){
 
 
         Pattern padraoQuestao = Pattern.compile("(?ius)quest[ãa]o\\s+(\\d+)((?:(?!quest[ãa]o\\s+\\d+).){100,})\\n(?-i:A)\\s+((?:(?!quest[ãa]o\\s+\\d+).)*?)\\n(?-i:B)\\s+((?:(?!quest[ãa]o\\s+\\d+).)*?)\\n(?-i:C)\\s+((?:(?!quest[ãa]o\\s+\\d+).)*?)\\n(?-i:D)\\s+((?:(?!quest[ãa]o\\s+\\d+).)*?)\\n(?-i:E)\\s+(.*?)(?=quest[ãa]o\\s+\\d+|[áa]rea\\s+livre|\\*[\\d*]*R\\s*\\d+|$)");
@@ -235,6 +261,11 @@ public class ImportadorProvaServiceV2 {
 
             String textoDessaPagina = "";
             File file = new File(documento);
+            String hashArquivo = calcularHashArquivo(file);
+            Optional<Prova> provaExistente = provaRepository.findByHashArquivo(hashArquivo);
+            if (provaExistente.isPresent()) {
+                throw new ProvaDuplicadaException(provaExistente.get().getAno(), provaExistente.get().getCurso());
+            }
             PDDocument doc = Loader.loadPDF(file);
             PDFTextStripper pdfTextStripper = new PDFTextStripper();
             Pattern padrao = Pattern.compile("\\s{10,}");
@@ -350,7 +381,10 @@ public class ImportadorProvaServiceV2 {
                 desenhosPorPagina.put(i, localizadorDesenhos.pontos);
             }
 
-            Prova prova = provaRepository.save(new Prova(ano, curso));
+            Prova provaNova = new Prova(ano, curso, hashArquivo);
+            provaNova.setImportadoPorId(importadoPorId);
+            provaNova.setImportadoPorNome(importadoPorNome);
+            Prova prova = provaRepository.save(provaNova);
 
             Matcher matcherQuestao =  padraoQuestao.matcher(textoPdfCompleto);
 
@@ -383,8 +417,15 @@ public class ImportadorProvaServiceV2 {
 
                     if (faixaImagem == null) {
                         float alturaDaPagina = doc.getPage(cabecalho.pagina - 1).getMediaBox().getHeight();
-                        faixaImagem = faixaDoDesenhoNaQuestao(desenhosPorPagina, cabecalho, alturaDaPagina);
+                        faixaImagem = faixaDoDesenhoNaQuestao(desenhosPorPagina, cabecalho, alturaDaPagina, numeroQuestao);
                     }
+                }
+
+                // DEBUG TEMPORARIO - remover depois de investigar a questao 33
+                if (cabecalho != null && numeroQuestao == 33) {
+                    System.out.println("[DEBUG Q33] pagina=" + cabecalho.pagina
+                            + " y=" + cabecalho.y + " yFim=" + cabecalho.yFim
+                            + " faixaImagemFinal=" + (faixaImagem == null ? "null" : Arrays.toString(faixaImagem)));
                 }
 
                 if (faixaImagem != null) {
@@ -437,9 +478,12 @@ public class ImportadorProvaServiceV2 {
         return encontrou ? new float[]{yTopo, yBase} : null;
     }
 
-    private float[] faixaDoDesenhoNaQuestao(Map<Integer, List<float[]>> desenhosPorPagina, CabecalhoQuestao cabecalho, float alturaPagina) {
+    private float[] faixaDoDesenhoNaQuestao(Map<Integer, List<float[]>> desenhosPorPagina, CabecalhoQuestao cabecalho, float alturaPagina, int numeroQuestao) {
         List<float[]> pontosDaPagina = desenhosPorPagina.get(cabecalho.pagina);
         if (pontosDaPagina == null) {
+            if (numeroQuestao == 33) {
+                System.out.println("[DEBUG Q33] pontosDaPagina == null para a pagina " + cabecalho.pagina);
+            }
             return null;
         }
 
@@ -464,7 +508,17 @@ public class ImportadorProvaServiceV2 {
             }
         }
 
+        if (numeroQuestao == 33) {
+            System.out.println("[DEBUG Q33] pontosTotalNaPagina=" + pontosDaPagina.size()
+                    + " totalNaQuestao=" + totalNaQuestao
+                    + " contagemPorFaixa=" + Arrays.toString(contagem));
+        }
+
         if (totalNaQuestao < PONTOS_MINIMOS_NA_QUESTAO) {
+            if (numeroQuestao == 33) {
+                System.out.println("[DEBUG Q33] descartado: totalNaQuestao(" + totalNaQuestao
+                        + ") < PONTOS_MINIMOS_NA_QUESTAO(" + PONTOS_MINIMOS_NA_QUESTAO + ")");
+            }
             return null;
         }
 
@@ -480,6 +534,9 @@ public class ImportadorProvaServiceV2 {
         }
 
         if (primeiraFaixa == -1) {
+            if (numeroQuestao == 33) {
+                System.out.println("[DEBUG Q33] descartado: nenhuma faixa atingiu PONTOS_MINIMOS_POR_FAIXA(" + PONTOS_MINIMOS_POR_FAIXA + ")");
+            }
             return null;
         }
 

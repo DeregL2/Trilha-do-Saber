@@ -1,7 +1,9 @@
 package com.tcc.trilha_do_saber.controller;
 
+import com.tcc.trilha_do_saber.dto.UsuarioSessaoDTO;
 import com.tcc.trilha_do_saber.model.Questao;
 import com.tcc.trilha_do_saber.repository.QuestaoRepository;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,7 +23,13 @@ public class QuestaoImagemController {
     }
 
     @GetMapping("/questao/{id}/imagem")
-    public ResponseEntity<byte[]> verImagem(@PathVariable Long id) {
+    public ResponseEntity<byte[]> verImagem(@PathVariable Long id, HttpSession session) {
+
+        // Bloqueia acesso anonimo: precisa estar logado (qualquer perfil) pra ver a imagem de uma questao
+        if (!(session.getAttribute("usuarioLogado") instanceof UsuarioSessaoDTO)) {
+            return ResponseEntity.status(401).build();
+        }
+
         Optional<Questao> questao = questaoRepository.findById(id);
 
         if (questao.isEmpty() || questao.get().getImagem() == null) {
