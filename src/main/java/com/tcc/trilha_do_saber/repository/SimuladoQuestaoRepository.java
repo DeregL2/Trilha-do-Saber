@@ -19,6 +19,8 @@ public interface SimuladoQuestaoRepository extends JpaRepository<SimuladoQuestao
 
     long countBySimuladoId(Long simuladoId);
 
+    long countBySimuladoIdAndMarcadaRevisaoTrue(Long simuladoId);
+
     @Query("select sq.simulado.id as id, count(sq) as total from SimuladoQuestao sq "
             + "where sq.simulado.finalizado = true and lower(sq.simulado.aluno.curso) = lower(:curso) "
             + "group by sq.simulado.id")
