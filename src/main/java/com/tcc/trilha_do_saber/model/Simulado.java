@@ -26,17 +26,24 @@ public class Simulado {
     private LocalDateTime dataFim;
     private boolean finalizado;
 
+    private Boolean modoProva;
+
     public Simulado() {
 
     }
 
     public Simulado(Aluno aluno, String titulo, int duracaoMinutos, LocalDateTime dataInicio) {
+        this(aluno, titulo, duracaoMinutos, dataInicio, true);
+    }
+
+    public Simulado(Aluno aluno, String titulo, int duracaoMinutos, LocalDateTime dataInicio, boolean modoProva) {
         this.aluno = aluno;
         this.nomeUsuario = aluno.getNome();
         this.titulo = titulo;
         this.duracaoMinutos = duracaoMinutos;
         this.dataInicio = dataInicio;
         this.finalizado = false; // Todo simulado comeca em andamento
+        this.modoProva = modoProva;
     }
 
     public void finalizar(LocalDateTime dataFim) {
@@ -44,12 +51,24 @@ public class Simulado {
         this.finalizado = true;
     }
 
+    public void finalizarPorTempo() {
+        finalizar(getDataLimite());
+    }
+
     public LocalDateTime getDataLimite() {
         return dataInicio.plusMinutes(duracaoMinutos);
     }
 
+    public boolean isModoProva() {
+        return modoProva == null || modoProva;
+    }
+
     public boolean expirou(LocalDateTime agora) {
-        return agora.isAfter(getDataLimite());
+        return isModoProva() && agora.isAfter(getDataLimite());
+    }
+
+    public boolean isFinalizadoPorTempo() {
+        return finalizado && isModoProva() && dataFim != null && !dataFim.isBefore(getDataLimite());
     }
 
     public boolean estaEmAndamento(LocalDateTime agora) {

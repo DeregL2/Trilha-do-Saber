@@ -12,6 +12,8 @@ public interface SimuladoRepository extends JpaRepository<Simulado, Long> {
 
     boolean existsByIdAndAlunoId(Long id, Long alunoId);
 
+    List<Simulado> findByFinalizadoFalse();
+
     @Query("select s from Simulado s join fetch s.aluno a "
             + "where s.finalizado = true and a.ativo = true and a.anonimizado = false "
             + "and lower(a.curso) = lower(:curso)")
