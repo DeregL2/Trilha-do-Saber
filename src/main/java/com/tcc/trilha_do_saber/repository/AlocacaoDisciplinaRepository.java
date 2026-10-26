@@ -19,4 +19,13 @@ public interface AlocacaoDisciplinaRepository extends JpaRepository<AlocacaoDisc
 
     @Query("select distinct a.periodoLetivo from AlocacaoDisciplina a where a.curso in :cursos order by a.periodoLetivo desc")
     List<String> periodosDosCursos(@Param("cursos") Collection<String> cursos);
+
+    @Query("select a from AlocacaoDisciplina a join a.professores p "
+            + "where p.id = :professorId and a.periodoLetivo = :periodo "
+            + "order by a.curso asc, a.semestre asc, a.turma asc, a.turno asc, a.disciplina asc")
+    List<AlocacaoDisciplina> buscarDoProfessor(@Param("professorId") Long professorId, @Param("periodo") String periodo);
+
+    @Query("select distinct a.periodoLetivo from AlocacaoDisciplina a join a.professores p "
+            + "where p.id = :professorId order by a.periodoLetivo desc")
+    List<String> periodosDoProfessor(@Param("professorId") Long professorId);
 }
