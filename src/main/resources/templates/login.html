@@ -39,6 +39,7 @@
 
             <span class="aviso-info" th:if="${param.cadastroEnviado}">Solicitação enviada! Assim que seu acesso for aprovado, você poderá entrar por aqui.</span>
             <span class="aviso-info" th:if="${param.deslogado}">Você saiu da plataforma.</span>
+            <span class="aviso-info" th:if="${param.senhaRedefinida}">Senha alterada com sucesso! Entre com a nova senha.</span>
             <span class="erro-geral" th:if="${erroLogin}" th:text="${erroLogin}"></span>
 
             <form method="post" th:action="@{/login}" th:object="${loginDTO}" id="formLogin">
@@ -52,7 +53,7 @@
                 <span class="erro" th:if="${#fields.hasErrors('senha')}" th:errors="*{senha}"></span>
 
                 <div class="linha-esqueci">
-                    <a href="#">Esqueci minha senha</a>
+                    <a th:href="@{/esqueci-senha}">Esqueci minha senha</a>
                 </div>
 
                 <button type="submit" class="botao-primario botao-largo" id="botaoEntrar">Entrar</button>
