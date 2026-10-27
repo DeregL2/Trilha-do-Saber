@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Meu Desempenho</title>
     <link rel="stylesheet" th:href="@{/css/painel.css}">
+    <link rel="stylesheet" th:href="@{/css/ranking.css}">
 </head>
 <body>
 
@@ -81,6 +82,48 @@
                     <span class="kpi-detalhe"
                           th:text="${#numbers.formatDecimal(dashboard.percentualEmBranco, 1, 1)} + '% do total'">0% do total</span>
                 </div>
+            </section>
+
+            <section class="painel painel-ranking" th:if="${ranking != null}">
+
+                <div class="ranking-bloco" th:if="${ranking.classificado}">
+                    <span class="ranking-medalha">🏆</span>
+                    <div>
+                        <span class="ranking-rotulo">Sua posição na turma</span>
+                        <strong class="ranking-valor"
+                                th:text="${ranking.textoPosicao} + ' de ' + ${ranking.totalParticipantes}">4º de 20</strong>
+                        <span class="ranking-detalhe"
+                              th:text="${#numbers.formatDecimal(ranking.percentual, 1, 1)} + '% de acerto em ' + ${ranking.simuladosFeitos} + ' simulados · ' + ${ranking.turma}">72,5% de acerto em 5 simulados</span>
+                    </div>
+                </div>
+
+                <div class="ranking-bloco" th:if="${ranking.insuficiente}">
+                    <span class="ranking-medalha">🎯</span>
+                    <div>
+                        <span class="ranking-rotulo">Sua posição na turma</span>
+                        <strong class="ranking-valor ranking-valor-texto">Ainda sem posição</strong>
+                        <span class="ranking-detalhe"
+                              th:text="'Faça mais ' + ${ranking.faltam} + (${ranking.faltam == 1} ? ' simulado' : ' simulados') + ' para entrar no ranking. Você tem ' + ${ranking.simuladosFeitos} + ' de ' + ${ranking.minimoSimulados} + '.'">Faça mais 1 simulado para entrar no ranking.</span>
+                        <div class="ranking-progresso">
+                            <div class="ranking-progresso-preenchido" th:style="'width:' + ${ranking.progresso} + '%'"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="ranking-bloco" th:if="${ranking.semTurma}">
+                    <span class="ranking-medalha">ℹ️</span>
+                    <div>
+                        <span class="ranking-rotulo">Sua posição na turma</span>
+                        <strong class="ranking-valor ranking-valor-texto">Turma não informada</strong>
+                        <span class="ranking-detalhe">Seu cadastro não tem curso, semestre, turma e turno completos. Peça à coordenação para atualizar.</span>
+                    </div>
+                </div>
+
+                <p class="ranking-nota">
+                    O ranking considera os alunos da sua turma com 3 ou mais simulados finalizados.
+                    Você vê apenas a sua posição, sem o nome dos colegas.
+                </p>
+
             </section>
 
             <section class="grade-dashboard">
