@@ -29,14 +29,23 @@ public class CoordenadorUsuarioController {
 
     @GetMapping
     public String listar(Model model, HttpSession session){
+        UsuarioSessaoDTO ator = (UsuarioSessaoDTO) session.getAttribute("usuarioLogado");
+        if (ator == null || !("ADMIN".equals(ator.getTipo()) || "COORDENADOR".equals(ator.getTipo()))) {
+            return "redirect:/login";
+        }
         model.addAttribute("alunos", alunoService.listarTodos());
         model.addAttribute("professores", professorService.listarTodos());
-        model.addAttribute("usuarioLogado", session.getAttribute("usuarioLogado"));
+        model.addAttribute("usuarioLogado", ator);
         return "coordenador/usuarios";
     }
 
     @GetMapping("/{tipo}/{id}/editar")
     public String editarFormulario(@PathVariable String tipo, @PathVariable Long id, Model model, HttpSession session){
+        UsuarioSessaoDTO ator = (UsuarioSessaoDTO) session.getAttribute("usuarioLogado");
+        if (ator == null || !("ADMIN".equals(ator.getTipo()) || "COORDENADOR".equals(ator.getTipo()))) {
+            return "redirect:/login";
+        }
+
         if ("professor".equals(tipo)) {
             Professor professor = professorService.buscarPorId(id);
             ProfessorFormDTO form = new ProfessorFormDTO();
@@ -62,7 +71,7 @@ public class CoordenadorUsuarioController {
             model.addAttribute("alunoForm", form);
         }
         model.addAttribute("tipo", tipo);
-        model.addAttribute("usuarioLogado", session.getAttribute("usuarioLogado"));
+        model.addAttribute("usuarioLogado", ator);
         return "coordenador/usuarioForm";
     }
 
@@ -74,7 +83,7 @@ public class CoordenadorUsuarioController {
             return "coordenador/usuarioForm";
         }
         UsuarioSessaoDTO ator = (UsuarioSessaoDTO) session.getAttribute("usuarioLogado");
-        if (ator == null) {
+        if (ator == null || !("ADMIN".equals(ator.getTipo()) || "COORDENADOR".equals(ator.getTipo()))) {
             return "redirect:/login";
         }
         long inicio = System.currentTimeMillis();
@@ -90,7 +99,7 @@ public class CoordenadorUsuarioController {
             return "coordenador/usuarioForm";
         }
         UsuarioSessaoDTO ator = (UsuarioSessaoDTO) session.getAttribute("usuarioLogado");
-        if (ator == null) {
+        if (ator == null || !("ADMIN".equals(ator.getTipo()) || "COORDENADOR".equals(ator.getTipo()))) {
             return "redirect:/login";
         }
         long inicio = System.currentTimeMillis();
@@ -101,7 +110,7 @@ public class CoordenadorUsuarioController {
     @PostMapping("/{tipo}/{id}/excluir")
     public String excluir(@PathVariable String tipo, @PathVariable Long id, HttpSession session, HttpServletRequest request){
         UsuarioSessaoDTO ator = (UsuarioSessaoDTO) session.getAttribute("usuarioLogado");
-        if (ator == null) {
+        if (ator == null || !("ADMIN".equals(ator.getTipo()) || "COORDENADOR".equals(ator.getTipo()))) {
             return "redirect:/login";
         }
         long inicio = System.currentTimeMillis();
@@ -116,7 +125,7 @@ public class CoordenadorUsuarioController {
     @PostMapping("/{tipo}/{id}/anonimizar")
     public String anonimizar(@PathVariable String tipo, @PathVariable Long id, HttpSession session, HttpServletRequest request){
         UsuarioSessaoDTO ator = (UsuarioSessaoDTO) session.getAttribute("usuarioLogado");
-        if (ator == null) {
+        if (ator == null || !("ADMIN".equals(ator.getTipo()) || "COORDENADOR".equals(ator.getTipo()))) {
             return "redirect:/login";
         }
         long inicio = System.currentTimeMillis();
