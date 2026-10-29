@@ -29,6 +29,7 @@ import org.apache.pdfbox.contentstream.operator.state.Concatenate;
 import org.apache.pdfbox.contentstream.operator.state.Restore;
 import org.apache.pdfbox.contentstream.operator.state.Save;
 import org.apache.pdfbox.contentstream.operator.state.SetGraphicsStateParameters;
+import com.tcc.trilha_do_saber.exception.ArquivoInvalidoException;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -448,6 +449,10 @@ public class ImportadorProvaServiceV2 {
             }
 
             doc.close();
+
+            if (questoesImportadas == 0) {
+                throw new ArquivoInvalidoException("Nenhuma questão foi encontrada no arquivo enviado como prova. Verifique se os arquivos de prova e gabarito não foram trocados.");
+            }
         }
         catch (IOException e) {
             System.out.println("Erro ao gerar PDF");
