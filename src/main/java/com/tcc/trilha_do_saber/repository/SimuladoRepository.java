@@ -6,12 +6,19 @@ import org.springframework.data.repository.query.Param;
 import com.tcc.trilha_do_saber.model.Simulado;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 public interface SimuladoRepository extends JpaRepository<Simulado, Long> {
 
     List<Simulado> findByAlunoIdAndFinalizadoTrueOrderByDataFimAsc(Long alunoId);
 
     boolean existsByIdAndAlunoId(Long id, Long alunoId);
+
+    Optional<Simulado> findByProvaAplicadaIdAndAlunoId(Long provaAplicadaId, Long alunoId);
+
+    List<Simulado> findByProvaAplicadaId(Long provaAplicadaId);
+
+    Optional<Simulado> findFirstByAlunoIdAndFinalizadoFalseAndProvaAplicadaIsNotNullOrderByIdDesc(Long alunoId);
 
     List<Simulado> findByFinalizadoFalse();
 

@@ -19,6 +19,8 @@ public interface RespostaRepository extends JpaRepository<Resposta, Long> {
 
     long countBySimuladoIdAndAcertouTrue(Long simuladoId);
 
+    long countBySimuladoProvaAplicadaIdAndQuestaoIdAndAcertouTrue(Long provaAplicadaId, Long questaoId);
+
     @Query("select r.simulado.id as id, count(r) as total from Resposta r "
             + "where r.simulado.finalizado = true "
             + "and lower(r.simulado.aluno.curso) = lower(:curso) "

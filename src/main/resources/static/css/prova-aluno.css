@@ -1,0 +1,245 @@
+.aviso-erro-modo {
+    max-width: 900px;
+    margin: 0 auto 16px;
+    padding: 12px 16px;
+    border-radius: 10px;
+    background: #FEF2F2;
+    color: #991B1B;
+    font-size: 14px;
+}
+
+.prova-vazio {
+    padding: 12px 16px;
+    border-radius: 10px;
+    background: #F8FAFC;
+    color: #64748B;
+    font-size: 14px;
+}
+
+.cartoes-modo {
+    align-items: start;
+}
+
+.cartao-modo.destaque:hover {
+    transform: none;
+}
+
+.prova-liberada {
+    margin-top: 12px;
+    padding: 16px;
+    border: 1px solid var(--borda);
+    border-radius: 12px;
+    background: #fff;
+}
+
+.prova-liberada.prova-aberta {
+    border-color: var(--marca);
+    background: var(--marca-fundo);
+}
+
+.prova-topo {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.prova-liberada h3 {
+    margin: 0;
+    font-size: 15px;
+    line-height: 1.4;
+}
+
+.prova-chip {
+    flex-shrink: 0;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.prova-chip-aberta {
+    background: #DCFCE7;
+    color: #166534;
+}
+
+.prova-chip-andamento {
+    background: #FEF3C7;
+    color: #92400E;
+}
+
+.prova-chip-agendada {
+    background: #E0E7FF;
+    color: #3730A3;
+}
+
+.cartao-modo .prova-horarios {
+    margin: 6px 0 12px;
+    font-size: 13px;
+    color: var(--texto-secundario);
+}
+
+.cartao-modo .prova-aviso-contagem {
+    margin: 0 0 12px;
+    font-size: 13px;
+}
+
+.prova-historico {
+    margin-top: 24px;
+    padding-top: 16px;
+    border-top: 1px solid var(--borda);
+}
+
+.prova-historico h3 {
+    margin: 0 0 10px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--texto-secundario);
+}
+
+.prova-historico-total {
+    font-weight: 400;
+    color: var(--texto-apagado);
+}
+
+.cartao-modo .prova-historico-lista {
+    display: flex;
+    flex: none;
+    flex-direction: column-reverse;
+    max-height: 232px;
+    margin: 0;
+    padding: 0;
+    overflow-y: auto;
+    list-style: none;
+    border: 1px solid var(--borda);
+    border-radius: 12px;
+    background: #fff;
+    line-height: 1.4;
+}
+
+.prova-historico-lista li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--borda);
+}
+
+.prova-historico-lista li:first-child {
+    border-bottom: 0;
+}
+
+.prova-historico-info {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.prova-historico-info strong {
+    overflow: hidden;
+    font-size: 13px;
+    color: var(--texto);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.prova-historico-info span {
+    font-size: 12px;
+    color: var(--texto-apagado);
+}
+
+.prova-historico-link {
+    flex-shrink: 0;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--marca);
+    text-decoration: none;
+}
+
+.prova-historico-link:hover {
+    text-decoration: underline;
+}
+
+.prova-estado p {
+    margin: 0 0 8px;
+    font-size: 14px;
+}
+
+.prova-contagem {
+    font-variant-numeric: tabular-nums;
+}
+
+.prova-regras {
+    margin-bottom: 12px;
+    padding: 10px 14px;
+    border-radius: 10px;
+    background: #FFFBEB;
+    color: #92400E;
+    font-size: 12px;
+    line-height: 1.6;
+}
+
+.prova-regras summary {
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.cartao-modo .prova-regras ul {
+    flex: none;
+    margin: 8px 0 0;
+    padding-left: 18px;
+    font-size: 12px;
+    line-height: 1.6;
+    color: #92400E;
+}
+
+.prova-aceite {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0 0 12px;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.aviso-prova-aplicada {
+    padding: 8px 16px;
+    background: #FEF2F2;
+    color: #991B1B;
+    font-size: 13px;
+    font-weight: 600;
+    text-align: center;
+}
+
+.prova-aplicada {
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+@media print {
+    .prova-aplicada * {
+        display: none !important;
+    }
+}
+
+.prova-motivo {
+    margin: 12px 0;
+    padding: 10px 14px;
+    border-radius: 10px;
+    background: #FEF2F2;
+    color: #991B1B;
+    font-size: 14px;
+}
+
+.prova-liberacao {
+    margin: 12px 0 20px;
+    font-size: 14px;
+    color: #475569;
+}
+
+.prova-nota {
+    font-size: 16px;
+}

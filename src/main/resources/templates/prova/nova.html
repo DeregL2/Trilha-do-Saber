@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Nova prova</title>
+    <link rel="stylesheet" th:href="@{/css/painel.css}">
+    <link rel="stylesheet" th:href="@{/css/prova.css}">
+</head>
+<body>
+
+<th:block th:if="${ehProfessor}">
+    <header th:replace="~{fragments/navProfessor :: nav(pagina='provas', usuarioLogado=${usuarioLogado})}"></header>
+</th:block>
+<th:block th:unless="${ehProfessor}">
+    <header th:replace="~{fragments/navCoordenador :: nav(pagina='provas', usuarioLogado=${usuarioLogado})}"></header>
+</th:block>
+
+<main class="conteudo">
+
+    <header class="topo-conteudo">
+        <h1>Nova prova</h1>
+        <p class="subtitulo-pagina">Escolha quem vai fazer, o horário e as questões. Todos os convocados terminam no mesmo horário de encerramento.</p>
+    </header>
+
+    <div class="pv-aviso-info" th:if="${avisoDuplicacao}" th:text="${avisoDuplicacao}"></div>
+    <div class="alerta-erro" th:if="${erroProva}" th:text="${erroProva}"></div>
+
+    <form method="post" th:action="@{${base}}" id="formProva">
+
+        <div class="cartao-form pv-cartao">
+            <h1>Dados da prova</h1>
+
+            <label for="titulo">Título</label>
+            <input type="text" id="titulo" name="titulo" maxlength="150" required th:value="${titulo}"
+                   placeholder="Ex.: Simulado ENADE de Aplicativos Web (grupo 1)">
+
+            <div class="pv-horarios">
+                <div>
+                    <label for="abertura">Abertura</label>
+                    <input type="datetime-local" id="abertura" name="abertura" required th:value="${abertura}">
+                </div>
+                <div>
+                    <label for="encerramento">Encerramento</label>
+                    <input type="datetime-local" id="encerramento" name="encerramento" required th:value="${encerramento}">
+                </div>
+            </div>
+            <p class="pv-dica">Horário de Brasília. A prova precisa ficar aberta por pelo menos <span th:text="${minimoMinutos}">5</span> minutos.
+                Quem entrar depois da abertura terá menos tempo, porque todos encerram juntos.</p>
+
+            <label class="pv-opcao">
+                <input type="checkbox" class="pv-caixa-opcao" name="reterGabarito" value="true" th:checked="${reterGabarito}">
+                <span><strong>Reter o gabarito até o encerramento.</strong>
+                    O aluno vê a nota e os acertos assim que termina, mas o gabarito comentado só aparece depois do horário de encerramento.
+                    Marque quando grupos diferentes fazem as mesmas questões em horários diferentes.</span>
+            </label>
+        </div>
+
+        <div class="cartao-form pv-cartao">
+            <h1>Quem vai fazer a prova</h1>
+            <p class="pv-dica">Marque a <strong>turma inteira</strong> ou abra a turma e escolha <strong>só alguns alunos</strong>.
+                Para dividir uma turma em grupos (por falta de computadores, por exemplo), crie uma prova para cada grupo, cada uma com o seu horário e as suas questões.
+                Depois de criar a primeira, use <strong>Duplicar para outro grupo</strong>.</p>
+
+            <div class="pv-grupo" th:each="grupo : ${grupos}">
+                <div class="pv-grupo-topo">
+                    <label class="pv-turma">
+                        <input type="checkbox" class="pv-turma-caixa" name="turmas" th:value="${grupo.turma.chave}"
+                               th:attr="data-total=${grupo.totalAlunos}"
+                               th:checked="${turmasSelecionadas.contains(grupo.turma.chave)}">
+                        <span th:text="${grupo.turma.rotulo}">Sistemas de Informação · 8º semestre · turma B · Noturno</span>
+                    </label>
+                    <span class="pv-prova-contagem" th:text="${grupo.totalAlunos + (grupo.totalAlunos == 1 ? ' aluno' : ' alunos')}">30 alunos</span>
+                </div>
+
+                <details class="pv-alunos" th:if="${!grupo.alunos.isEmpty()}">
+                    <summary>Escolher só alguns alunos</summary>
+                    <div class="pv-alunos-barra">
+                        <button type="button" class="pv-marcar-alunos botao-secundario">Marcar ou desmarcar todos</button>
+                    </div>
+                    <label class="pv-aluno" th:each="aluno : ${grupo.alunos}">
+                        <input type="checkbox" class="pv-aluno-caixa" name="alunoIds" th:value="${aluno.id}"
+                               th:checked="${alunosSelecionados.contains(aluno.id)}">
+                        <span th:text="${aluno.nome}">Ana Lima</span>
+                        <small th:text="${aluno.registro}">20240001</small>
+                    </label>
+                </details>
+
+                <p class="pv-vazio" th:if="${grupo.alunos.isEmpty()}">Nenhum aluno ativo nesta turma.</p>
+            </div>
+
+            <p class="pv-vazio" th:if="${grupos.isEmpty()}">
+                Nenhuma turma encontrada para você neste período letivo.
+                <span th:if="${ehProfessor}">É preciso que a coordenação tenha vinculado você à turma na importação de turmas.</span>
+                <span th:unless="${ehProfessor}">É preciso que o seu curso tenha turmas importadas ou alunos ativos cadastrados.</span>
+            </p>
+        </div>
+
+        <div class="cartao-form pv-cartao">
+            <h1>Questões</h1>
+            <p class="pv-dica">Escolha questões de qualquer prova do ENADE já importada (até <span th:text="${maximoQuestoes}">60</span>).
+                Elas aparecem para os alunos na ordem em que estão listadas abaixo. A prévia mostra o começo e o final do enunciado; clique nela para ler tudo.</p>
+
+            <div class="pv-barra">
+                <input type="search" id="filtroQuestoes" class="pv-filtro"
+                       placeholder="Filtrar: curso, ano, dificuldade ou trecho do enunciado..." aria-label="Filtrar questões">
+                <button type="button" class="botao-secundario" id="limparSelecao">Limpar seleção</button>
+            </div>
+
+            <p class="pv-vazio" th:if="${banco.isEmpty()}">Nenhuma prova do ENADE foi importada ainda.</p>
+
+            <details class="pv-prova" th:each="prova : ${banco}">
+                <summary>
+                    <span class="pv-prova-titulo" th:text="${prova.rotulo}">ENADE 2022</span>
+                    <span class="pv-prova-contagem" th:text="${prova.questoes.size() + ' questões'}">35 questões</span>
+                    <button type="button" class="pv-marcar-prova botao-secundario">Marcar todas</button>
+                </summary>
+
+                <div class="pv-questao" th:each="q : ${prova.questoes}">
+                    <input type="checkbox" class="pv-caixa" name="questaoIds" th:value="${q.id}"
+                           th:id="${'q' + q.id}" th:checked="${questoesSelecionadas.contains(q.id)}">
+                    <div class="pv-questao-corpo">
+                        <label class="pv-questao-topo" th:for="${'q' + q.id}">
+                            <strong th:text="${'Questão ' + q.numero}">Questão 1</strong>
+                            <span class="pv-dif" th:if="${q.dificuldade != '—'}" th:text="${q.dificuldade}">Médio</span>
+                            <span class="pv-img" th:if="${q.temImagem}">com imagem</span>
+                        </label>
+                        <details class="pv-enunciado">
+                            <summary th:text="${q.resumo}">Resumo do enunciado</summary>
+                            <p th:unless="${q.resumoCompleto}" th:text="${q.enunciado}">Enunciado completo</p>
+                        </details>
+                    </div>
+                </div>
+            </details>
+        </div>
+
+        <div class="pv-rodape">
+            <span class="pv-contador"><span id="contadorAlunos">0 alunos</span> · <span id="contadorQuestoes">0 questões</span></span>
+            <a class="botao-secundario" th:href="@{${base}}">Cancelar</a>
+            <button type="submit" class="botao-primario" id="botaoCriar">Criar e agendar prova</button>
+        </div>
+
+    </form>
+
+</main>
+
+<script>
+    (function () {
+        var formulario = document.getElementById("formProva");
+        var filtro = document.getElementById("filtroQuestoes");
+        var contadorQuestoes = document.getElementById("contadorQuestoes");
+        var contadorAlunos = document.getElementById("contadorAlunos");
+        var limpar = document.getElementById("limparSelecao");
+        var botaoCriar = document.getElementById("botaoCriar");
+
+        function caixasQuestoes() {
+            return Array.prototype.slice.call(formulario.querySelectorAll("input.pv-caixa"));
+        }
+
+        function grupos() {
+            return Array.prototype.slice.call(formulario.querySelectorAll(".pv-grupo"));
+        }
+
+        function aplicarTurmaInteira(grupo) {
+            var inteira = grupo.querySelector(".pv-turma-caixa");
+            grupo.querySelectorAll("input.pv-aluno-caixa").forEach(function (caixa) {
+                if (inteira.checked) {
+                    caixa.checked = false;
+                }
+                caixa.disabled = inteira.checked;
+            });
+            grupo.classList.toggle("pv-grupo-inteiro", inteira.checked);
+        }
+
+        function atualizar() {
+            var questoes = caixasQuestoes().filter(function (caixa) { return caixa.checked; }).length;
+            contadorQuestoes.textContent = questoes + (questoes === 1 ? " questão" : " questões");
+
+            var alunos = 0;
+            grupos().forEach(function (grupo) {
+                var inteira = grupo.querySelector(".pv-turma-caixa");
+                if (inteira.checked) {
+                    alunos += Number(inteira.dataset.total);
+                } else {
+                    alunos += grupo.querySelectorAll("input.pv-aluno-caixa:checked").length;
+                }
+            });
+            contadorAlunos.textContent = alunos + (alunos === 1 ? " aluno" : " alunos");
+        }
+
+        function aplicarFiltro() {
+            var termos = filtro.value.trim().toLowerCase().split(/\s+/).filter(function (termo) { return termo !== ""; });
+            formulario.querySelectorAll("details.pv-prova").forEach(function (prova) {
+                var visiveis = 0;
+                var tituloProva = prova.querySelector(".pv-prova-titulo").textContent.toLowerCase();
+                prova.querySelectorAll(".pv-questao").forEach(function (questao) {
+                    var texto = (tituloProva + " " + questao.textContent).toLowerCase();
+                    var combina = termos.every(function (termo) { return texto.indexOf(termo) !== -1; });
+                    questao.hidden = !combina;
+                    if (combina) {
+                        visiveis++;
+                    }
+                });
+                prova.hidden = termos.length > 0 && visiveis === 0;
+                if (termos.length > 0 && visiveis > 0) {
+                    prova.open = true;
+                }
+            });
+        }
+
+        filtro.addEventListener("input", aplicarFiltro);
+
+        limpar.addEventListener("click", function () {
+            caixasQuestoes().forEach(function (caixa) { caixa.checked = false; });
+            atualizar();
+        });
+
+        formulario.querySelectorAll(".pv-marcar-prova").forEach(function (botao) {
+            botao.addEventListener("click", function (evento) {
+                evento.preventDefault();
+                evento.stopPropagation();
+                var prova = botao.closest("details.pv-prova");
+                var caixasVisiveis = Array.prototype.slice.call(prova.querySelectorAll(".pv-questao"))
+                    .filter(function (questao) { return !questao.hidden; })
+                    .map(function (questao) { return questao.querySelector("input.pv-caixa"); });
+                var todasMarcadas = caixasVisiveis.every(function (caixa) { return caixa.checked; });
+                caixasVisiveis.forEach(function (caixa) { caixa.checked = !todasMarcadas; });
+                atualizar();
+            });
+        });
+
+        formulario.querySelectorAll(".pv-marcar-alunos").forEach(function (botao) {
+            botao.addEventListener("click", function () {
+                var caixas = Array.prototype.slice.call(botao.closest(".pv-grupo").querySelectorAll("input.pv-aluno-caixa"))
+                    .filter(function (caixa) { return !caixa.disabled; });
+                var todos = caixas.every(function (caixa) { return caixa.checked; });
+                caixas.forEach(function (caixa) { caixa.checked = !todos; });
+                atualizar();
+            });
+        });
+
+        formulario.addEventListener("change", function (evento) {
+            if (evento.target.classList.contains("pv-turma-caixa")) {
+                aplicarTurmaInteira(evento.target.closest(".pv-grupo"));
+            }
+            if (evento.target.classList.contains("pv-caixa") || evento.target.classList.contains("pv-turma-caixa")
+                || evento.target.classList.contains("pv-aluno-caixa")) {
+                atualizar();
+            }
+        });
+
+        formulario.addEventListener("submit", function () {
+            botaoCriar.disabled = true;
+            botaoCriar.textContent = "Criando...";
+        });
+
+        grupos().forEach(function (grupo) {
+            aplicarTurmaInteira(grupo);
+            if (grupo.querySelector("input.pv-aluno-caixa:checked")) {
+                var detalhes = grupo.querySelector("details.pv-alunos");
+                if (detalhes) {
+                    detalhes.open = true;
+                }
+            }
+        });
+        atualizar();
+    })();
+</script>
+
+</body>
+</html>

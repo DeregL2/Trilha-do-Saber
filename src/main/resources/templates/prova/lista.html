@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Provas aplicadas</title>
+    <link rel="stylesheet" th:href="@{/css/painel.css}">
+    <link rel="stylesheet" th:href="@{/css/importacao-usuarios.css}">
+    <link rel="stylesheet" th:href="@{/css/prova.css}">
+</head>
+<body>
+
+<th:block th:if="${ehProfessor}">
+    <header th:replace="~{fragments/navProfessor :: nav(pagina='provas', usuarioLogado=${usuarioLogado})}"></header>
+</th:block>
+<th:block th:unless="${ehProfessor}">
+    <header th:replace="~{fragments/navCoordenador :: nav(pagina='provas', usuarioLogado=${usuarioLogado})}"></header>
+</th:block>
+
+<main class="conteudo">
+
+    <header class="topo-conteudo">
+        <h1>Provas aplicadas</h1>
+        <p class="subtitulo-pagina">Crie uma prova com questões do ENADE, libere para as suas turmas em um horário marcado e acompanhe o resultado.</p>
+    </header>
+
+    <div class="imp-alerta-ok" th:if="${mensagemProva}" th:text="${mensagemProva}"></div>
+    <div class="alerta-erro" th:if="${erroProva}" th:text="${erroProva}"></div>
+
+    <div class="cabecalho-usuarios">
+        <h2>Minhas provas</h2>
+        <a class="botao-primario" th:href="@{|${base}/nova|}">Nova prova</a>
+    </div>
+
+    <div class="pv-tabela-rolagem">
+        <table class="tabela-usuarios pv-tabela">
+            <thead>
+            <tr>
+                <th>Título</th>
+                <th>Turmas</th>
+                <th>Abertura</th>
+                <th>Encerramento</th>
+                <th>Questões</th>
+                <th>Situação</th>
+                <th></th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="prova : ${provas}">
+                <td th:text="${prova.titulo}"></td>
+                <td>
+                    <span class="pv-turma-linha" th:each="turma : ${prova.turmas}" th:text="${turma}"></span>
+                </td>
+                <td th:text="${#temporals.format(prova.abertura, 'dd/MM/yyyy HH:mm')}"></td>
+                <td th:text="${#temporals.format(prova.encerramento, 'dd/MM/yyyy HH:mm')}"></td>
+                <td th:text="${prova.totalQuestoes}"></td>
+                <td>
+                    <span class="pv-selo" th:classappend="${'pv-selo-' + #strings.toLowerCase(prova.status.name())}"
+                          th:text="${prova.status.rotulo}"></span>
+                </td>
+                <td class="coluna-acoes">
+                    <a th:href="@{|${base}/${prova.id}|}">Acompanhar</a>
+                </td>
+            </tr>
+            <tr th:if="${provas.isEmpty()}">
+                <td colspan="7" class="linha-vazia">Você ainda não criou nenhuma prova</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+</main>
+
+</body>
+</html>

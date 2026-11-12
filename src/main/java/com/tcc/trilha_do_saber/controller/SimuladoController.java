@@ -10,6 +10,7 @@ import com.tcc.trilha_do_saber.model.Questao;
 import com.tcc.trilha_do_saber.model.Simulado;
 import com.tcc.trilha_do_saber.model.SimuladoQuestao;
 import com.tcc.trilha_do_saber.repository.AlternativaRepository;
+import com.tcc.trilha_do_saber.service.ProvaDoAlunoService;
 import com.tcc.trilha_do_saber.service.SimuladoService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.http.HttpStatus;
@@ -34,22 +35,25 @@ public class SimuladoController {
 
     private final SimuladoService simuladoService;
     private final AlternativaRepository alternativaRepository;
+    private final ProvaDoAlunoService provaDoAlunoService;
 
-    public SimuladoController(SimuladoService simuladoService, AlternativaRepository alternativaRepository) {
+    public SimuladoController(SimuladoService simuladoService, AlternativaRepository alternativaRepository,
+                              ProvaDoAlunoService provaDoAlunoService) {
         this.simuladoService = simuladoService;
         this.alternativaRepository = alternativaRepository;
+        this.provaDoAlunoService = provaDoAlunoService;
     }
 
     @GetMapping("/simulado/novo")
     public String novo(HttpSession session, Model model) {
 
-        if (alunoLogado(session) == null) {
+        UsuarioSessaoDTO aluno = alunoLogado(session);
+        if (aluno == null) {
             return "redirect:/login";
         }
 
         model.addAttribute("questoes", SimuladoService.QUESTOES_POR_SIMULADO);
-        model.addAttribute("minutosPorQuestao", SimuladoService.MINUTOS_POR_QUESTAO);
-        model.addAttribute("minutosProva", SimuladoService.QUESTOES_POR_SIMULADO * SimuladoService.MINUTOS_POR_QUESTAO);
+        model.addAttribute("provas", provaDoAlunoService.disponiveis(aluno.getId()));
         return "simuladoModo";
     }
 
@@ -66,8 +70,14 @@ public class SimuladoController {
             return "redirect:/simulado/novo";
         }
 
+        if (!"treino".equals(modo)) {
+            redirectAttributes.addFlashAttribute("erroSimulado",
+                    "O modo prova só fica disponível quando o professor libera uma prova para a sua turma.");
+            return "redirect:/simulado/novo";
+        }
+
         try {
-            Simulado simulado = simuladoService.iniciar(aluno.getId(), !"treino".equals(modo));
+            Simulado simulado = simuladoService.iniciar(aluno.getId(), false);
             return "redirect:/simulado/" + simulado.getId() + "/questao/1";
         } catch (SemQuestoesException e) {
             redirectAttributes.addFlashAttribute("erroSimulado",
@@ -131,6 +141,8 @@ public class SimuladoController {
         model.addAttribute("navegacao", navegacao);
         model.addAttribute("marcada", simuladoQuestao.isMarcadaRevisao());
         model.addAttribute("totalMarcadas", simuladoService.totalMarcadas(id));
+        model.addAttribute("aplicado", simulado.isAplicado());
+        model.addAttribute("toleranciaSaidaMs", ProvaDoAlunoService.TOLERANCIA_SAIDA_MS);
 
         return "simulado";
     }
@@ -212,6 +224,27 @@ public class SimuladoController {
         return ResponseEntity.ok(corpo);
     }
 
+    @PostMapping("/simulado/{id}/saida")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> saida(@PathVariable Long id, HttpSession session) {
+
+        UsuarioSessaoDTO aluno = alunoLogado(session);
+        if (aluno == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("erro", "sessao"));
+        }
+        if (!simuladoService.pertenceAoAluno(id, aluno.getId())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("erro", "acesso"));
+        }
+
+        Map<String, Object> corpo = new LinkedHashMap<>();
+        try {
+            corpo.put("encerrada", provaDoAlunoService.registrarSaida(id, aluno.getId()));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("erro", e.getMessage()));
+        }
+        return ResponseEntity.ok(corpo);
+    }
+
     @GetMapping("/simulado/{id}/concluido")
     public String concluido(@PathVariable Long id, Model model, HttpSession session) {
 
@@ -243,6 +276,17 @@ public class SimuladoController {
 
         if (!simulado.isFinalizado()) {
             return "redirect:/simulado/" + id + "/questao/1";
+        }
+
+        if (simulado.isAplicado() && simulado.isGabaritoRetido() && LocalDateTime.now().isBefore(simulado.getDataLimite())) {
+            model.addAttribute("resultado", simuladoService.gerarResultado(id));
+            model.addAttribute("simulado", simulado);
+            model.addAttribute("total", simuladoService.totalQuestoes(id));
+            model.addAttribute("respondidas", simuladoService.totalRespondidas(id));
+            model.addAttribute("porSaida", simulado.isEncerradoPorSaida());
+            model.addAttribute("segundosParaLiberar",
+                    Math.max(0, Duration.between(LocalDateTime.now(), simulado.getDataLimite()).getSeconds()));
+            return "provaEnviada";
         }
 
         ResultadoSimuladoDTO resultado = simuladoService.gerarResultado(id);

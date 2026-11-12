@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Escolha o modo do simulado</title>
     <link rel="stylesheet" th:href="@{/css/simulado.css}">
+    <link rel="stylesheet" th:href="@{/css/prova-aluno.css}">
 </head>
 <body>
 
@@ -13,8 +14,10 @@
     <header class="cabecalho-modo">
         <a th:href="@{/aluno/dashboard}" class="link-sair">&larr; Voltar</a>
         <h1>Como você quer fazer o simulado?</h1>
-        <p class="subtitulo">Escolha o modo antes de começar. As questões são sorteadas do banco do seu curso.</p>
+        <p class="subtitulo">Escolha o modo antes de começar. No treino, as questões são sorteadas do banco do seu curso. A prova é liberada pelo professor.</p>
     </header>
+
+    <p class="aviso-erro-modo" role="alert" th:if="${erroSimulado}" th:text="${erroSimulado}"></p>
 
     <section class="cartoes-modo">
 
@@ -30,21 +33,121 @@
             <a class="botao-secundario bloco" th:href="@{/simulado/iniciar(modo='treino')}">Começar treino</a>
         </article>
 
-        <article class="cartao-modo destaque">
+        <article class="cartao-modo destaque" th:with="pendentes=${provas.?[!enviada]}, feitas=${provas.?[enviada]}">
             <span class="selo-modo selo-modo-prova">Prova</span>
             <h2>Modo prova</h2>
-            <p>Tempo limite proporcional ao do ENADE: <strong th:text="${minutosPorQuestao}">6</strong> minutos por questão.</p>
-            <ul>
-                <li th:text="'Até ' + ${questoes} + ' questões em ' + ${minutosProva} + ' minutos'">Até 5 questões em 30 minutos</li>
-                <li>O tempo é controlado pelo servidor</li>
-                <li>Ao zerar o tempo, o simulado é enviado automaticamente</li>
-            </ul>
-            <a class="botao-primario bloco" th:href="@{/simulado/iniciar(modo='prova')}">Começar prova</a>
+            <p>Só fica disponível quando o professor libera uma prova para você.</p>
+
+            <p class="prova-vazio" th:if="${pendentes.isEmpty()}">Nenhuma prova para fazer agora.</p>
+
+            <div class="prova-liberada" th:each="prova : ${pendentes}"
+                 th:classappend="${prova.aberta or prova.emAndamento} ? 'prova-aberta' : ''">
+
+                <div class="prova-topo">
+                    <h3 th:text="${prova.titulo}">Prova ENADE</h3>
+                    <span class="prova-chip prova-chip-aberta" th:if="${prova.aberta}">Aberta agora</span>
+                    <span class="prova-chip prova-chip-andamento" th:if="${prova.emAndamento}">Em andamento</span>
+                    <span class="prova-chip prova-chip-agendada" th:if="${prova.agendada}">Agendada</span>
+                </div>
+
+                <p class="prova-horarios">
+                    <span th:text="${#temporals.format(prova.abertura, 'dd/MM')}">13/11</span>
+                    · das <strong th:text="${#temporals.format(prova.abertura, 'HH:mm')}">19:30</strong>
+                    às <strong th:text="${#temporals.format(prova.encerramento, 'HH:mm')}">21:00</strong>
+                </p>
+
+                <div th:if="${prova.agendada}" class="prova-estado">
+                    <p class="prova-aviso-contagem">Abre em <strong class="prova-contagem" th:attr="data-segundos=${prova.segundosParaAbrir}">--:--:--</strong></p>
+                </div>
+
+                <form th:if="${prova.aberta}" method="post" class="prova-iniciar"
+                      th:action="@{'/simulado/prova/' + ${prova.provaId} + '/iniciar'}">
+                    <p class="prova-aviso-contagem">Faltam <strong class="prova-contagem" th:attr="data-segundos=${prova.segundosParaEncerrar}">--:--:--</strong> para o encerramento, às
+                        <strong th:text="${#temporals.format(prova.encerramento, 'HH:mm')}">21:00</strong>.</p>
+
+                    <details class="prova-regras" open>
+                        <summary>Regras da prova</summary>
+                        <ul>
+                            <li>A prova é individual e só pode ser feita uma vez.</li>
+                            <li>Todos terminam no mesmo horário de encerramento.</li>
+                            <li>Durante a prova você não consegue abrir outras páginas do sistema.</li>
+                            <li><strong>Se sair da tela da prova</strong> (trocar de aba, minimizar ou abrir outro programa) por mais de 2 segundos, <strong>ela é encerrada na hora</strong>, com as respostas que você já deu.</li>
+                            <li>Feche notificações e outros programas. Use um computador, não o celular.</li>
+                            <li>Copiar, colar, imprimir e o clique direito ficam bloqueados.</li>
+                        </ul>
+                    </details>
+
+                    <label class="prova-aceite">
+                        <input type="checkbox" class="prova-aceite-caixa" required>
+                        <span>Li e entendi as regras.</span>
+                    </label>
+                    <button type="submit" class="botao-primario bloco prova-botao-iniciar" disabled>Iniciar prova</button>
+                </form>
+
+                <a th:if="${prova.emAndamento}" class="botao-primario bloco"
+                   th:href="@{'/simulado/' + ${prova.simuladoId} + '/questao/1'}">Continuar prova</a>
+            </div>
+
+            <div class="prova-historico" th:if="${!feitas.isEmpty()}">
+                <h3>Provas já feitas <span class="prova-historico-total" th:text="${'(' + feitas.size() + ')'}">(3)</span></h3>
+                <ul class="prova-historico-lista">
+                    <li th:each="prova : ${feitas}">
+                        <div class="prova-historico-info">
+                            <strong th:text="${prova.titulo}">Prova ENADE</strong>
+                            <span th:text="${#temporals.format(prova.abertura, 'dd/MM')} + ' · ' + ${#temporals.format(prova.abertura, 'HH:mm')} + ' às ' + ${#temporals.format(prova.encerramento, 'HH:mm')}">13/11 · 19:30 às 21:00</span>
+                        </div>
+                        <a class="prova-historico-link" th:href="@{'/simulado/' + ${prova.simuladoId} + '/resultado'}">Ver resultado</a>
+                    </li>
+                </ul>
+            </div>
         </article>
 
     </section>
 
 </main>
+
+<script>
+    document.querySelectorAll(".prova-aceite-caixa").forEach(function (caixa) {
+        var botao = caixa.closest("form").querySelector(".prova-botao-iniciar");
+        caixa.addEventListener("change", function () { botao.disabled = !caixa.checked; });
+        caixa.closest("form").addEventListener("submit", function () {
+            botao.disabled = true;
+            botao.textContent = "Iniciando...";
+        });
+    });
+
+    var contagens = document.querySelectorAll(".prova-contagem");
+    if (contagens.length > 0) {
+        var inicio = Date.now();
+        var restantes = Array.prototype.map.call(contagens, function (elemento) { return Number(elemento.dataset.segundos); });
+
+        function formatar(segundos) {
+            var h = String(Math.floor(segundos / 3600)).padStart(2, "0");
+            var m = String(Math.floor((segundos % 3600) / 60)).padStart(2, "0");
+            var s = String(segundos % 60).padStart(2, "0");
+            return h + ":" + m + ":" + s;
+        }
+
+        function atualizar() {
+            var passados = Math.round((Date.now() - inicio) / 1000);
+            var recarregar = false;
+            contagens.forEach(function (elemento, i) {
+                var resta = Math.max(0, restantes[i] - passados);
+                elemento.textContent = formatar(resta);
+                if (resta === 0 && elemento.closest(".prova-estado")) {
+                    recarregar = true;
+                }
+            });
+            if (recarregar) {
+                setTimeout(function () { window.location.reload(); }, 800);
+                clearInterval(intervalo);
+            }
+        }
+
+        var intervalo = setInterval(atualizar, 1000);
+        atualizar();
+    }
+</script>
 
 </body>
 </html>
