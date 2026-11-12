@@ -177,12 +177,27 @@ public class BancoQuestoesController {
                             @RequestParam(required = false) MultipartFile novaImagem,
                             @RequestParam List<Long> altId,
                             @RequestParam List<String> altTexto,
-                            @RequestParam Long corretaId,
+                            @RequestParam(required = false) Long corretaId,
+                            Model model,
                             HttpSession session) throws IOException {
 
         UsuarioSessaoDTO ator = autorizado(session);
         if (ator == null) {
             return "redirect:/login";
+        }
+
+        if (corretaId == null) {
+            Questao questaoAtual = questaoRepository.findById(id)
+                    .orElseThrow(() -> new RuntimeException("Questao nao encontrada"));
+            List<Alternativa> alternativas = alternativaRepository.findByQuestaoIdOrderByIdAsc(id);
+
+            model.addAttribute("erro", "Selecione qual alternativa é a correta antes de salvar.");
+            model.addAttribute("questao", questaoAtual);
+            model.addAttribute("alternativas", alternativas);
+            model.addAttribute("usuarioLogado", ator);
+            model.addAttribute("ehAdmin", "ADMIN".equals(ator.getTipo()));
+            model.addAttribute("baseUrl", baseUrl(ator));
+            return "coordenador/questaoForm";
         }
 
         Questao questao = questaoRepository.findById(id)

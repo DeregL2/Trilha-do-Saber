@@ -25,6 +25,8 @@
             Questão nº <strong th:text="${questao.numero}"></strong>
         </p>
 
+        <p th:if="${erro != null}" th:text="${erro}" style="color:#B91C1C; font-weight:600;"></p>
+
         <form method="post" th:action="@{${baseUrl} + '/' + ${questao.id}}" enctype="multipart/form-data">
 
             <label>Enunciado</label>
