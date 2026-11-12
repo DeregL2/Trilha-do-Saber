@@ -8,6 +8,7 @@ import com.tcc.trilha_do_saber.model.TipoAcao;
 import com.tcc.trilha_do_saber.repository.AlunoRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import com.tcc.trilha_do_saber.service.EmailUnicoService;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -18,12 +19,14 @@ public class AlunoService {
     private final AlunoRepository alunoRepository;
     private final PasswordEncoder passwordEncoder;
     private final LogAuditoriaService logAuditoriaService;
+    private final EmailUnicoService emailUnicoService;
 
     public AlunoService(AlunoRepository alunoRepository, PasswordEncoder passwordEncoder,
-                        LogAuditoriaService logAuditoriaService){
+                        LogAuditoriaService logAuditoriaService, EmailUnicoService emailUnicoService){
         this.alunoRepository = alunoRepository;
         this.passwordEncoder = passwordEncoder;
         this.logAuditoriaService = logAuditoriaService;
+        this.emailUnicoService = emailUnicoService;
     }
 
     public List<Aluno> listarTodos(){
@@ -39,9 +42,8 @@ public class AlunoService {
         if (!dto.senhasConferem()) {
             throw new IllegalArgumentException("As senhas não conferem");
         }
-        if (alunoRepository.findByEmail(dto.getEmail()).isPresent()) {
-            throw new IllegalArgumentException("Já existe um cadastro com esse email");
-        }
+        emailUnicoService.validarEmailDisponivel(dto.getEmail());
+
 
         String senhaComHash = passwordEncoder.encode(dto.getSenha());
         Aluno aluno = new Aluno(dto.getNome(), dto.getEmail(), senhaComHash, dto.getRegistroAluno(), dto.getCurso(), dto.getSemestre(),
@@ -72,6 +74,10 @@ public class AlunoService {
 
     public Aluno atualizar(Long id, AlunoFormDTO dto, UsuarioSessaoDTO ator, String ip, long duracaoMs){
         Aluno aluno = buscarPorId(id);
+
+        if (!aluno.getEmail().equalsIgnoreCase(dto.getEmail())) {
+            emailUnicoService.validarEmailDisponivelParaEdicao(dto.getEmail(), "ALUNO", id);
+        }
 
         StringBuilder mudancas = new StringBuilder();
         compararCampo(mudancas, "nome", aluno.getNome(), dto.getNome());

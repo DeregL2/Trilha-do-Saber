@@ -6,4 +6,6 @@ import java.util.Optional;
 
 public interface AdmGeralRepository extends JpaRepository<AdmGeral, Long> {
     Optional<AdmGeral> findByEmail(String email);
+
+    Optional<AdmGeral> findByEmailIgnoreCase(String email);
 }

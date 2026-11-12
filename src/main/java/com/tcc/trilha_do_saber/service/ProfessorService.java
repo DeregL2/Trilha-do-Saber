@@ -21,13 +21,16 @@ public class ProfessorService {
     private final PasswordEncoder passwordEncoder;
     private final LogAuditoriaService logAuditoriaService;
     private final EmailService emailService;
+    private final EmailUnicoService emailUnicoService;
 
     public ProfessorService(ProfessorRepository professorRepository, PasswordEncoder passwordEncoder,
-                            LogAuditoriaService logAuditoriaService, EmailService emailService){
+                            LogAuditoriaService logAuditoriaService, EmailService emailService,
+                            EmailUnicoService emailUnicoService){
         this.professorRepository = professorRepository;
         this.passwordEncoder = passwordEncoder;
         this.logAuditoriaService = logAuditoriaService;
         this.emailService = emailService;
+        this.emailUnicoService = emailUnicoService;
     }
 
     public List<Professor> listarTodos(){
@@ -43,9 +46,7 @@ public class ProfessorService {
         if (!dto.senhasConferem()) {
             throw new IllegalArgumentException("As senhas não conferem");
         }
-        if (professorRepository.findByEmail(dto.getEmail()).isPresent()) {
-            throw new IllegalArgumentException("Já existe um cadastro com esse email");
-        }
+        emailUnicoService.validarEmailDisponivel(dto.getEmail());
 
         String senhaComHash = passwordEncoder.encode(dto.getSenha());
         Professor professor = new Professor(dto.getNome(), dto.getEmail(), senhaComHash, dto.getRegistroProfissional());
@@ -79,9 +80,8 @@ public class ProfessorService {
     }
 
     public Professor cadastrarPeloAdmin(CadastroProfessorAdminDTO dto, UsuarioSessaoDTO ator, String ip, long duracaoMs){
-        if (professorRepository.findByEmail(dto.getEmail()).isPresent()) {
-            throw new IllegalArgumentException("Já existe um cadastro com esse email");
-        }
+
+        emailUnicoService.validarEmailDisponivel(dto.getEmail());
 
         String senhaGerada = gerarSenhaAleatoria();
         String senhaComHash = passwordEncoder.encode(senhaGerada);
@@ -110,6 +110,10 @@ public class ProfessorService {
 
     public Professor atualizar(Long id, ProfessorFormDTO dto, UsuarioSessaoDTO ator, String ip, long duracaoMs){
         Professor professor = buscarPorId(id);
+
+        if (!professor.getEmail().equalsIgnoreCase(dto.getEmail())) {
+            emailUnicoService.validarEmailDisponivelParaEdicao(dto.getEmail(), "PROFESSOR", id);
+        }
 
         StringBuilder mudancas = new StringBuilder();
         compararCampo(mudancas, "nome", professor.getNome(), dto.getNome());

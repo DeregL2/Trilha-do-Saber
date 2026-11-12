@@ -41,7 +41,6 @@ import java.nio.file.Files;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -70,6 +69,8 @@ public class ImportadorProvaServiceV2 {
     private static final int PONTOS_MINIMOS_POR_FAIXA = 5;
 
     private static final int PONTOS_MINIMOS_NA_QUESTAO = 25;
+
+    private static final float TOLERANCIA_SOBREPOSICAO_PONTOS = 0.5f;
 
     public ImportadorProvaServiceV2(QuestaoRepository questaoRepository, AlternativaRepository alternativaRepository, ProvaRepository provaRepository) {
         this.questaoRepository = questaoRepository;
@@ -116,6 +117,39 @@ public class ImportadorProvaServiceV2 {
             }
 
             super.writeString(string, textPositions);
+        }
+    }
+
+    private static class StripperSemEspacoFantasma extends PDFTextStripper {
+
+        StripperSemEspacoFantasma() throws IOException {
+            super();
+        }
+
+        @Override
+        protected void writeString(String string, List<TextPosition> textPositions) throws IOException {
+            StringBuilder textoFiltrado = new StringBuilder();
+            List<TextPosition> posicoesFiltradas = new ArrayList<>();
+
+            TextPosition anterior = null;
+
+            for (TextPosition posicaoAtual : textPositions) {
+                String unicode = posicaoAtual.getUnicode();
+                float fimDoAnterior = anterior == null ? Float.NEGATIVE_INFINITY
+                        : anterior.getXDirAdj() + anterior.getWidthDirAdj();
+
+                boolean ehEspacoFantasmaDeLigadura = " ".equals(unicode)
+                        && anterior != null
+                        && posicaoAtual.getXDirAdj() < fimDoAnterior - TOLERANCIA_SOBREPOSICAO_PONTOS;
+
+                if (!ehEspacoFantasmaDeLigadura) {
+                    textoFiltrado.append(unicode);
+                    posicoesFiltradas.add(posicaoAtual);
+                    anterior = posicaoAtual;
+                }
+            }
+
+            super.writeString(textoFiltrado.toString(), posicoesFiltradas);
         }
     }
 
@@ -270,8 +304,24 @@ public class ImportadorProvaServiceV2 {
                 throw new ProvaDuplicadaException(provaExistente.get().getAno(), provaExistente.get().getCurso());
             }
             PDDocument doc = Loader.loadPDF(file);
-            PDFTextStripper pdfTextStripper = new PDFTextStripper();
+            PDFTextStripper pdfTextStripper = new StripperSemEspacoFantasma();
             Pattern padrao = Pattern.compile("\\s{10,}");
+
+            Pattern padraoQuebraDeParagrafo = Pattern.compile(
+                    "(?i)^[A-ZÀ-Ü]{2,}(?:\\s+[A-ZÀ-Ü]{2,})*,\\s*[A-ZÀ-Ü]\\."
+                            + "|^(a\\s+partir\\s+(d[ao]s?|de)"
+                            + "|considerando(\\s+as)?"
+                            + "|com\\s+base\\s+n[ao]s?"
+                            + "|de\\s+acordo\\s+com"
+                            + "|avalie\\s+as"
+                            + "|julgue\\s+(o|os)"
+                            + "|assinale\\s+a"
+                            + "|[ée]\\s+correto\\s+afirmar"
+                            + "|a\\s+respeito\\s+d[ao]s?"
+                            + "|tendo\\s+em\\s+vista"
+                            + "|nesse\\s+contexto"
+                            + "|diante\\s+do\\s+exposto)"
+            );
 
             Pattern padraoTituloDeslocado = Pattern.compile("(?iu)quest[ãa]o\\s+\\d+\\s*$");
 
@@ -298,9 +348,13 @@ public class ImportadorProvaServiceV2 {
 
                     String linhaSemEspacos = linhaLinha.trim();
                     if (linhaSemEspacos.matches("(?i).*\\*[\\d*]*R\\s*\\d{5,}.*")
-                            || linhaSemEspacos.matches("(?i)\\d*\\s*sistemas\\s+de\\s+informa.*")) {
+                            || linhaSemEspacos.matches("(?i)\\d*\\s*sistemas\\s+de\\s+informa.*")
+                            || linhaSemEspacos.matches("(?i)dispon[íi]vel\\s+em\\s*:.*")) {
                         continue;
                     }
+
+                    boolean iniciaNovoParagrafo = !bufferEsquerda.isEmpty()
+                            && padraoQuebraDeParagrafo.matcher(linhaSemEspacos).find();
 
                     Matcher matcher = padrao.matcher(linhaLinha);
 
@@ -308,10 +362,16 @@ public class ImportadorProvaServiceV2 {
                         int inicioCorredor = matcher.start();
                         int fimCorredor = matcher.end();
 
+                        if (iniciaNovoParagrafo) {
+                            bufferEsquerda += "\n";
+                        }
                         bufferEsquerda += linhaLinha.substring(0, inicioCorredor) + "\n";
                         bufferDireita += linhaLinha.substring(fimCorredor)+ "\n";
                     }
                     else {
+                        if (iniciaNovoParagrafo) {
+                            bufferEsquerda += "\n";
+                        }
                         bufferEsquerda += linhaLinha + "\n";
                     }
                 }
@@ -424,13 +484,6 @@ public class ImportadorProvaServiceV2 {
                     }
                 }
 
-                // DEBUG TEMPORARIO - remover depois de investigar a questao 33
-                if (cabecalho != null && numeroQuestao == 33) {
-                    System.out.println("[DEBUG Q33] pagina=" + cabecalho.pagina
-                            + " y=" + cabecalho.y + " yFim=" + cabecalho.yFim
-                            + " faixaImagemFinal=" + (faixaImagem == null ? "null" : Arrays.toString(faixaImagem)));
-                }
-
                 if (faixaImagem != null) {
                     imagemRecortada = recortarImagemDaQuestao(renderer, cachePaginas, cabecalho, faixaImagem);
                 }
@@ -488,9 +541,6 @@ public class ImportadorProvaServiceV2 {
     private float[] faixaDoDesenhoNaQuestao(Map<Integer, List<float[]>> desenhosPorPagina, CabecalhoQuestao cabecalho, float alturaPagina, int numeroQuestao) {
         List<float[]> pontosDaPagina = desenhosPorPagina.get(cabecalho.pagina);
         if (pontosDaPagina == null) {
-            if (numeroQuestao == 33) {
-                System.out.println("[DEBUG Q33] pontosDaPagina == null para a pagina " + cabecalho.pagina);
-            }
             return null;
         }
 
@@ -515,17 +565,7 @@ public class ImportadorProvaServiceV2 {
             }
         }
 
-        if (numeroQuestao == 33) {
-            System.out.println("[DEBUG Q33] pontosTotalNaPagina=" + pontosDaPagina.size()
-                    + " totalNaQuestao=" + totalNaQuestao
-                    + " contagemPorFaixa=" + Arrays.toString(contagem));
-        }
-
         if (totalNaQuestao < PONTOS_MINIMOS_NA_QUESTAO) {
-            if (numeroQuestao == 33) {
-                System.out.println("[DEBUG Q33] descartado: totalNaQuestao(" + totalNaQuestao
-                        + ") < PONTOS_MINIMOS_NA_QUESTAO(" + PONTOS_MINIMOS_NA_QUESTAO + ")");
-            }
             return null;
         }
 
@@ -541,9 +581,6 @@ public class ImportadorProvaServiceV2 {
         }
 
         if (primeiraFaixa == -1) {
-            if (numeroQuestao == 33) {
-                System.out.println("[DEBUG Q33] descartado: nenhuma faixa atingiu PONTOS_MINIMOS_POR_FAIXA(" + PONTOS_MINIMOS_POR_FAIXA + ")");
-            }
             return null;
         }
 

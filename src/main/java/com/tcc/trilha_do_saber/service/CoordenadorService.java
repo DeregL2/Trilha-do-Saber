@@ -22,13 +22,16 @@ public class CoordenadorService {
     private final PasswordEncoder passwordEncoder;
     private final LogAuditoriaService logAuditoriaService;
     private final EmailService emailService;
+    private final EmailUnicoService emailUnicoService;
 
     public CoordenadorService(CoordenadorRepository coordenadorRepository, PasswordEncoder passwordEncoder,
-                              LogAuditoriaService logAuditoriaService, EmailService emailService){
+                              LogAuditoriaService logAuditoriaService, EmailService emailService,
+                              EmailUnicoService emailUnicoService){
         this.coordenadorRepository = coordenadorRepository;
         this.passwordEncoder = passwordEncoder;
         this.logAuditoriaService = logAuditoriaService;
         this.emailService = emailService;
+        this.emailUnicoService = emailUnicoService;
     }
 
     public List<Coordenador> listarTodos(){
@@ -44,9 +47,7 @@ public class CoordenadorService {
         if (!dto.senhasConferem()) {
             throw new IllegalArgumentException("As senhas não conferem");
         }
-        if (coordenadorRepository.findByEmail(dto.getEmail()).isPresent()) {
-            throw new IllegalArgumentException("Já existe um cadastro com esse email");
-        }
+        emailUnicoService.validarEmailDisponivel(dto.getEmail());
 
         String senhaComHash = passwordEncoder.encode(dto.getSenha());
         Coordenador coordenador = new Coordenador(dto.getNome(), dto.getEmail(), senhaComHash, dto.getRegistroFuncional(), dto.cursosJuntos());        coordenador.setConsentimentoLgpd(dto.isAceitouTermos());
@@ -80,9 +81,7 @@ public class CoordenadorService {
     }
 
     public Coordenador cadastrarPeloAdmin(CadastroCoordenadorAdminDTO dto, UsuarioSessaoDTO ator, String ip, long duracaoMs){
-        if (coordenadorRepository.findByEmail(dto.getEmail()).isPresent()){
-            throw new IllegalArgumentException("Já existe um cadastro com esse email");
-        }
+        emailUnicoService.validarEmailDisponivel(dto.getEmail());
 
         String senhaGerada = gerarSenhaAleatoria();
         String senhaComHash = passwordEncoder.encode(senhaGerada);
@@ -110,6 +109,10 @@ public class CoordenadorService {
 
     public Coordenador atualizar(Long id, CoordenadorFormDTO dto, UsuarioSessaoDTO ator, String ip, long duracaoMs){
         Coordenador coordenador = buscarPorId(id);
+
+        if (!coordenador.getEmail().equalsIgnoreCase(dto.getEmail())) {
+            emailUnicoService.validarEmailDisponivelParaEdicao(dto.getEmail(), "COORDENADOR", id);
+        }
 
         StringBuilder mudancas = new StringBuilder();
         compararCampo(mudancas, "nome", coordenador.getNome(), dto.getNome());

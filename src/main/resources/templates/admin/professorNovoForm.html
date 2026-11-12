@@ -16,7 +16,8 @@
         <h1>Novo professor</h1>
         <p class="subtitulo-pagina">O acesso já é liberado na hora. Uma senha provisória será enviada para o e-mail informado.</p>
 
-        <span class="erro-geral" th:if="${erroGeral}" th:text="${erroGeral}"></span>
+        <span class="erro-geral" th:if="${erroGeral}" th:text="${erroGeral}"
+              style="color:#B91C1C; font-weight:600; display:block; margin-bottom:12px;"></span>
 
         <form method="post" th:object="${professorNovoForm}" th:action="@{/admin/usuarios/professor/novo}">
 

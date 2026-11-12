@@ -37,6 +37,9 @@ class AlunoServiceTest {
     @Mock
     private LogAuditoriaService logAuditoriaService;
 
+    @Mock
+    private EmailUnicoService emailUnicoService;
+
     @InjectMocks
     private AlunoService alunoService;
 
@@ -52,7 +55,6 @@ class AlunoServiceTest {
         dto.setSemestre(8);
         dto.setTurma("B");
         dto.setTurno("Noturno");
-        when(alunoRepository.findByEmail("ana@umc.br")).thenReturn(Optional.empty());
         when(passwordEncoder.encode("Senha@123")).thenReturn("hash");
         when(alunoRepository.save(any(Aluno.class))).thenAnswer(invocacao -> invocacao.getArgument(0));
 

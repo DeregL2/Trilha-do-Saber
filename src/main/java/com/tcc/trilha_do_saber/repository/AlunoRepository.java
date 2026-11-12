@@ -12,6 +12,8 @@ public interface AlunoRepository extends JpaRepository<Aluno, Long> {
 
     List<Aluno> findByCursoIgnoreCaseAndAtivoTrueAndAnonimizadoFalse(String curso);
 
+    Optional<Aluno> findByEmailIgnoreCase(String email);
+
     @Query("select count(a) from Aluno a where lower(a.curso) = lower(:curso) and a.semestre = :semestre "
             + "and lower(a.turma) = lower(:turma) and lower(a.turno) = lower(:turno) "
             + "and a.ativo = true and a.anonimizado = false")

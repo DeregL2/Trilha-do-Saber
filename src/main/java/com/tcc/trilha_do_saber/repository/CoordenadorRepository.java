@@ -6,4 +6,6 @@ import java.util.Optional;
 
 public interface CoordenadorRepository extends JpaRepository<Coordenador, Long> {
     Optional<Coordenador> findByEmail(String email);
+
+    Optional<Coordenador> findByEmailIgnoreCase(String email);
 }
