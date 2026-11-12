@@ -10,7 +10,40 @@ Plataforma de estudos adaptativa para preparação ao **ENADE**, desenvolvida co
 
 O ENADE é uma prova essencial para a avaliação dos cursos de graduação no Brasil, mas encontrar um banco de questões organizado e confiável para treino é um desafio — provas de edições anteriores costumam estar disponíveis apenas em PDFs soltos, sem nenhuma estrutura de estudo por trás.
 
-O **Trilha do Saber** resolve isso automatizando a importação de provas oficiais do ENADE, organizando as questões por tema e permitindo que o aluno resolva exercícios enquanto o sistema acompanha e confere suas respostas, criando uma trilha de estudo personalizada.
+O **Trilha do Saber** resolve isso automatizando a importação de provas oficiais do ENADE direto do PDF original, organizando as questões por curso/ano e permitindo que o aluno resolva simulados enquanto o sistema acompanha e confere seu desempenho, criando uma trilha de estudo personalizada — com visão separada para aluno, professor, coordenador e administração.
+
+## ✨ Funcionalidades
+
+**Importação automática de provas (núcleo do projeto)**
+- Extração automática de enunciados, alternativas e imagens/diagramas a partir do PDF oficial do ENADE (layout em duas colunas), com reconhecimento de correção de ligaduras tipográficas, recomposição de parágrafos e remoção de elementos irrelevantes (cabeçalhos repetidos, códigos de barra, links de referência bibliográfica)
+- Importação do gabarito oficial em PDF, com múltiplas estratégias de leitura para diferentes formatos de gabarito
+- Cadastro manual de questões no banco, como alternativa à importação automática
+
+**Área do aluno**
+- Cadastro com solicitação de acesso e aceite dos termos de uso/LGPD
+- Verificação em duas etapas por e-mail e fluxo de primeiro acesso
+- Resolução de simulados e provas aplicadas pela turma, com correção automática
+- Dashboard de desempenho e ranking da turma
+
+**Área do professor**
+- Painel com as turmas alocadas e acompanhamento dos alunos
+- Dashboard de desempenho por turma
+
+**Área do coordenador**
+- Gestão do banco de questões, turmas e alocação de disciplinas/professores
+- Importação em massa de alunos e professores via planilha
+- Aplicação de provas para turmas inteiras
+- Dashboards central, por curso e por turma
+
+**Administração**
+- Gestão de todos os tipos de conta (aluno, professor, coordenador, admin)
+- Log de auditoria de ações administrativas, com expurgo automático de registros antigos
+
+**Segurança e qualidade**
+- Senhas com hash BCrypt e verificação de e-mail único entre todos os tipos de conta (impede o mesmo e-mail cadastrado como aluno e professor, por exemplo)
+- Redefinição de senha por e-mail com token de uso único
+- Encerramento automático de simulados expirados (tarefa agendada)
+- Suíte de testes unitários e de integração (JUnit + Mockito) com cobertura acompanhada via JaCoCo
 
 ## 🛠️ Tecnologias utilizadas
 
@@ -34,18 +67,24 @@ O **Trilha do Saber** resolve isso automatizando a importação de provas oficia
 **Outros**
 - Spring Data JPA + Hibernate
 - Spring Security + BCrypt
-- API REST própria + Swagger
+- Envio de e-mail transacional via Resend (verificação em duas etapas, redefinição de senha)
 - Deploy via Render
+
+---
+
+## ✅ Testes
+
+O projeto tem uma suíte com centenas de testes unitários e de integração (JUnit 5 + Mockito), cobrindo controllers, services e regras de negócio, com cobertura acompanhada via JaCoCo.
 
 ---
 
 ## 👥 Integrantes
 
 | Nome |
-|---|---|
-| **Derick Alves Maschio** 
-| **Isabella Nicoliche Silva** 
-| **Thaíssa Victoria Bianchini de Oliveira** 
+|---|
+| **Derick Alves Maschio** |
+| **Isabella Nicoliche Silva** |
+| **Thaíssa Victoria Bianchini de Oliveira** |
 
 **Curso:** Sistemas de Informação — 8ª B Noturno
 **Instituição:** UMC (Universidade de Mogi das Cruzes)
