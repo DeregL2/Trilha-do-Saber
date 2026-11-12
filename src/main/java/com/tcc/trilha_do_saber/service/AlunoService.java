@@ -8,6 +8,7 @@ import com.tcc.trilha_do_saber.model.TipoAcao;
 import com.tcc.trilha_do_saber.repository.AlunoRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import com.tcc.trilha_do_saber.service.EmailUnicoService;
 
 import java.time.LocalDateTime;
@@ -146,6 +147,32 @@ public class AlunoService {
                 TipoAcao.EXCLUSAO, "Aluno", id,
                 "Aluno excluido: " + nomeParaLog + " (" + emailParaLog + "). Dados academicos mantidos no banco.",
                 ip, duracaoMs);
+    }
+
+    @Transactional
+    public int avancarSemestreEmMassa(String curso, UsuarioSessaoDTO ator, String ip, long duracaoMs){
+        List<Aluno> ativos = alunoRepository.findByCursoIgnoreCaseAndAtivoTrueAndAnonimizadoFalse(curso);
+
+        int avancados = 0;
+        int formados = 0;
+        for (Aluno aluno : ativos) {
+            if (aluno.getSemestre() >= 12) {
+                aluno.setAtivo(false);
+                formados++;
+            } else {
+                aluno.setSemestre(aluno.getSemestre() + 1);
+                avancados++;
+            }
+        }
+        alunoRepository.saveAll(ativos);
+
+        logAuditoriaService.registrar(ator.getId(), ator.getNome(), ator.getTipo(),
+                TipoAcao.ATUALIZACAO, "Aluno", null,
+                "Virada de semestre em massa no curso " + curso + ": " + avancados
+                        + " aluno(s) avancado(s) e " + formados + " aluno(s) formado(s)/desativado(s)",
+                ip, duracaoMs);
+
+        return avancados + formados;
     }
 
     public void anonimizar(Long id, UsuarioSessaoDTO ator, String ip, long duracaoMs){

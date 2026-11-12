@@ -198,6 +198,78 @@
         </div>
     </section>
 
+    <section class="painel painel-tabela" th:unless="${cursos.isEmpty()}">
+        <h2>Ações da coordenação</h2>
+        <p class="painel-descricao">Marcação de ENADE e virada de semestre para o período letivo selecionado.</p>
+
+        <details class="prova-grupo">
+            <summary>
+                <span class="prova-grupo-titulo">Turmas que vão realizar o ENADE</span>
+                <span class="prova-grupo-contagem">Marque quais turmas vão prestar o ENADE neste ciclo</span>
+            </summary>
+
+            <div style="padding: 16px 18px;">
+                <p class="painel-descricao" th:if="${turmasEnade.isEmpty()}" style="margin:0;">Nenhuma turma cadastrada neste período.</p>
+
+                <div class="tabela-rolagem" th:unless="${turmasEnade.isEmpty()}">
+                    <table class="tabela-desempenho">
+                        <thead>
+                        <tr>
+                            <th>Curso</th>
+                            <th>Semestre</th>
+                            <th>Turma</th>
+                            <th>Período</th>
+                            <th></th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="t : ${turmasEnade}">
+                            <td th:text="${t.curso}">Sistemas de Informação</td>
+                            <td th:text="${t.semestre} + 'º'">8º</td>
+                            <td th:text="${t.turma}">B</td>
+                            <td th:text="${t.turno}">Noturno</td>
+                            <td class="coluna-acao">
+                                <form method="post" th:action="@{|${base}/enade|}">
+                                    <input type="hidden" name="periodo" th:value="${periodoSelecionado}">
+                                    <input type="hidden" name="curso" th:value="${t.curso}">
+                                    <input type="hidden" name="semestre" th:value="${t.semestre}">
+                                    <input type="hidden" name="turma" th:value="${t.turma}">
+                                    <input type="hidden" name="turno" th:value="${t.turno}">
+                                    <button type="submit"
+                                            th:class="${t.enade} ? 'botao-enade marcada' : 'botao-enade'"
+                                            th:text="${t.enade} ? 'Marcada ✓ (clique p/ desmarcar)' : 'Marcar como ENADE'">
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </details>
+
+        <details class="prova-grupo">
+            <summary>
+                <span class="prova-grupo-titulo">Virada de semestre</span>
+                <span class="prova-grupo-contagem">Avança em 1 o semestre de todos os alunos ativos de um curso</span>
+            </summary>
+
+            <div style="padding: 16px 18px;">
+                <form method="post" class="form-importacao" th:action="@{|${base}/avancar-semestre|}"
+                      onsubmit="return confirm('Tem certeza? Isso vai avançar o semestre de TODOS os alunos ativos deste curso, de uma vez.');">
+                    <input type="hidden" name="periodo" th:value="${periodoSelecionado}">
+                    <div class="campo">
+                        <label for="cursoAvancar">Curso</label>
+                        <select id="cursoAvancar" name="curso" required>
+                            <option th:each="c : ${cursos}" th:value="${c}" th:text="${c}">Sistemas de Informação</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="botao-primario">Avançar semestre de todos os alunos ativos</button>
+                </form>
+            </div>
+        </details>
+    </section>
+
 </main>
 
 </body>

@@ -1602,3 +1602,31 @@ body {
     flex-shrink: 0;
 }
 
+.barra-filtro-questoes {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.cartao-largo select {
+    display: block;
+    width: 100%;
+    max-width: 320px;
+    height: 42px;
+    padding: 9px 12px;
+    border: 1px solid var(--borda);
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: inherit;
+    background: #fff;
+    color: var(--texto);
+}
+
+.cartao-largo select:focus {
+    outline: none;
+    border-color: var(--marca);
+    box-shadow: 0 0 0 3px var(--marca-clara);
+}

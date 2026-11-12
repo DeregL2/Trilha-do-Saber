@@ -2,19 +2,23 @@ package com.tcc.trilha_do_saber.service;
 
 import com.tcc.trilha_do_saber.dto.AlocacaoFormDTO;
 import com.tcc.trilha_do_saber.dto.NovaAlocacaoFormDTO;
+import com.tcc.trilha_do_saber.dto.TurmaEnadeStatusDTO;
 import com.tcc.trilha_do_saber.dto.UsuarioSessaoDTO;
 import com.tcc.trilha_do_saber.model.AlocacaoDisciplina;
 import com.tcc.trilha_do_saber.model.Curso;
 import com.tcc.trilha_do_saber.model.Professor;
 import com.tcc.trilha_do_saber.model.TipoAcao;
+import com.tcc.trilha_do_saber.model.TurmaEnade;
 import com.tcc.trilha_do_saber.repository.AlocacaoDisciplinaRepository;
 import com.tcc.trilha_do_saber.repository.ProfessorRepository;
+import com.tcc.trilha_do_saber.repository.TurmaEnadeRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
@@ -26,13 +30,16 @@ public class AlocacaoService {
     private final AlocacaoDisciplinaRepository alocacaoRepository;
     private final ProfessorRepository professorRepository;
     private final LogAuditoriaService logAuditoriaService;
+    private final TurmaEnadeRepository turmaEnadeRepository;
 
     public AlocacaoService(AlocacaoDisciplinaRepository alocacaoRepository,
                            ProfessorRepository professorRepository,
-                           LogAuditoriaService logAuditoriaService) {
+                           LogAuditoriaService logAuditoriaService,
+                           TurmaEnadeRepository turmaEnadeRepository) {
         this.alocacaoRepository = alocacaoRepository;
         this.professorRepository = professorRepository;
         this.logAuditoriaService = logAuditoriaService;
+        this.turmaEnadeRepository = turmaEnadeRepository;
     }
 
     public AlocacaoDisciplina buscarPermitida(Long id, Collection<String> cursosPermitidos) {
@@ -136,6 +143,38 @@ public class AlocacaoService {
                 TipoAcao.CADASTRO, "Alocacao", salva.getId(), detalhes, ip, System.currentTimeMillis() - inicio);
 
         return salva;
+    }
+
+    public List<TurmaEnadeStatusDTO> turmasComStatusEnade(List<AlocacaoDisciplina> alocacoes, String periodoLetivo) {
+        LinkedHashMap<String, TurmaEnadeStatusDTO> distintas = new LinkedHashMap<>();
+        for (AlocacaoDisciplina a : alocacoes) {
+            String chave = a.getCurso() + "|" + a.getSemestre() + "|" + a.getTurma() + "|" + a.getTurno();
+            if (!distintas.containsKey(chave)) {
+                boolean marcada = turmaEnadeRepository.findByPeriodoLetivoAndCursoAndSemestreAndTurmaAndTurno(
+                        periodoLetivo, a.getCurso(), a.getSemestre(), a.getTurma(), a.getTurno()).isPresent();
+                distintas.put(chave, new TurmaEnadeStatusDTO(
+                        a.getCurso(), a.getSemestre(), a.getTurma(), a.getTurno(), marcada));
+            }
+        }
+        return new ArrayList<>(distintas.values());
+    }
+
+    @Transactional
+    public void alternarEnade(String periodoLetivo, String curso, int semestre, String turma, String turno,
+                              Collection<String> cursosPermitidos, UsuarioSessaoDTO ator) {
+        boolean permitido = cursosPermitidos.stream().anyMatch(c -> c.equalsIgnoreCase(curso));
+        if (!permitido) {
+            throw new IllegalArgumentException("Você não pode alterar turmas do curso " + curso + ".");
+        }
+
+        Optional<TurmaEnade> existente = turmaEnadeRepository
+                .findByPeriodoLetivoAndCursoAndSemestreAndTurmaAndTurno(periodoLetivo, curso, semestre, turma, turno);
+
+        if (existente.isPresent()) {
+            turmaEnadeRepository.delete(existente.get());
+        } else {
+            turmaEnadeRepository.save(new TurmaEnade(periodoLetivo, curso, semestre, turma, turno, ator.getNome()));
+        }
     }
 
     private List<Professor> professoresAtivos(Collection<Long> ids) {

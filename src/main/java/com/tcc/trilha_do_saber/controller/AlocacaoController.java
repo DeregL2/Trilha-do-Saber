@@ -11,6 +11,7 @@ import com.tcc.trilha_do_saber.model.Professor;
 import com.tcc.trilha_do_saber.repository.AlocacaoDisciplinaRepository;
 import com.tcc.trilha_do_saber.repository.CoordenadorRepository;
 import com.tcc.trilha_do_saber.service.AlocacaoService;
+import com.tcc.trilha_do_saber.service.AlunoService;
 import com.tcc.trilha_do_saber.service.ImportacaoAlocacaoService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
@@ -44,15 +45,18 @@ public class AlocacaoController {
     private final AlocacaoService alocacaoService;
     private final AlocacaoDisciplinaRepository alocacaoRepository;
     private final CoordenadorRepository coordenadorRepository;
+    private final AlunoService alunoService;
 
     public AlocacaoController(ImportacaoAlocacaoService importacaoService,
                               AlocacaoService alocacaoService,
                               AlocacaoDisciplinaRepository alocacaoRepository,
-                              CoordenadorRepository coordenadorRepository) {
+                              CoordenadorRepository coordenadorRepository,
+                              AlunoService alunoService) {
         this.importacaoService = importacaoService;
         this.alocacaoService = alocacaoService;
         this.alocacaoRepository = alocacaoRepository;
         this.coordenadorRepository = coordenadorRepository;
+        this.alunoService = alunoService;
     }
 
     @GetMapping({"/coordenador/turmas", "/admin/turmas"})
@@ -227,6 +231,50 @@ public class AlocacaoController {
         return "redirect:" + baseDe(usuario) + "?periodo=" + alocacao.getPeriodoLetivo();
     }
 
+    @PostMapping({"/coordenador/turmas/enade", "/admin/turmas/enade"})
+    public String alternarEnade(@RequestParam String periodo, @RequestParam String curso,
+                                @RequestParam int semestre, @RequestParam String turma, @RequestParam String turno,
+                                HttpSession session, RedirectAttributes redirectAttributes) {
+
+        UsuarioSessaoDTO usuario = usuarioAutorizado(session);
+        if (usuario == null) {
+            return "redirect:/login";
+        }
+
+        try {
+            alocacaoService.alternarEnade(periodo, curso, semestre, turma, turno, cursosPermitidos(usuario), usuario);
+            redirectAttributes.addFlashAttribute("mensagem", "Marcação de ENADE atualizada.");
+        } catch (IllegalArgumentException e) {
+            redirectAttributes.addFlashAttribute("erro", e.getMessage());
+        }
+
+        return "redirect:" + baseDe(usuario) + "?periodo=" + codificar(periodo);
+    }
+
+    @PostMapping({"/coordenador/turmas/avancar-semestre", "/admin/turmas/avancar-semestre"})
+    public String avancarSemestre(@RequestParam String curso, @RequestParam(required = false) String periodo,
+                                  HttpSession session, HttpServletRequest request,
+                                  RedirectAttributes redirectAttributes) {
+
+        UsuarioSessaoDTO usuario = usuarioAutorizado(session);
+        if (usuario == null) {
+            return "redirect:/login";
+        }
+
+        if (cursosPermitidos(usuario).stream().noneMatch(c -> c.equalsIgnoreCase(curso))) {
+            redirectAttributes.addFlashAttribute("erro", "Você não pode alterar alunos do curso " + curso + ".");
+            return "redirect:" + baseDe(usuario);
+        }
+
+        long inicio = System.currentTimeMillis();
+        int alterados = alunoService.avancarSemestreEmMassa(curso, usuario, request.getRemoteAddr(),
+                System.currentTimeMillis() - inicio);
+
+        redirectAttributes.addFlashAttribute("mensagem", alterados
+                + " aluno(s) ativo(s) de " + curso + " tiveram o semestre avançado ou foram formados.");
+        return "redirect:" + baseDe(usuario) + (periodo != null ? "?periodo=" + codificar(periodo) : "");
+    }
+
     private void preencherNova(Model model, UsuarioSessaoDTO usuario, List<String> cursos) {
         model.addAttribute("usuario", usuario);
         model.addAttribute("ehAdmin", "ADMIN".equals(usuario.getTipo()));
@@ -274,6 +322,10 @@ public class AlocacaoController {
             opcoes.add(0, selecionado);
         }
 
+        List<AlocacaoDisciplina> alocacoes = cursos.isEmpty() ? List.of()
+                : alocacaoRepository.findByPeriodoLetivoAndCursoInOrderByCursoAscSemestreAscTurmaAscDisciplinaAsc(
+                selecionado, cursos);
+
         model.addAttribute("usuario", usuario);
         model.addAttribute("ehAdmin", "ADMIN".equals(usuario.getTipo()));
         model.addAttribute("base", baseDe(usuario));
@@ -281,9 +333,8 @@ public class AlocacaoController {
         model.addAttribute("periodos", opcoes);
         model.addAttribute("periodoSelecionado", selecionado);
         model.addAttribute("periodoFormulario", periodoDigitado != null ? periodoDigitado : sugerido);
-        model.addAttribute("alocacoes", cursos.isEmpty() ? List.of()
-                : alocacaoRepository.findByPeriodoLetivoAndCursoInOrderByCursoAscSemestreAscTurmaAscDisciplinaAsc(
-                selecionado, cursos));
+        model.addAttribute("alocacoes", alocacoes);
+        model.addAttribute("turmasEnade", alocacaoService.turmasComStatusEnade(alocacoes, selecionado));
     }
 
     private boolean periodoValido(String periodo) {

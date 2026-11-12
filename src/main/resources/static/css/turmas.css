@@ -304,3 +304,43 @@
 .topo-conteudo .filtro-periodo {
     margin: 12px 0 4px;
 }
+
+.botao-enade {
+    padding: 6px 12px;
+    border: 1px solid var(--borda);
+    border-radius: 8px;
+    background: #fff;
+    color: var(--texto-secundario);
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.botao-enade:hover {
+    border-color: var(--marca);
+    color: var(--marca);
+}
+
+.botao-enade.marcada {
+    background: var(--verde-fundo);
+    border-color: var(--verde);
+    color: var(--texto);
+}
+
+.form-importacao select {
+    height: 42px;
+    padding: 9px 12px;
+    border: 1px solid var(--borda);
+    border-radius: 8px;
+    background: #fff;
+    color: var(--texto);
+    font-family: inherit;
+    font-size: 14px;
+}
+
+.form-importacao select:focus {
+    outline: none;
+    border-color: var(--marca);
+    box-shadow: 0 0 0 3px var(--marca-clara);
+}

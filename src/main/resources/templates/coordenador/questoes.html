@@ -20,17 +20,17 @@
 
         <h1>Banco de Questões</h1>
 
-        <form method="get" th:action="@{${baseUrl}}">
-            <label>Curso</label>
-            <select name="curso" onchange="this.form.submit()">
-                <option value="">Selecionar curso</option>
-                <option th:each="c : ${T(com.tcc.trilha_do_saber.model.Curso).values()}"
-                        th:value="${c.nomeExibicao}" th:text="${c.nomeExibicao}"
-                        th:selected="${c.nomeExibicao == cursoSelecionado}"></option>
-            </select>
-        </form>
+        <div class="barra-filtro-questoes">
+            <form method="get" th:action="@{${baseUrl}}">
+                <label for="filtroCurso">Curso</label>
+                <select id="filtroCurso" name="curso" onchange="this.form.submit()">
+                    <option value="">Selecionar curso</option>
+                    <option th:each="c : ${T(com.tcc.trilha_do_saber.model.Curso).values()}"
+                            th:value="${c.nomeExibicao}" th:text="${c.nomeExibicao}"
+                            th:selected="${c.nomeExibicao == cursoSelecionado}"></option>
+                </select>
+            </form>
 
-        <div class="acoes-form" style="justify-content:flex-end; margin: 12px 0;">
             <a th:href="@{${baseUrl} + '/novo'(curso=${cursoSelecionado})}" class="botao-primario">+ Nova questão</a>
         </div>
 
