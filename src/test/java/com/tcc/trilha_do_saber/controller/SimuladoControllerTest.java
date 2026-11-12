@@ -11,6 +11,8 @@ import com.tcc.trilha_do_saber.model.Questao;
 import com.tcc.trilha_do_saber.model.Simulado;
 import com.tcc.trilha_do_saber.model.SimuladoQuestao;
 import com.tcc.trilha_do_saber.repository.AlternativaRepository;
+import com.tcc.trilha_do_saber.dto.ProvaDisponivelDTO;
+import com.tcc.trilha_do_saber.service.ProvaDoAlunoService;
 import com.tcc.trilha_do_saber.service.SimuladoService;
 import jakarta.servlet.http.HttpSession;
 import org.junit.jupiter.api.Test;
@@ -50,6 +52,9 @@ class SimuladoControllerTest {
     private AlternativaRepository alternativaRepository;
 
     @Mock
+    private ProvaDoAlunoService provaDoAlunoService;
+
+    @Mock
     private HttpSession session;
 
     @Mock
@@ -66,9 +71,9 @@ class SimuladoControllerTest {
         entrarComoAluno();
         Simulado simulado = mock(Simulado.class);
         when(simulado.getId()).thenReturn(10L);
-        when(simuladoService.iniciar(1L, true)).thenReturn(simulado);
+        when(simuladoService.iniciar(1L, false)).thenReturn(simulado);
 
-        String destino = simuladoController.iniciar("prova", session, redirectAttributes);
+        String destino = simuladoController.iniciar("treino", session, redirectAttributes);
 
         assertEquals("redirect:/simulado/10/questao/1", destino);
         verifyNoInteractions(redirectAttributes);
@@ -77,9 +82,9 @@ class SimuladoControllerTest {
     @Test
     void deveVoltarAoDashboardComMensagemQuandoOCursoNaoTemQuestoes() {
         entrarComoAluno();
-        when(simuladoService.iniciar(1L, true)).thenThrow(new SemQuestoesException("Engenharia de Software"));
+        when(simuladoService.iniciar(1L, false)).thenThrow(new SemQuestoesException("Engenharia de Software"));
 
-        String destino = simuladoController.iniciar("prova", session, redirectAttributes);
+        String destino = simuladoController.iniciar("treino", session, redirectAttributes);
 
         assertEquals("redirect:/aluno/dashboard", destino);
         ArgumentCaptor<Object> mensagem = ArgumentCaptor.forClass(Object.class);
@@ -120,25 +125,26 @@ class SimuladoControllerTest {
     }
 
     @Test
-    void modoProvaDeveIniciarComTempoLimite() {
+    void modoProvaNaoPodeMaisSerIniciadoPeloProprioAluno() {
         entrarComoAluno();
-        Simulado simulado = simuladoComId(10L);
-        when(simuladoService.iniciar(1L, true)).thenReturn(simulado);
 
-        simuladoController.iniciar("prova", session, redirectAttributes);
+        String destino = simuladoController.iniciar("prova", session, redirectAttributes);
 
-        verify(simuladoService).iniciar(1L, true);
+        assertEquals("redirect:/simulado/novo", destino);
+        ArgumentCaptor<Object> mensagem = ArgumentCaptor.forClass(Object.class);
+        verify(redirectAttributes).addFlashAttribute(eq("erroSimulado"), mensagem.capture());
+        assertTrue(mensagem.getValue().toString().contains("professor"));
+        verifyNoInteractions(simuladoService);
     }
 
     @Test
-    void valorDesconhecidoDeModoDeveVirarProvaEnaoTreino() {
+    void qualquerValorDeModoQueNaoSejaTreinoTambemEBloqueado() {
         entrarComoAluno();
-        Simulado simulado = simuladoComId(10L);
-        when(simuladoService.iniciar(1L, true)).thenReturn(simulado);
 
-        simuladoController.iniciar("qualquercoisa", session, redirectAttributes);
-
-        verify(simuladoService).iniciar(1L, true);
+        for (String modo : new String[]{"qualquercoisa", "PROVA", "Treino", "", " treino", "prova&modo=treino"}) {
+            assertEquals("redirect:/simulado/novo", simuladoController.iniciar(modo, session, redirectAttributes));
+        }
+        verifyNoInteractions(simuladoService);
     }
 
     @Test
@@ -152,15 +158,154 @@ class SimuladoControllerTest {
     }
 
     @Test
-    void telaDeEscolhaDoModoDeveInformarQuestoesETempoDaProva() {
+    void telaDeEscolhaDoModoDeveInformarAsQuestoesDoTreinoEAsProvasLiberadas() {
         entrarComoAluno();
+        List<ProvaDisponivelDTO> provas = List.of(new ProvaDisponivelDTO(3L, "Prova ENADE", LocalDateTime.of(2026, 11, 13, 19, 30),
+                LocalDateTime.of(2026, 11, 13, 21, 0), ProvaDisponivelDTO.Situacao.ABERTA, null));
+        when(provaDoAlunoService.disponiveis(1L)).thenReturn(provas);
 
         String tela = simuladoController.novo(session, model);
 
         assertEquals("simuladoModo", tela);
         verify(model).addAttribute("questoes", 35);
-        verify(model).addAttribute("minutosPorQuestao", 6);
-        verify(model).addAttribute("minutosProva", 210);
+        verify(model).addAttribute("provas", provas);
+    }
+
+    @Test
+    void questaoDeUmaProvaAplicadaAvisaATelaParaAtivarAsTravas() {
+        entrarComoAluno();
+        donoDoSimulado(10L);
+        Simulado simulado = simuladoEmAndamento(10L, true, 10);
+        when(simulado.isAplicado()).thenReturn(true);
+        prepararQuestao(simulado, false);
+
+        simuladoController.questao(10L, 2, model, session);
+
+        verify(model).addAttribute("aplicado", true);
+        verify(model).addAttribute("toleranciaSaidaMs", 2000);
+    }
+
+    @Test
+    void questaoDeSimuladoComumNaoAtivaAsTravas() {
+        entrarComoAluno();
+        donoDoSimulado(10L);
+        prepararQuestao(simuladoEmAndamento(10L, true, 10), false);
+
+        simuladoController.questao(10L, 2, model, session);
+
+        verify(model).addAttribute("aplicado", false);
+    }
+
+    @Test
+    void saidaDaTelaEncerraAProvaEInformaOCliente() {
+        entrarComoAluno();
+        donoDoSimulado(10L);
+        when(provaDoAlunoService.registrarSaida(10L, 1L)).thenReturn(true);
+
+        ResponseEntity<Map<String, Object>> resposta = simuladoController.saida(10L, session);
+
+        assertEquals(HttpStatus.OK, resposta.getStatusCode());
+        assertEquals(true, resposta.getBody().get("encerrada"));
+    }
+
+    @Test
+    void saidaDeProvaJaEncerradaDevolveEncerradaFalsa() {
+        entrarComoAluno();
+        donoDoSimulado(10L);
+        when(provaDoAlunoService.registrarSaida(10L, 1L)).thenReturn(false);
+
+        assertEquals(false, simuladoController.saida(10L, session).getBody().get("encerrada"));
+    }
+
+    @Test
+    void saidaSemLoginOuDeOutroAlunoEhRecusada() {
+        when(session.getAttribute("usuarioLogado")).thenReturn(null);
+        assertEquals(HttpStatus.UNAUTHORIZED, simuladoController.saida(10L, session).getStatusCode());
+
+        entrarComoAluno();
+        when(simuladoService.pertenceAoAluno(10L, 1L)).thenReturn(false);
+        assertEquals(HttpStatus.FORBIDDEN, simuladoController.saida(10L, session).getStatusCode());
+
+        verifyNoInteractions(provaDoAlunoService);
+    }
+
+    @Test
+    void saidaEmSimuladoQueNaoERegistraSaidasDevolveErro() {
+        entrarComoAluno();
+        donoDoSimulado(10L);
+        when(provaDoAlunoService.registrarSaida(10L, 1L)).thenThrow(new IllegalArgumentException("Este simulado não registra saídas da tela"));
+
+        ResponseEntity<Map<String, Object>> resposta = simuladoController.saida(10L, session);
+
+        assertEquals(HttpStatus.BAD_REQUEST, resposta.getStatusCode());
+        assertEquals("Este simulado não registra saídas da tela", resposta.getBody().get("erro"));
+    }
+
+    @Test
+    void resultadoDeProvaAplicadaAntesDoEncerramentoSegueEscondidoComAvisoDeEnvio() {
+        entrarComoAluno();
+        donoDoSimulado(10L);
+        Simulado enviada = mock(Simulado.class);
+        lenient().when(enviada.isFinalizado()).thenReturn(true);
+        when(enviada.isAplicado()).thenReturn(true);
+        when(enviada.getDataLimite()).thenReturn(LocalDateTime.now().plusMinutes(30));
+        when(enviada.isEncerradoPorSaida()).thenReturn(true);
+        when(enviada.isGabaritoRetido()).thenReturn(true);
+        when(simuladoService.buscarSimulado(10L)).thenReturn(enviada);
+        when(simuladoService.totalQuestoes(10L)).thenReturn(5L);
+        when(simuladoService.totalRespondidas(10L)).thenReturn(3L);
+        ResultadoSimuladoDTO parcial = new ResultadoSimuladoDTO(5, 3, 2, 60.0);
+        when(simuladoService.gerarResultado(10L)).thenReturn(parcial);
+
+        String tela = simuladoController.verResultado(10L, model, session);
+
+        assertEquals("provaEnviada", tela);
+        verify(model).addAttribute("resultado", parcial);
+        verify(model).addAttribute("porSaida", true);
+        ArgumentCaptor<Object> segundos = ArgumentCaptor.forClass(Object.class);
+        verify(model).addAttribute(eq("segundosParaLiberar"), segundos.capture());
+        long ate = (Long) segundos.getValue();
+        assertTrue(ate > 1700 && ate <= 1800, "segundos: " + ate);
+        verify(model).addAttribute("respondidas", 3L);
+        verify(model).addAttribute("total", 5L);
+        verify(simuladoService, never()).gerarRevisao(any());
+    }
+
+
+    @Test
+    void resultadoDeProvaAplicadaSemRetencaoLiberaNotaEGabaritoLogoAoTerminar() {
+        entrarComoAluno();
+        donoDoSimulado(10L);
+        Simulado enviada = mock(Simulado.class);
+        lenient().when(enviada.isFinalizado()).thenReturn(true);
+        when(enviada.isAplicado()).thenReturn(true);
+        lenient().when(enviada.isGabaritoRetido()).thenReturn(false);
+        lenient().when(enviada.getDataLimite()).thenReturn(LocalDateTime.now().plusMinutes(30));
+        when(enviada.getDataInicio()).thenReturn(LocalDateTime.of(2026, 11, 13, 19, 30));
+        when(enviada.getDataFim()).thenReturn(LocalDateTime.of(2026, 11, 13, 20, 0));
+        when(simuladoService.buscarSimulado(10L)).thenReturn(enviada);
+        when(simuladoService.gerarResultado(10L)).thenReturn(new ResultadoSimuladoDTO(5, 3, 2, 60.0));
+        when(simuladoService.gerarRevisao(10L)).thenReturn(List.of());
+
+        assertEquals("resultado", simuladoController.verResultado(10L, model, session));
+    }
+
+    @Test
+    void resultadoDeProvaAplicadaDepoisDoEncerramentoLiberaONotaEORevisao() {
+        entrarComoAluno();
+        donoDoSimulado(10L);
+        Simulado enviada = mock(Simulado.class);
+        lenient().when(enviada.isFinalizado()).thenReturn(true);
+        when(enviada.isAplicado()).thenReturn(true);
+        when(enviada.isGabaritoRetido()).thenReturn(true);
+        when(enviada.getDataLimite()).thenReturn(LocalDateTime.now().minusMinutes(1));
+        when(enviada.getDataInicio()).thenReturn(LocalDateTime.of(2026, 11, 13, 19, 30));
+        when(enviada.getDataFim()).thenReturn(LocalDateTime.of(2026, 11, 13, 20, 0));
+        when(simuladoService.buscarSimulado(10L)).thenReturn(enviada);
+        when(simuladoService.gerarResultado(10L)).thenReturn(new ResultadoSimuladoDTO(5, 3, 2, 60.0));
+        when(simuladoService.gerarRevisao(10L)).thenReturn(List.of());
+
+        assertEquals("resultado", simuladoController.verResultado(10L, model, session));
     }
 
     @Test

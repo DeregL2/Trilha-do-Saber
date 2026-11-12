@@ -1,0 +1,108 @@
+.aviso-erro-modo {
+    max-width: 900px;
+    margin: 0 auto 16px;
+    padding: 12px 16px;
+    border-radius: 10px;
+    background: #FEF2F2;
+    color: #991B1B;
+    font-size: 14px;
+}
+
+.prova-vazio {
+    padding: 12px 16px;
+    border-radius: 10px;
+    background: #F8FAFC;
+    color: #64748B;
+    font-size: 14px;
+}
+
+.prova-liberada {
+    margin-top: 16px;
+    padding: 16px;
+    border: 1px solid #E2E8F0;
+    border-radius: 12px;
+    background: #fff;
+}
+
+.prova-liberada h3 {
+    margin: 0 0 6px;
+    font-size: 16px;
+}
+
+.prova-horarios {
+    margin: 0 0 12px;
+    font-size: 14px;
+    color: #475569;
+}
+
+.prova-estado p {
+    margin: 0 0 8px;
+    font-size: 14px;
+}
+
+.prova-contagem {
+    font-variant-numeric: tabular-nums;
+}
+
+.prova-regras {
+    margin-bottom: 12px;
+    padding: 12px 16px;
+    border-radius: 10px;
+    background: #FFFBEB;
+    color: #92400E;
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+.prova-regras ul {
+    margin: 6px 0 0;
+    padding-left: 18px;
+}
+
+.prova-aceite {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0 0 12px;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.aviso-prova-aplicada {
+    padding: 8px 16px;
+    background: #FEF2F2;
+    color: #991B1B;
+    font-size: 13px;
+    font-weight: 600;
+    text-align: center;
+}
+
+.prova-aplicada {
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+@media print {
+    .prova-aplicada * {
+        display: none !important;
+    }
+}
+
+.prova-motivo {
+    margin: 12px 0;
+    padding: 10px 14px;
+    border-radius: 10px;
+    background: #FEF2F2;
+    color: #991B1B;
+    font-size: 14px;
+}
+
+.prova-liberacao {
+    margin: 12px 0 20px;
+    font-size: 14px;
+    color: #475569;
+}
+
+.prova-nota {
+    font-size: 16px;
+}

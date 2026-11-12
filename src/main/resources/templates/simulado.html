@@ -5,19 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title th:text="${simulado.titulo}">Simulado</title>
     <link rel="stylesheet" th:href="@{/css/simulado.css}">
+    <link rel="stylesheet" th:href="@{/css/prova-aluno.css}">
 </head>
-<body>
+<body th:classappend="${aplicado} ? 'prova-aplicada' : ''">
 
 <form th:action="@{'/simulado/' + ${simulado.id} + '/questao/' + ${ordem}}" method="post" class="prova"
       th:data-salvar-url="@{'/simulado/' + ${simulado.id} + '/questao/' + ${ordem} + '/salvar'}"
       th:data-resultado-url="@{'/simulado/' + ${simulado.id} + '/resultado'}"
-      th:data-login-url="@{/login}">
+      th:data-login-url="@{/login}"
+      th:data-saida-url="@{'/simulado/' + ${simulado.id} + '/saida'}"
+      th:data-tolerancia-ms="${toleranciaSaidaMs}">
 
     <header class="topo">
         <div class="topo-linha">
             <div class="topo-esquerda">
-                <a th:href="@{/}" class="link-sair">&larr; Sair</a>
-                <span class="divisor"></span>
+                <a th:unless="${aplicado}" th:href="@{/}" class="link-sair">&larr; Sair</a>
+                <span th:unless="${aplicado}" class="divisor"></span>
                 <span class="titulo-prova" th:text="${simulado.titulo}">Simulado</span>
                 <span class="selo-modo" th:classappend="${simulado.modoProva} ? 'selo-modo-prova' : 'selo-modo-treino'"
                       th:text="${simulado.modoProva} ? 'Modo prova' : 'Modo treino'">Modo prova</span>
@@ -29,6 +32,9 @@
     Questão <span th:text="${ordem}">1</span> de <span th:text="${total}">20</span>
 </span>
             </div>
+        </div>
+        <div class="aviso-prova-aplicada" th:if="${aplicado}">
+            Prova em andamento: se você sair desta tela por mais de 2 segundos, a prova será encerrada.
         </div>
         <div class="barra-progresso">
             <div class="barra-preenchida" th:style="'width:' + ${progresso} + '%'"></div>
@@ -244,6 +250,57 @@
                         avisar("Não foi possível salvar agora. Ela será enviada ao mudar de questão.", true);
                     });
             });
+        });
+    })();
+</script>
+
+<script th:if="${aplicado}">
+    (function () {
+        const formulario = document.querySelector("form.prova");
+        const urlSaida = formulario.dataset.saidaUrl;
+        const urlResultado = formulario.dataset.resultadoUrl;
+        const tolerancia = Number(formulario.dataset.toleranciaMs) || 2000;
+        let foraDesde = null;
+        let encerrando = false;
+
+        function encerrar() {
+            if (encerrando) {
+                return;
+            }
+            encerrando = true;
+            fetch(urlSaida, {method: "POST", credentials: "same-origin", keepalive: true})
+                .catch(function () {})
+                .then(function () { window.location.href = urlResultado; });
+        }
+
+        function verificar() {
+            const fora = document.hidden || !document.hasFocus();
+            if (!fora) {
+                foraDesde = null;
+                return;
+            }
+            if (foraDesde === null) {
+                foraDesde = Date.now();
+            } else if (Date.now() - foraDesde >= tolerancia) {
+                encerrar();
+            }
+        }
+
+        setInterval(verificar, 250);
+        document.addEventListener("visibilitychange", verificar);
+        window.addEventListener("blur", verificar);
+        window.addEventListener("focus", verificar);
+
+        ["contextmenu", "copy", "cut", "paste", "dragstart", "selectstart"].forEach(function (evento) {
+            document.addEventListener(evento, function (e) { e.preventDefault(); });
+        });
+
+        document.addEventListener("keydown", function (e) {
+            const tecla = (e.key || "").toLowerCase();
+            const bloqueada = (e.ctrlKey || e.metaKey) && ["p", "s", "u", "c", "v", "x", "a"].indexOf(tecla) !== -1;
+            if (bloqueada || e.key === "F12" || e.key === "PrintScreen") {
+                e.preventDefault();
+            }
         });
     })();
 </script>

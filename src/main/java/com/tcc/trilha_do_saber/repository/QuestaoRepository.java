@@ -10,6 +10,8 @@ public interface QuestaoRepository extends JpaRepository<Questao, Long> {
 
     List<Questao> findByProvaCursoAndAtivaTrue(String curso);
 
+    List<Questao> findByAtivaTrueOrderByProva_CursoAscProva_AnoDescNumeroAsc();
+
     List<Questao> findByNumero(int numero);
 
     List<Questao> findByNumeroAndProvaCursoAndProvaAno(int numero, String curso, int ano);

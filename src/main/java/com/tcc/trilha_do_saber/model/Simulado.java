@@ -2,9 +2,11 @@ package com.tcc.trilha_do_saber.model;
 
 
 import jakarta.persistence.*;
+import java.time.Duration;
 import java.time.LocalDateTime;
 
 @Entity
+@Table(name = "simulado", uniqueConstraints = @UniqueConstraint(columnNames = {"prova_aplicada_id", "aluno_id"}))
 public class Simulado {
 
     @Id
@@ -28,6 +30,14 @@ public class Simulado {
 
     private Boolean modoProva;
 
+    @ManyToOne
+    @JoinColumn(name = "prova_aplicada_id")
+    private ProvaAplicada provaAplicada;
+
+    private LocalDateTime dataLimiteFixa;
+
+    private Boolean encerradoPorSaida;
+
     public Simulado() {
 
     }
@@ -46,6 +56,17 @@ public class Simulado {
         this.modoProva = modoProva;
     }
 
+    public Simulado(Aluno aluno, ProvaAplicada provaAplicada, LocalDateTime dataInicio) {
+        this(aluno, provaAplicada.getTitulo(), minutosAte(dataInicio, provaAplicada.getDataEncerramento()), dataInicio, true);
+        this.provaAplicada = provaAplicada;
+        this.dataLimiteFixa = provaAplicada.getDataEncerramento();
+    }
+
+    private static int minutosAte(LocalDateTime inicio, LocalDateTime fim) {
+        long segundos = Duration.between(inicio, fim).getSeconds();
+        return (int) Math.max(1, (segundos + 59) / 60);
+    }
+
     public void finalizar(LocalDateTime dataFim) {
         this.dataFim = dataFim;
         this.finalizado = true;
@@ -56,7 +77,27 @@ public class Simulado {
     }
 
     public LocalDateTime getDataLimite() {
-        return dataInicio.plusMinutes(duracaoMinutos);
+        return dataLimiteFixa != null ? dataLimiteFixa : dataInicio.plusMinutes(duracaoMinutos);
+    }
+
+    public boolean isAplicado() {
+        return provaAplicada != null;
+    }
+
+    public ProvaAplicada getProvaAplicada() {
+        return provaAplicada;
+    }
+
+    public boolean isGabaritoRetido() {
+        return provaAplicada != null && provaAplicada.isGabaritoRetido();
+    }
+
+    public boolean isEncerradoPorSaida() {
+        return Boolean.TRUE.equals(encerradoPorSaida);
+    }
+
+    public void marcarEncerradoPorSaida() {
+        this.encerradoPorSaida = true;
     }
 
     public boolean isModoProva() {

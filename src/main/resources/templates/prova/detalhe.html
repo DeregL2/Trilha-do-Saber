@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Acompanhar prova</title>
+    <link rel="stylesheet" th:href="@{/css/painel.css}">
+    <link rel="stylesheet" th:href="@{/css/importacao-usuarios.css}">
+    <link rel="stylesheet" th:href="@{/css/prova.css}">
+</head>
+<body>
+
+<th:block th:if="${ehProfessor}">
+    <header th:replace="~{fragments/navProfessor :: nav(pagina='provas', usuarioLogado=${usuarioLogado})}"></header>
+</th:block>
+<th:block th:unless="${ehProfessor}">
+    <header th:replace="~{fragments/navCoordenador :: nav(pagina='provas', usuarioLogado=${usuarioLogado})}"></header>
+</th:block>
+
+<main class="conteudo" id="painelProva" th:attr="data-atualizar=${detalhe.prova.status.name() == 'ABERTA'}">
+
+    <header class="topo-conteudo">
+        <h1 th:text="${detalhe.prova.titulo}">Prova</h1>
+        <p class="subtitulo-pagina">
+            <span class="pv-selo" th:classappend="${'pv-selo-' + #strings.toLowerCase(detalhe.prova.status.name())}"
+                  th:text="${detalhe.prova.status.rotulo}"></span>
+            Abre em <strong th:text="${#temporals.format(detalhe.prova.abertura, 'dd/MM/yyyy HH:mm')}"></strong>
+            e encerra em <strong th:text="${#temporals.format(detalhe.prova.encerramento, 'dd/MM/yyyy HH:mm')}"></strong>
+            · <span th:text="${detalhe.prova.totalQuestoes}">0</span> questões
+        </p>
+    </header>
+
+    <div class="imp-alerta-ok" th:if="${mensagemProva}" th:text="${mensagemProva}"></div>
+    <div class="alerta-erro" th:if="${erroProva}" th:text="${erroProva}"></div>
+
+    <div class="pv-turmas-detalhe">
+        <span class="pv-turma-linha" th:each="turma : ${detalhe.prova.turmas}" th:text="${turma}"></span>
+    </div>
+
+    <section class="grade-cards imp-cards-5">
+        <div class="card-estatistica">
+            <span class="rotulo-card">Alunos convocados</span>
+            <strong class="numero-card" th:text="${detalhe.totalAlunos}">0</strong>
+        </div>
+        <div class="card-estatistica">
+            <span class="rotulo-card">Iniciaram</span>
+            <strong class="numero-card" th:text="${detalhe.iniciaram}">0</strong>
+        </div>
+        <div class="card-estatistica">
+            <span class="rotulo-card">Terminaram</span>
+            <strong class="numero-card" th:text="${detalhe.finalizaram}">0</strong>
+        </div>
+        <div class="card-estatistica">
+            <span class="rotulo-card">Encerradas por saída</span>
+            <strong class="numero-card" th:text="${detalhe.encerradasPorSaida}">0</strong>
+        </div>
+        <div class="card-estatistica">
+            <span class="rotulo-card">Média de acertos</span>
+            <strong class="numero-card" th:if="${detalhe.temMedia}" th:text="${#numbers.formatDecimal(detalhe.media, 1, 0)} + '%'">0%</strong>
+            <strong class="numero-card" th:unless="${detalhe.temMedia}">—</strong>
+        </div>
+    </section>
+
+    <p class="pv-resumo-notas" th:if="${detalhe.temMedia}">
+        Maior nota <strong th:text="${#numbers.formatDecimal(detalhe.maiorNota, 1, 0)} + '%'">100%</strong>
+        · Menor nota <strong th:text="${#numbers.formatDecimal(detalhe.menorNota, 1, 0)} + '%'">0%</strong>
+    </p>
+
+    <section class="pv-dashboard" th:if="${detalhe.finalizaram > 0 or !detalhe.questoes.isEmpty()}">
+        <div class="pv-painel" th:if="${detalhe.finalizaram > 0}">
+            <h2>Distribuição das notas</h2>
+            <p class="pv-dica">Quantos alunos ficaram em cada faixa de acertos (só quem já terminou).</p>
+            <div class="pv-faixa" th:each="faixa : ${detalhe.faixas}">
+                <span class="pv-faixa-rotulo" th:text="${faixa.rotulo}">0–20%</span>
+                <div class="pv-barra-fundo">
+                    <div class="pv-barra-cheia" th:style="'width:' + ${faixa.quantidade * 100 / detalhe.maiorFaixa} + '%'"></div>
+                </div>
+                <span class="pv-faixa-qtd" th:text="${faixa.quantidade}">0</span>
+            </div>
+        </div>
+
+        <div class="pv-painel" th:if="${!detalhe.questoes.isEmpty()}">
+            <h2>Desempenho por questão</h2>
+            <p class="pv-dica">Quantos dos <span th:text="${detalhe.iniciaram}">0</span> alunos que fizeram a prova acertaram cada questão.</p>
+            <div class="pv-questao-linha" th:each="q : ${detalhe.questoes}">
+                <div class="pv-questao-cabeca">
+                    <strong th:text="${q.ordem + '. Questão ' + q.numero}">1. Questão 12</strong>
+                    <span class="pv-questao-pct"
+                          th:text="${q.acertos + ' de ' + q.total + ' (' + #numbers.formatDecimal(q.percentual, 1, 0) + '%)'}">3 de 5 (60%)</span>
+                </div>
+                <div class="pv-barra-fundo">
+                    <div class="pv-barra-cheia" th:classappend="${'pv-nivel-' + q.nivel}"
+                         th:style="'width:' + ${#numbers.formatDecimal(q.percentual, 1, 0)} + '%'"></div>
+                </div>
+                <span class="pv-questao-resumo" th:text="${q.resumo}">Resumo do enunciado</span>
+            </div>
+        </div>
+    </section>
+
+    <div class="pv-acoes-topo">
+        <a class="botao-secundario" th:href="@{${base}}">Voltar para as provas</a>
+        <a class="botao-secundario" th:href="@{|${base}/${detalhe.prova.id}/duplicar|}">Duplicar para outro grupo</a>
+        <a class="botao-secundario" th:href="@{|${base}/${detalhe.prova.id}/exportar|}">Exportar CSV</a>
+        <form th:if="${detalhe.prova.agendada}" method="post" th:action="@{|${base}/${detalhe.prova.id}/cancelar|}"
+              data-confirmar="Cancelar esta prova? Os alunos não poderão mais fazê-la.">
+            <button type="submit" class="botao-perigo">Cancelar prova</button>
+        </form>
+        <span class="pv-dica" th:if="${detalhe.prova.status.name() == 'ABERTA'}">Esta página se atualiza sozinha a cada 30 segundos.</span>
+    </div>
+
+    <div class="pv-tabela-rolagem">
+        <table class="tabela-usuarios pv-tabela">
+            <thead>
+            <tr>
+                <th>Aluno</th>
+                <th>Registro</th>
+                <th>Turma</th>
+                <th>Situação</th>
+                <th>Respondidas</th>
+                <th>Acertos</th>
+                <th>Nota</th>
+                <th>Encerrou às</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="linha : ${detalhe.linhas}" th:classappend="${linha.saiuDaTela} ? 'pv-linha-saida'">
+                <td th:text="${linha.nome}"></td>
+                <td th:text="${linha.registro}"></td>
+                <td th:text="${linha.turma}"></td>
+                <td th:text="${linha.situacao}"></td>
+                <td th:text="${linha.iniciou} ? ${linha.respondidas} + ' de ' + ${linha.total} : '—'"></td>
+                <td th:text="${linha.iniciou} ? ${linha.acertos} : '—'"></td>
+                <td th:text="${linha.iniciou} ? ${#numbers.formatDecimal(linha.percentual, 1, 0)} + '%' : '—'"></td>
+                <td th:text="${linha.terminouEm != null} ? ${#temporals.format(linha.terminouEm, 'HH:mm:ss')} : '—'"></td>
+            </tr>
+            <tr th:if="${detalhe.linhas.isEmpty()}">
+                <td colspan="8" class="linha-vazia">Nenhum aluno ativo convocado para esta prova</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+</main>
+
+<script>
+    document.querySelectorAll("form[data-confirmar]").forEach(function (formulario) {
+        formulario.addEventListener("submit", function (evento) {
+            if (!confirm(formulario.dataset.confirmar)) {
+                evento.preventDefault();
+            }
+        });
+    });
+
+    var painel = document.getElementById("painelProva");
+    if (painel && painel.dataset.atualizar === "true") {
+        setTimeout(function () { window.location.reload(); }, 30000);
+    }
+</script>
+
+</body>
+</html>
