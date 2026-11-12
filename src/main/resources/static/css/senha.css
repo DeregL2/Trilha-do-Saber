@@ -1,0 +1,42 @@
+.campo-senha {
+    position: relative;
+    display: block;
+    width: 100%;
+}
+
+html .campo-senha input.campo-senha-entrada {
+    display: block;
+    padding-right: 46px;
+}
+
+.campo-senha-olho {
+    position: absolute;
+    top: 0;
+    right: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 0 8px 8px 0;
+    background: transparent;
+    color: #5F6368;
+    cursor: pointer;
+}
+
+.campo-senha-olho:hover {
+    color: #6C4CE8;
+}
+
+.campo-senha-olho:focus-visible {
+    outline: 2px solid #6C4CE8;
+    outline-offset: -2px;
+}
+
+.campo-senha-entrada::-ms-reveal,
+.campo-senha-entrada::-ms-clear {
+    display: none;
+}
