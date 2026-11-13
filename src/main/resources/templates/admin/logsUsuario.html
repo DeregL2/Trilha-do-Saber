@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Atividade do usuário</title>
+    <link rel="stylesheet" th:href="@{/css/painel.css}">
+    <link rel="stylesheet" th:href="@{/css/logs.css}">
+</head>
+<body>
+
+<header th:replace="~{fragments/navAdmin :: nav(pagina='logs', usuarioLogado=${usuarioLogado})}"></header>
+
+<main class="conteudo">
+
+    <header class="topo-conteudo">
+        <a class="link-voltar-logs" th:href="@{/admin/logs}">&larr; Todos os logs</a>
+        <h1 th:text="${atividade.nome}">Nome do usuário</h1>
+        <p class="subtitulo-pagina">
+            <span class="chip-perfil" th:text="${atividade.tipo}">ALUNO</span>
+            <span th:if="${atividade.usuarioId != null}" th:text="'ID ' + ${atividade.usuarioId}">ID 7</span>
+            <span th:if="${atividade.usuarioId == null}">Tentativas de login sem conta correspondente</span>
+        </p>
+    </header>
+
+    <p class="aviso-corte" th:if="${atividade.semRegistros}">Nenhum registro encontrado para este usuário.</p>
+
+    <section class="grade-cards" th:unless="${atividade.semRegistros}">
+        <div class="card-estatistica">
+            <span class="rotulo-card">Ações registradas</span>
+            <strong class="numero-card" th:text="${atividade.totalAcoes}">0</strong>
+        </div>
+        <div class="card-estatistica">
+            <span class="rotulo-card">Logins com sucesso</span>
+            <strong class="numero-card" th:text="${atividade.loginsSucesso}">0</strong>
+        </div>
+        <div class="card-estatistica">
+            <span class="rotulo-card">Falhas de login</span>
+            <strong class="numero-card" th:text="${atividade.loginsFalha}">0</strong>
+        </div>
+        <div class="card-estatistica">
+            <span class="rotulo-card">Primeira atividade</span>
+            <strong class="numero-card" th:if="${atividade.primeira != null}"
+                    th:text="${#temporals.format(atividade.primeira, 'dd/MM/yyyy')}">--</strong>
+            <strong class="numero-card" th:unless="${atividade.primeira != null}">-</strong>
+        </div>
+        <div class="card-estatistica">
+            <span class="rotulo-card">Última atividade</span>
+            <strong class="numero-card" th:if="${atividade.ultima != null}"
+                    th:text="${#temporals.format(atividade.ultima, 'dd/MM/yyyy')}">--</strong>
+            <strong class="numero-card" th:unless="${atividade.ultima != null}">-</strong>
+        </div>
+    </section>
+
+    <div class="chips-acoes" th:if="${!atividade.acoesPorTipo.isEmpty()}">
+        <span class="chip-acao" th:each="contagem : ${atividade.acoesPorTipo}">
+            <span th:text="${contagem.acao}">LOGIN_SUCESSO</span><strong th:text="${contagem.quantidade}">3</strong>
+        </span>
+    </div>
+
+    <p class="linha-ips" th:if="${!atividade.ips.isEmpty()}">
+        IPs usados:
+        <code th:each="ip : ${atividade.ips}" th:text="${ip}">1.1.1.1</code>
+    </p>
+
+    <section class="secao-logs" th:unless="${atividade.semRegistros}">
+        <h2>O que esta conta fez</h2>
+        <p class="subtitulo-secao">Todas as ações registradas em nome deste usuário, da mais recente para a mais antiga.</p>
+
+        <p class="aviso-corte" th:if="${atividade.feitasCortadas}">
+            Mostrando as <strong th:text="${maximoLinhas}">500</strong> mais recentes de
+            <strong th:text="${atividade.totalAcoes}">700</strong> ações.
+        </p>
+
+        <div class="tabela-logs-container">
+            <table class="tabela-logs">
+                <thead>
+                <tr>
+                    <th class="col-data">Data/Hora</th>
+                    <th class="col-acao">Ação</th>
+                    <th class="col-entidade">Entidade</th>
+                    <th class="col-descricao">Descrição</th>
+                    <th class="col-ip">IP</th>
+                    <th class="col-integridade">Integridade</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="log : ${feitas}">
+                    <td class="col-data" th:text="${#temporals.format(log.dataHora, 'dd/MM/yyyy HH:mm:ss')}"></td>
+                    <td class="col-acao" th:text="${log.acao}"></td>
+                    <td class="col-entidade" th:text="${log.entidadeTipo} + (${log.entidadeId} != null ? (' #' + ${log.entidadeId}) : '')"></td>
+                    <td class="col-descricao" th:text="${log.detalhes} != null ? ${log.detalhes} : '-'"></td>
+                    <td class="col-ip" th:text="${log.ip} != null ? ${log.ip} : '-'"></td>
+                    <td class="col-integridade">
+                        <span class="badge-status" th:classappend="${log.integro} ? 'badge-ativo' : 'badge-inativo'"
+                              th:text="${log.integro} ? 'Íntegro' : 'Adulterado'"></span>
+                    </td>
+                </tr>
+                <tr th:if="${feitas.isEmpty()}">
+                    <td colspan="6" class="linha-vazia">Esta conta não tem ações registradas em seu nome</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="secao-logs" th:if="${atividade.tipo != 'DESCONHECIDO' and atividade.tipo != 'ADMIN'}">
+        <h2>O que fizeram com esta conta</h2>
+        <p class="subtitulo-secao">Ações de outras pessoas sobre este cadastro (por exemplo, o 2FA desligado por um coordenador).</p>
+
+        <p class="aviso-corte" th:if="${atividade.sofridasCortadas}">
+            Mostrando as <strong th:text="${maximoSofridas}">200</strong> mais recentes de
+            <strong th:text="${atividade.totalSofridas}">300</strong> ações.
+        </p>
+
+        <div class="tabela-logs-container">
+            <table class="tabela-logs">
+                <thead>
+                <tr>
+                    <th class="col-data">Data/Hora</th>
+                    <th class="col-feito-por">Feito por</th>
+                    <th class="col-acao">Ação</th>
+                    <th class="col-descricao">Descrição</th>
+                    <th class="col-ip">IP</th>
+                    <th class="col-integridade">Integridade</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="log : ${sofridas}">
+                    <td class="col-data" th:text="${#temporals.format(log.dataHora, 'dd/MM/yyyy HH:mm:ss')}"></td>
+                    <td class="col-feito-por">
+                        <a class="link-usuario" th:if="${log.usuarioId != null}"
+                           th:href="@{/admin/logs/usuario(tipo=${log.usuarioTipo},id=${log.usuarioId})}"
+                           th:text="${log.usuarioNome}"></a>
+                        <span th:if="${log.usuarioId == null}" th:text="${log.usuarioNome} != null ? ${log.usuarioNome} : '-'"></span>
+                        <div class="subtitulo-secao" th:text="${log.usuarioTipo}"></div>
+                    </td>
+                    <td class="col-acao" th:text="${log.acao}"></td>
+                    <td class="col-descricao" th:text="${log.detalhes} != null ? ${log.detalhes} : '-'"></td>
+                    <td class="col-ip" th:text="${log.ip} != null ? ${log.ip} : '-'"></td>
+                    <td class="col-integridade">
+                        <span class="badge-status" th:classappend="${log.integro} ? 'badge-ativo' : 'badge-inativo'"
+                              th:text="${log.integro} ? 'Íntegro' : 'Adulterado'"></span>
+                    </td>
+                </tr>
+                <tr th:if="${sofridas.isEmpty()}">
+                    <td colspan="6" class="linha-vazia">Ninguém registrou ações sobre esta conta</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+</main>
+
+</body>
+</html>

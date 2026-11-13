@@ -5,57 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Logs de Auditoria</title>
     <link rel="stylesheet" th:href="@{/css/painel.css}">
-    <style>
-        .conteudo {
-            max-width: 1500px;
-        }
-
-        .tabela-logs {
-            width: 100%;
-            border-collapse: collapse;
-            table-layout: fixed;
-        }
-
-        .tabela-logs th,
-        .tabela-logs td {
-            text-align: left;
-            padding: 12px 16px;
-            border-bottom: 1px solid var(--borda);
-            font-size: 13px;
-            white-space: normal;
-            word-wrap: break-word;
-            vertical-align: top;
-        }
-
-        .tabela-logs th {
-            background: var(--marca-fundo);
-            color: var(--texto-secundario);
-            font-weight: 600;
-            font-size: 12px;
-            text-transform: uppercase;
-        }
-
-        .tabela-logs tr:last-child td {
-            border-bottom: none;
-        }
-
-        .col-data { width: 10%; }
-        .col-usuario { width: 11%; }
-        .col-tipo { width: 7%; }
-        .col-acao { width: 9%; }
-        .col-entidade { width: 9%; }
-        .col-descricao { width: 30%; color: var(--texto-secundario); line-height: 1.5; }
-        .col-ip { width: 10%; font-family: monospace; font-size: 12px; }
-        .col-duracao { width: 6%; }
-        .col-integridade { width: 8%; }
-
-        .tabela-logs-container {
-            background: #fff;
-            border: 1px solid var(--borda);
-            border-radius: 12px;
-            overflow: hidden;
-        }
-    </style>
+    <link rel="stylesheet" th:href="@{/css/logs.css}">
 </head>
 <body>
 
@@ -65,13 +15,55 @@
 
     <header class="topo-conteudo">
         <h1>Logs de Auditoria</h1>
-        <p class="subtitulo-pagina">Registro de acessos e ações do sistema, conforme Marco Civil da Internet e LGPD</p>
+        <p class="subtitulo-pagina">Registro de acessos e ações do sistema, conforme Marco Civil da Internet e LGPD.</p>
+        <br>
     </header>
+
+    <form class="filtros-logs" method="get" th:action="@{/admin/logs}">
+        <div class="campo-filtro campo-usuario">
+            <label for="filtroUsuario">Usuário</label>
+            <input type="search" id="filtroUsuario" name="usuario" th:value="${filtroUsuario}"
+                   placeholder="Nome ou e-mail (ignora acentos)">
+        </div>
+
+        <div class="campo-filtro">
+            <label for="filtroPerfil">Perfil</label>
+            <select id="filtroPerfil" name="perfil">
+                <option value="">Todos</option>
+                <option th:each="p : ${perfis}" th:value="${p}" th:text="${p}" th:selected="${p == filtroPerfil}"></option>
+            </select>
+        </div>
+
+        <div class="campo-filtro">
+            <label for="filtroAcao">Ação</label>
+            <select id="filtroAcao" name="acao">
+                <option value="">Todas</option>
+                <option th:each="a : ${acoes}" th:value="${a.name()}" th:text="${a}" th:selected="${a.name() == filtroAcao}"></option>
+            </select>
+        </div>
+
+        <div class="campo-filtro">
+            <label for="filtroDe">De</label>
+            <input type="date" id="filtroDe" name="de" th:value="${filtroDe}">
+        </div>
+
+        <div class="campo-filtro">
+            <label for="filtroAte">Até</label>
+            <input type="date" id="filtroAte" name="ate" th:value="${filtroAte}">
+        </div>
+
+        <div class="acoes-filtro">
+            <button type="submit" class="botao-primario">Filtrar</button>
+            <a class="botao-secundario" th:if="${temFiltro}" th:href="@{/admin/logs}">Limpar</a>
+        </div>
+    </form>
+
+    <p class="aviso-filtro" th:if="${erroFiltro}" th:text="${erroFiltro}"></p>
 
     <section class="grade-cards">
         <div class="card-estatistica">
-            <span class="rotulo-card">Total de registros</span>
-            <strong class="numero-card" th:text="${logs.size()}"></strong>
+            <span class="rotulo-card" th:text="${temFiltro} ? 'Registros encontrados' : 'Total de registros'">Total de registros</span>
+            <strong class="numero-card" th:text="${totalEncontrado}"></strong>
         </div>
         <div class="card-estatistica">
             <span class="rotulo-card">Íntegros</span>
@@ -86,6 +78,15 @@
     <div class="cabecalho-usuarios">
         <h2>Registros</h2>
     </div>
+
+    <p class="aviso-corte" th:if="${cortado}">
+        Mostrando os <strong th:text="${maximoLinhas}">500</strong> registros mais recentes de
+        <strong th:text="${totalEncontrado}">700</strong> encontrados. Refine o filtro para ver os demais.
+        Clique no nome de um usuário para ver tudo o que ele fez.
+    </p>
+    <p class="aviso-corte" th:if="${!cortado and !logs.isEmpty()}">
+        Clique no nome de um usuário para ver tudo o que ele fez e tudo o que fizeram com a conta dele.
+    </p>
 
     <div class="tabela-logs-container">
         <table class="tabela-logs">
@@ -105,7 +106,15 @@
             <tbody>
             <tr th:each="log : ${logs}">
                 <td class="col-data" th:text="${#temporals.format(log.dataHora, 'dd/MM/yyyy HH:mm:ss')}"></td>
-                <td class="col-usuario" th:text="${log.usuarioNome}"></td>
+                <td class="col-usuario">
+                    <a class="link-usuario" th:if="${log.usuarioId != null}"
+                       th:href="@{/admin/logs/usuario(tipo=${log.usuarioTipo},id=${log.usuarioId})}"
+                       th:text="${log.usuarioNome}"></a>
+                    <a class="link-usuario" th:if="${log.usuarioId == null and log.usuarioNome != null}"
+                       th:href="@{/admin/logs/usuario(tipo=${log.usuarioTipo},nome=${log.usuarioNome})}"
+                       th:text="${log.usuarioNome}"></a>
+                    <span th:if="${log.usuarioId == null and log.usuarioNome == null}">-</span>
+                </td>
                 <td class="col-tipo" th:text="${log.usuarioTipo}"></td>
                 <td class="col-acao" th:text="${log.acao}"></td>
                 <td class="col-entidade" th:text="${log.entidadeTipo} + (${log.entidadeId} != null ? (' #' + ${log.entidadeId}) : '')"></td>
@@ -118,7 +127,8 @@
                 </td>
             </tr>
             <tr th:if="${logs.isEmpty()}">
-                <td colspan="9" class="linha-vazia">Nenhum registro de auditoria ainda</td>
+                <td colspan="9" class="linha-vazia"
+                    th:text="${temFiltro} ? 'Nenhum registro encontrado com esses filtros' : 'Nenhum registro de auditoria ainda'"></td>
             </tr>
             </tbody>
         </table>
