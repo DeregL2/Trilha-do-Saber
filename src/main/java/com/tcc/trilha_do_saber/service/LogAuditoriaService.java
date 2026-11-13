@@ -1,5 +1,9 @@
 package com.tcc.trilha_do_saber.service;
 
+import com.tcc.trilha_do_saber.dto.AtividadeUsuarioDTO;
+import com.tcc.trilha_do_saber.dto.ContagemAcaoDTO;
+import com.tcc.trilha_do_saber.dto.FiltroLogDTO;
+import com.tcc.trilha_do_saber.dto.ResultadoBuscaLogDTO;
 import com.tcc.trilha_do_saber.model.LogAuditoria;
 import com.tcc.trilha_do_saber.model.TipoAcao;
 import com.tcc.trilha_do_saber.repository.LogAuditoriaRepository;
@@ -7,14 +11,28 @@ import org.springframework.stereotype.Service;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.text.Normalizer;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.EnumMap;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
 
 @Service
 public class LogAuditoriaService {
 
 
+    public static final int MAXIMO_LINHAS = 500;
+    public static final int MAXIMO_SOFRIDAS = 200;
+    public static final int MAXIMO_IPS = 10;
     private static final int DIAS_RETENCAO = 365;
+    private static final LocalDateTime INICIO_ABERTO = LocalDateTime.of(1970, 1, 1, 0, 0);
+    private static final LocalDateTime FIM_ABERTO = LocalDateTime.of(2100, 1, 1, 0, 0);
 
     private final LogAuditoriaRepository logAuditoriaRepository;
 
@@ -72,6 +90,122 @@ public class LogAuditoriaService {
 
     public List<LogAuditoria> listarTodos(){
         return logAuditoriaRepository.findAllByOrderByDataHoraDesc();
+    }
+
+    public ResultadoBuscaLogDTO buscar(FiltroLogDTO filtro){
+        LocalDate de = filtro.getDe();
+        LocalDate ate = filtro.getAte();
+        if (de != null && ate != null && de.isAfter(ate)) {
+            LocalDate troca = de;
+            de = ate;
+            ate = troca;
+        }
+
+        List<LogAuditoria> base;
+        if (de != null || ate != null) {
+            LocalDateTime inicio = de != null ? de.atStartOfDay() : INICIO_ABERTO;
+            LocalDateTime fim = ate != null ? ate.plusDays(1).atStartOfDay().minusNanos(1) : FIM_ABERTO;
+            base = logAuditoriaRepository.findByDataHoraBetweenOrderByDataHoraDesc(inicio, fim);
+        } else {
+            base = logAuditoriaRepository.findAllByOrderByDataHoraDesc();
+        }
+
+        String nomeProcurado = semAcento(filtro.getUsuario());
+        String perfil = filtro.getPerfil() == null ? "" : filtro.getPerfil().trim();
+
+        List<LogAuditoria> encontrados = new ArrayList<>();
+        for (LogAuditoria log : base) {
+            if (!nomeProcurado.isEmpty() && !semAcento(log.getUsuarioNome()).contains(nomeProcurado)) {
+                continue;
+            }
+            if (!perfil.isEmpty() && !perfil.equalsIgnoreCase(log.getUsuarioTipo())) {
+                continue;
+            }
+            if (filtro.getAcao() != null && filtro.getAcao() != log.getAcao()) {
+                continue;
+            }
+            encontrados.add(log);
+        }
+
+        List<LogAuditoria> exibidos = encontrados.subList(0, Math.min(encontrados.size(), MAXIMO_LINHAS));
+        return new ResultadoBuscaLogDTO(exibidos, encontrados.size());
+    }
+
+    public AtividadeUsuarioDTO atividadeDoUsuario(String tipo, Long usuarioId, String nome){
+        boolean desconhecido = "DESCONHECIDO".equals(tipo);
+
+        List<LogAuditoria> feitas = desconhecido
+                ? logAuditoriaRepository.findByUsuarioTipoAndUsuarioNomeIgnoreCaseOrderByDataHoraDesc(tipo, nome)
+                : logAuditoriaRepository.findByUsuarioTipoAndUsuarioIdOrderByDataHoraDesc(tipo, usuarioId);
+
+        String entidade = entidadeDoTipo(tipo);
+        List<LogAuditoria> sofridas = new ArrayList<>();
+        if (entidade != null && usuarioId != null) {
+            for (LogAuditoria log : logAuditoriaRepository.findByEntidadeTipoAndEntidadeIdOrderByDataHoraDesc(entidade, usuarioId)) {
+                boolean fezEleProprio = tipo.equals(log.getUsuarioTipo()) && usuarioId.equals(log.getUsuarioId());
+                if (!fezEleProprio) {
+                    sofridas.add(log);
+                }
+            }
+        }
+
+        long loginsSucesso = feitas.stream().filter(log -> log.getAcao() == TipoAcao.LOGIN_SUCESSO).count();
+        long loginsFalha = feitas.stream().filter(log -> log.getAcao() == TipoAcao.LOGIN_FALHA).count();
+
+        Set<String> ips = new LinkedHashSet<>();
+        for (LogAuditoria log : feitas) {
+            if (log.getIp() != null && !log.getIp().isBlank() && ips.size() < MAXIMO_IPS) {
+                ips.add(log.getIp());
+            }
+        }
+
+        Map<TipoAcao, Long> contagem = new EnumMap<>(TipoAcao.class);
+        for (LogAuditoria log : feitas) {
+            if (log.getAcao() != null) {
+                contagem.merge(log.getAcao(), 1L, Long::sum);
+            }
+        }
+        List<ContagemAcaoDTO> acoesPorTipo = contagem.entrySet().stream()
+                .map(entrada -> new ContagemAcaoDTO(entrada.getKey(), entrada.getValue()))
+                .sorted(Comparator.comparingLong(ContagemAcaoDTO::getQuantidade).reversed())
+                .toList();
+
+        String nomeExibido = nome;
+        if (!feitas.isEmpty() && feitas.get(0).getUsuarioNome() != null) {
+            nomeExibido = feitas.get(0).getUsuarioNome();
+        }
+        if (nomeExibido == null || nomeExibido.isBlank()) {
+            nomeExibido = usuarioId != null ? "Usuário #" + usuarioId : "Desconhecido";
+        }
+
+        LocalDateTime ultima = feitas.isEmpty() ? null : feitas.get(0).getDataHora();
+        LocalDateTime primeira = feitas.isEmpty() ? null : feitas.get(feitas.size() - 1).getDataHora();
+
+        List<LogAuditoria> feitasExibidas = feitas.subList(0, Math.min(feitas.size(), MAXIMO_LINHAS));
+        List<LogAuditoria> sofridasExibidas = sofridas.subList(0, Math.min(sofridas.size(), MAXIMO_SOFRIDAS));
+
+        return new AtividadeUsuarioDTO(tipo, usuarioId, nomeExibido, feitas.size(), primeira, ultima, loginsSucesso,
+                loginsFalha, new ArrayList<>(ips), acoesPorTipo, feitasExibidas, sofridas.size(), sofridasExibidas);
+    }
+
+    static String entidadeDoTipo(String tipo){
+        if (tipo == null) {
+            return null;
+        }
+        return switch (tipo) {
+            case "ALUNO" -> "Aluno";
+            case "PROFESSOR" -> "Professor";
+            case "COORDENADOR" -> "Coordenador";
+            default -> null;
+        };
+    }
+
+    static String semAcento(String texto){
+        if (texto == null) {
+            return "";
+        }
+        String semMarcas = Normalizer.normalize(texto.trim(), Normalizer.Form.NFD).replaceAll("\\p{M}", "");
+        return semMarcas.toLowerCase(Locale.ROOT);
     }
 
     public int expurgarLogsAntigos(){

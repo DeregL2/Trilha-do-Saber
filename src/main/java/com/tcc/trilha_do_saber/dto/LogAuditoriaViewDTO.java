@@ -17,6 +17,7 @@ public class LogAuditoriaViewDTO {
 
     public Long getId(){ return log.getId(); }
     public LocalDateTime getDataHora(){ return log.getDataHora(); }
+    public Long getUsuarioId(){ return log.getUsuarioId(); }
     public String getUsuarioNome(){ return log.getUsuarioNome(); }
     public String getUsuarioTipo(){ return log.getUsuarioTipo(); }
     public TipoAcao getAcao(){ return log.getAcao(); }
