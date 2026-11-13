@@ -36,7 +36,8 @@ public class UsuarioSessaoDTO implements Serializable {
     public boolean isPrimeiroAcesso(){ return primeiroAcesso; }
     public boolean isDuasEtapasAtiva(){ return duasEtapasAtiva; }
 
+
     public boolean isExigeCodigo(){
-        return duasEtapasAtiva || primeiroAcesso;
+        return duasEtapasAtiva;
     }
 }

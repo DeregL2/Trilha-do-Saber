@@ -71,7 +71,8 @@ public class PrimeiroAcessoService {
         logAuditoriaService.registrar(usuario.getId(), usuario.getNome(), tipo, TipoAcao.LOGIN_SUCESSO, "Login",
                 usuario.getId(), "Login concluido apos o primeiro acesso", ip, null);
 
-        return new UsuarioSessaoDTO(usuario.getId(), usuario.getNome(), usuario.getEmail(), tipo);
+        return new UsuarioSessaoDTO(usuario.getId(), usuario.getNome(), usuario.getEmail(), tipo, false,
+                usuario.isDuasEtapasAtiva());
     }
 
     private Optional<Usuario> localizar(UsuarioSessaoDTO pendente) {

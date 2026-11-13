@@ -56,11 +56,18 @@ public class LoginController {
             UsuarioSessaoDTO usuario = authService.autenticar(dto.getEmail(), dto.getSenha());
 
             if (!usuario.isExigeCodigo()) {
+
+
+                if (usuario.isPrimeiroAcesso()) {
+                    session.setAttribute("primeiroAcesso", usuario);
+                    return "redirect:/primeiro-acesso";
+                }
+
                 session.setAttribute("usuarioLogado", usuario);
 
                 logAuditoriaService.registrar(usuario.getId(), usuario.getNome(), usuario.getTipo(),
                         TipoAcao.LOGIN_SUCESSO, "Login", usuario.getId(),
-                        "Login concluido sem verificacao em duas etapas (desativada pelo usuario)",
+                        "Login concluido sem verificacao em duas etapas (desativada)",
                         request.getRemoteAddr(), null);
 
                 return "redirect:" + PaginaInicial.de(usuario.getTipo());
