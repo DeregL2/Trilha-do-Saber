@@ -2,7 +2,7 @@
 
 Plataforma de estudos adaptativa para preparação ao **ENADE**, desenvolvida como Trabalho de Conclusão de Curso (TCC) do curso de **Sistemas de Informação** da UMC.
 
-> Organiza o banco de questões de provas anteriores, aplica exercícios ao aluno e acompanha seu desempenho, ajudando a direcionar os estudos para os temas com maior necessidade de reforço.
+> Organiza o banco de questões de provas anteriores, aplica exercícios ao aluno e acompanha seu desempenho.
 
 ---
 
