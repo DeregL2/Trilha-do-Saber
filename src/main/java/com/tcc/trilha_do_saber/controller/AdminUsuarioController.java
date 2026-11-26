@@ -132,12 +132,13 @@ public class AdminUsuarioController {
 
     @PostMapping("/{id}")
     public String atualizar(@PathVariable Long id, @Valid @ModelAttribute("coordenadorForm") CoordenadorFormDTO form,
-                            BindingResult result, HttpSession session, HttpServletRequest request){
-        if (result.hasErrors()) {
-            return "admin/coordenadorForm";
-        }
+                            BindingResult result, Model model, HttpSession session, HttpServletRequest request){
         UsuarioSessaoDTO ator = (UsuarioSessaoDTO) session.getAttribute("usuarioLogado");
         if (ator == null || !"ADMIN".equals(ator.getTipo())) return "redirect:/login";
+        if (result.hasErrors()) {
+            model.addAttribute("usuarioLogado", ator);
+            return "admin/coordenadorForm";
+        }
         long inicio = System.currentTimeMillis();
         coordenadorService.atualizar(id, form, ator, request.getRemoteAddr(), System.currentTimeMillis() - inicio);
         return "redirect:/admin/coordenadores";

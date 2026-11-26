@@ -60,6 +60,9 @@ public class MinhaContaController {
         }
 
         response.setContentType(usuario.getFotoPerfilTipo() != null ? usuario.getFotoPerfilTipo() : MediaType.APPLICATION_OCTET_STREAM_VALUE);
+        // Impede o navegador de tratar a foto como outro tipo de arquivo (ex.: fotos antigas salvas como SVG)
+        response.setHeader("X-Content-Type-Options", "nosniff");
+        response.setHeader("Content-Security-Policy", "default-src 'none'; sandbox");
         response.getOutputStream().write(usuario.getFotoPerfil());
         response.getOutputStream().flush();
     }

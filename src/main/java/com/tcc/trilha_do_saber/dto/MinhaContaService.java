@@ -140,22 +140,41 @@ public class MinhaContaService {
         if (foto == null || foto.isEmpty()) {
             throw new IllegalArgumentException("Selecione uma imagem");
         }
-        String contentType = foto.getContentType();
-        if (contentType == null || !contentType.startsWith("image/")) {
-            throw new IllegalArgumentException("O arquivo precisa ser uma imagem");
-        }
         if (foto.getSize() > TAMANHO_MAXIMO_FOTO) {
             throw new IllegalArgumentException("A imagem precisa ter no máximo 3MB");
         }
+        // O tipo informado pelo navegador não é confiável: o formato vem dos primeiros bytes do arquivo
+        byte[] conteudo = foto.getBytes();
+        String contentType = tipoDaImagem(conteudo);
+        if (contentType == null) {
+            throw new IllegalArgumentException("A foto precisa ser uma imagem PNG, JPG ou WebP");
+        }
 
         Usuario usuario = buscar(sessao.getTipo(), sessao.getId());
-        usuario.setFotoPerfil(foto.getBytes());
+        usuario.setFotoPerfil(conteudo);
         usuario.setFotoPerfilTipo(contentType);
         salvar(sessao.getTipo(), usuario);
 
         logAuditoriaService.registrar(usuario.getId(), usuario.getNome(), sessao.getTipo(),
                 TipoAcao.ATUALIZACAO, sessao.getTipo(), usuario.getId(),
                 "Usuário atualizou a foto de perfil", ip, duracaoMs);
+    }
+
+    static String tipoDaImagem(byte[] bytes){
+        if (bytes == null) {
+            return null;
+        }
+        if (bytes.length >= 8 && (bytes[0] & 0xFF) == 0x89 && bytes[1] == 'P' && bytes[2] == 'N' && bytes[3] == 'G') {
+            return "image/png";
+        }
+        if (bytes.length >= 3 && (bytes[0] & 0xFF) == 0xFF && (bytes[1] & 0xFF) == 0xD8 && (bytes[2] & 0xFF) == 0xFF) {
+            return "image/jpeg";
+        }
+        if (bytes.length >= 12 && bytes[0] == 'R' && bytes[1] == 'I' && bytes[2] == 'F' && bytes[3] == 'F'
+                && bytes[8] == 'W' && bytes[9] == 'E' && bytes[10] == 'B' && bytes[11] == 'P') {
+            return "image/webp";
+        }
+        return null;
     }
 
     public void removerFoto(UsuarioSessaoDTO sessao, String ip, long duracaoMs){
