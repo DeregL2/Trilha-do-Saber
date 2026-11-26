@@ -6,7 +6,6 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.Lob;
 import jakarta.persistence.MappedSuperclass;
 
 import java.time.LocalDateTime;
@@ -35,7 +34,10 @@ public abstract class Usuario {
 
     private LocalDateTime dataConsentimento;
 
-    @Lob
+    // Guardada como bytea, e não como @Lob: no PostgreSQL o @Lob vira "large object" (oid), que só pode ser
+    // lido dentro de transação. Listas de alunos carregadas fora de transação quebravam com um aluno com foto.
+    // Coluna nova para não esbarrar na antiga foto_perfil (oid), que o ddl-auto=update não converte.
+    @Column(name = "foto_perfil_bytes")
     private byte[] fotoPerfil;
 
     private String fotoPerfilTipo;
@@ -200,4 +202,4 @@ public abstract class Usuario {
     public void setDuasEtapasAtiva(boolean ativa){
         this.duasEtapas = ativa;
     }
-}
+}
