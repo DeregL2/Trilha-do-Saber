@@ -41,7 +41,11 @@ public class LoginController {
     }
 
     @GetMapping("/")
-    public String raiz(){
+    public String raiz(HttpSession session){
+        // Quem já está logado vai para a própria página inicial (usado também pelo botão da página de erro)
+        if (session.getAttribute("usuarioLogado") instanceof UsuarioSessaoDTO usuario) {
+            return "redirect:" + PaginaInicial.de(usuario.getTipo());
+        }
         return "redirect:/login";
     }
 

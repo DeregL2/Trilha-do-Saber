@@ -8,16 +8,24 @@ import com.tcc.trilha_do_saber.service.PainelCoordenadorService;
 import com.tcc.trilha_do_saber.service.ProfessorPainelService;
 import com.tcc.trilha_do_saber.service.ProfessorTurmaService;
 import jakarta.servlet.http.HttpSession;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 
 import java.time.LocalDate;
+import java.time.MonthDay;
+import java.time.format.DateTimeParseException;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 @Controller
 public class HomeController {
+
+    private static final MonthDay DIA_PADRAO_ENADE = MonthDay.of(11, 29);
+
+    @Value("${app.enade.data:}")
+    private String dataEnadeConfigurada;
 
     private final ProfessorTurmaService professorTurmaService;
     private final ProfessorPainelService professorPainelService;
@@ -98,8 +106,25 @@ public class HomeController {
 
     private void adicionarContagemEnade(Model model){
         LocalDate hoje = LocalDate.now();
-        LocalDate dataEnade = LocalDate.of(hoje.getYear(), 11, 29);
+        LocalDate dataEnade = proximoEnade(hoje, dataEnadeConfigurada);
         model.addAttribute("dataEnade", dataEnade);
         model.addAttribute("diasParaEnade", ChronoUnit.DAYS.between(hoje, dataEnade));
+    }
+
+    // Usa a data oficial configurada em app.enade.data (AAAA-MM-DD) enquanto ela não passou;
+    // sem data configurada, ou depois dela, conta até o próximo 29/11 para nunca mostrar dias negativos.
+    static LocalDate proximoEnade(LocalDate hoje, String dataConfigurada){
+        if (dataConfigurada != null && !dataConfigurada.isBlank()) {
+            try {
+                LocalDate configurada = LocalDate.parse(dataConfigurada.trim());
+                if (!configurada.isBefore(hoje)) {
+                    return configurada;
+                }
+            } catch (DateTimeParseException ignorada) {
+                // data mal escrita na configuração: segue com a data padrão
+            }
+        }
+        LocalDate padrao = LocalDate.of(hoje.getYear(), DIA_PADRAO_ENADE.getMonth(), DIA_PADRAO_ENADE.getDayOfMonth());
+        return padrao.isBefore(hoje) ? padrao.plusYears(1) : padrao;
     }
 }

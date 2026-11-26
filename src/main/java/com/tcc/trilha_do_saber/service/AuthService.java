@@ -25,6 +25,10 @@ public class AuthService {
     private final AlunoRepository alunoRepository;
     private final PasswordEncoder passwordEncoder;
 
+    static final String CREDENCIAIS_INVALIDAS = "E-mail ou senha inválidos";
+
+    private volatile String hashFicticio;
+
     public AuthService(AdmGeralRepository admGeralRepository, CoordenadorRepository coordenadorRepository,
                        ProfessorRepository professorRepository, AlunoRepository alunoRepository,
                        PasswordEncoder passwordEncoder){
@@ -56,18 +60,26 @@ public class AuthService {
             return validar(aluno.get(), senha, "ALUNO");
         }
 
-        throw new IllegalArgumentException("E-mail ou senha inválidos");
+        // Mesmo custo de uma senha errada, para o tempo de resposta não indicar se o e-mail existe
+        passwordEncoder.matches(senha == null ? "" : senha, hashFicticio());
+        throw new IllegalArgumentException(CREDENCIAIS_INVALIDAS);
     }
 
     private UsuarioSessaoDTO validar(Usuario usuario, String senha, String tipo){
-        if (usuario.isExcluido() || usuario.getSenha() == null) {
+        // A senha é conferida antes de qualquer outra mensagem: sem a senha certa, ninguém descobre
+        // se o e-mail está cadastrado, pendente de aprovação ou desativado.
+        if (usuario.getSenha() == null) {
+            passwordEncoder.matches(senha == null ? "" : senha, hashFicticio());
+            throw new IllegalArgumentException(CREDENCIAIS_INVALIDAS);
+        }
+        if (!passwordEncoder.matches(senha, usuario.getSenha())) {
+            throw new IllegalArgumentException(CREDENCIAIS_INVALIDAS);
+        }
+        if (usuario.isExcluido()) {
             throw new IllegalArgumentException("Conta desativada");
         }
         if (!usuario.isAtivo()) {
             throw new IllegalArgumentException("Cadastro ainda não aprovado");
-        }
-        if (!passwordEncoder.matches(senha, usuario.getSenha())) {
-            throw new IllegalArgumentException("E-mail ou senha inválidos");
         }
         boolean primeiroAcesso = false;
         if (usuario.isPrimeiroAcessoPendente()) {
@@ -78,5 +90,12 @@ public class AuthService {
         }
         return new UsuarioSessaoDTO(usuario.getId(), usuario.getNome(), usuario.getEmail(), tipo, primeiroAcesso,
                 usuario.isDuasEtapasAtiva());
+    }
+
+    private String hashFicticio(){
+        if (hashFicticio == null) {
+            hashFicticio = passwordEncoder.encode("senha-ficticia-para-tempo-constante");
+        }
+        return hashFicticio;
     }
 }

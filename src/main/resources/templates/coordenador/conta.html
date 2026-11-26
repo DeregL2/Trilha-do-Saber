@@ -37,7 +37,7 @@
       <span th:unless="${conta.temFoto}" class="foto-perfil-vazia" th:text="${conta.iniciais}">??</span>
 
       <form th:action="@{/conta/foto}" method="post" enctype="multipart/form-data" class="formulario-foto">
-        <input type="file" name="foto" accept="image/*">
+        <input type="file" name="foto" accept="image/png,image/jpeg,image/webp">
         <button type="submit" class="botao-secundario">Enviar foto</button>
       </form>
       <form th:if="${conta.temFoto}" th:action="@{/conta/foto/remover}" method="post" class="formulario-foto">
