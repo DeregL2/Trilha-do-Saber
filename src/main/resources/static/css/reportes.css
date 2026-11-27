@@ -18,14 +18,67 @@
     color: var(--texto-secundario);
 }
 
+/* Larguras próprias desta tabela. As regras gerais de .tabela-usuarios (painel.css) deixam a última coluna
+   com 90px e cortam o texto, o que espremia os três botões de ação. */
+.reportes-tabela .tabela-usuarios th:nth-child(1),
+.reportes-tabela .tabela-usuarios td:nth-child(1) { width: 150px; }
+.reportes-tabela .tabela-usuarios th:nth-child(4),
+.reportes-tabela .tabela-usuarios td:nth-child(4) { width: 150px; }
+.reportes-tabela .tabela-usuarios th:nth-child(5),
+.reportes-tabela .tabela-usuarios td:nth-child(5) { width: 130px; }
+.reportes-tabela .tabela-usuarios th:last-child,
+.reportes-tabela .tabela-usuarios td:last-child {
+    width: 190px;
+    text-align: left;
+}
+
+/* Questão, problema, aluno e análise podem quebrar linha em vez de serem cortados com "..." */
+.reportes-tabela .tabela-usuarios td {
+    white-space: normal;
+    vertical-align: top;
+    overflow-wrap: anywhere;
+}
+
+.reportes-tabela .tabela-usuarios td:first-child {
+    white-space: nowrap;
+}
+
 .reporte-acoes {
     display: flex;
     flex-direction: column;
     gap: 6px;
 }
 
+.reporte-acoes form {
+    margin: 0;
+}
+
 .reporte-acoes button {
+    display: block;
     width: 100%;
+    padding: 8px 12px;
+    font-size: 13px;
+    line-height: 1.2;
+    white-space: nowrap;
+    text-align: center;
+    cursor: pointer;
+}
+
+.reporte-acoes .botao-perigo {
+    background: #fff;
+}
+
+.reporte-acoes .botao-perigo:hover {
+    background: var(--vermelho-fundo);
+}
+
+.reporte-acoes .botao-secundario:hover {
+    border-color: var(--texto-secundario);
+    color: var(--texto);
+}
+
+.reporte-sem-acao {
+    color: var(--texto-secundario);
 }
 
 .reporte-mensagem {
