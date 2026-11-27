@@ -1,0 +1,237 @@
+/* Lista de checkboxes usada quando o JavaScript não carrega: caixinha ao lado do nome */
+.cartao-form .lista-professores {
+    max-height: 260px;
+    overflow-y: auto;
+    border: 1px solid var(--borda);
+    border-radius: 8px;
+    padding: 4px 0;
+}
+
+.cartao-form .lista-professores .opcao-professor {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0;
+    padding: 8px 12px;
+    font-weight: 400;
+    color: var(--texto);
+    cursor: pointer;
+}
+
+.cartao-form .lista-professores .opcao-professor input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    margin: 0;
+    padding: 0;
+    flex-shrink: 0;
+    accent-color: var(--marca);
+}
+
+/* Com JavaScript, a lista original fica escondida e o campo de busca assume */
+.lista-professores.sm-original {
+    display: none;
+}
+
+.sm {
+    position: relative;
+}
+
+/* O "display" das regras abaixo venceria o atributo hidden usado pela busca para esconder opções */
+.sm [hidden] {
+    display: none !important;
+}
+
+.sm-campo {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    min-height: 42px;
+    padding: 6px 36px 6px 8px;
+    border: 1px solid var(--borda);
+    border-radius: 8px;
+    background: #fff;
+    cursor: text;
+    position: relative;
+}
+
+.sm-campo::after {
+    content: "";
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    width: 7px;
+    height: 7px;
+    border-right: 2px solid var(--texto-secundario);
+    border-bottom: 2px solid var(--texto-secundario);
+    transform: translateY(-70%) rotate(45deg);
+    pointer-events: none;
+}
+
+.sm-aberto .sm-campo::after {
+    transform: translateY(-30%) rotate(-135deg);
+}
+
+.sm-aberto .sm-campo,
+.sm-campo:focus-within {
+    border-color: var(--marca);
+    box-shadow: 0 0 0 3px var(--marca-clara);
+}
+
+.sm-etiquetas {
+    display: contents;
+}
+
+.sm-etiqueta {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    max-width: 100%;
+    padding: 3px 4px 3px 10px;
+    border-radius: 999px;
+    background: var(--marca-clara);
+    color: var(--marca);
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.sm-etiqueta-texto {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.sm-remover {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--marca);
+    font-size: 16px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.sm-remover:hover,
+.sm-remover:focus-visible {
+    background: #fff;
+    outline: none;
+}
+
+/* Mais específico que ".cartao-form input:not([type=checkbox])", que daria borda e altura próprias à busca */
+.cartao-form .sm-campo input.sm-busca,
+.cartao-form .sm-campo input.sm-busca:focus {
+    flex: 1;
+    display: block;
+    min-width: 140px;
+    width: auto;
+    height: 28px;
+    border: 0;
+    border-radius: 0;
+    padding: 4px;
+    outline: none;
+    box-shadow: none;
+    background: transparent;
+}
+
+.sm-lista {
+    position: absolute;
+    z-index: 20;
+    left: 0;
+    right: 0;
+    top: calc(100% + 4px);
+    max-height: 280px;
+    overflow-y: auto;
+    margin: 0;
+    padding: 4px;
+    list-style: none;
+    background: #fff;
+    border: 1px solid var(--borda);
+    border-radius: 10px;
+    box-shadow: 0 10px 24px rgba(16, 24, 40, .12);
+}
+
+.sm-opcao {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.sm-opcao.sm-ativa {
+    background: var(--marca-fundo);
+}
+
+.sm-marca {
+    flex-shrink: 0;
+    width: 18px;
+    height: 18px;
+    border: 1.5px solid var(--borda);
+    border-radius: 4px;
+    background: #fff;
+    position: relative;
+}
+
+.sm-selecionada .sm-marca {
+    background: var(--marca);
+    border-color: var(--marca);
+}
+
+.sm-selecionada .sm-marca::after {
+    content: "";
+    position: absolute;
+    left: 5px;
+    top: 1px;
+    width: 5px;
+    height: 10px;
+    border-right: 2px solid #fff;
+    border-bottom: 2px solid #fff;
+    transform: rotate(45deg);
+}
+
+.sm-textos {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.sm-nome {
+    font-size: 14px;
+    color: var(--texto);
+}
+
+.sm-detalhe {
+    font-size: 12px;
+    color: var(--texto-secundario);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.sm-vazio {
+    padding: 10px;
+    font-size: 13px;
+    color: var(--texto-secundario);
+}
+
+.sm-contador {
+    display: block;
+    margin-top: 6px;
+    font-size: 12px;
+    color: var(--texto-secundario);
+}
+
+.cartao-form .dica-professores {
+    display: block;
+    margin-top: 4px;
+    font-size: 12px;
+    line-height: 1.4;
+    color: var(--texto-secundario);
+}
