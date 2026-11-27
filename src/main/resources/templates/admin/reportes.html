@@ -68,13 +68,14 @@
                         <form method="post" th:action="@{|/admin/reportes/${reporte.id}/resolver|}" th:if="${reporte.questaoAtiva}"
                               data-confirmar="Desativar a questão? Ela deixa de aparecer em novos simulados.">
                             <input type="hidden" name="desativarQuestao" value="true">
-                            <button type="submit" class="botao-perigo">Resolver e desativar questão</button>
+                            <button type="submit" class="botao-perigo"
+                                    title="Marca o reporte como resolvido e tira a questão dos novos simulados">Resolver e desativar</button>
                         </form>
                         <form method="post" th:action="@{|/admin/reportes/${reporte.id}/descartar|}">
                             <button type="submit" class="botao-secundario">Descartar</button>
                         </form>
                     </div>
-                    <span th:unless="${reporte.aberto}">—</span>
+                    <span class="reporte-sem-acao" th:unless="${reporte.aberto}">—</span>
                 </td>
             </tr>
             <tr th:if="${reportes.isEmpty()}">

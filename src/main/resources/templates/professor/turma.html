@@ -9,37 +9,26 @@
 </head>
 <body>
 
-<header class="topbar">
-    <div class="marca-topbar">
-        <img th:src="@{/css/img/icons/img/logo.png}" alt="Trilha do Saber" class="logo-marca">
-        <div>
-            <strong>Trilha do Saber</strong>
-            <span>Professor</span>
-        </div>
-    </div>
-
-    <nav class="menu-topbar">
-        <a th:href="@{/professor/inicio}" class="item-menu"><img th:src="@{/css/img/icons/img/iconeinicio.png}" alt="Início" class="icone-menu"> Início</a>
-        <a th:href="@{/professor/turmas}" class="item-menu"><img th:src="@{/css/img/icons/img/iconeturma.png}" alt="Turmas" class="icone-menu"> Turmas</a>
-        <a th:href="@{/professor/dashboard}" class="item-menu ativo"><img th:src="@{/css/img/icons/img/iconedash.png}" alt="Desempenho" class="icone-menu"> Desempenho</a>
-        <a href="#" class="item-menu"><img th:src="@{/css/img/icons/img/iconeconteu.png}" alt="Conteúdo de Aula" class="icone-menu"> Conteúdo de Aula</a>
-        <a href="#" class="item-menu"><img th:src="@{/css/img/icons/img/iconeconta.png}" alt="Minha Conta" class="icone-menu"> Minha Conta</a>
-    </nav>
-
-    <div class="perfil-topbar">
-        <div class="avatar-usuario">PR</div>
-        <div>
-            <strong th:text="${usuario.nome}">Professor</strong>
-            <span th:text="${usuario.email}">professor@umc.br</span>
-        </div>
-        <a th:href="@{/cadastro/termos-lgpd}" target="_blank" class="link-sair">Termo de Uso</a>
-        <a th:href="@{/logout}" class="link-sair">Sair</a>
-    </div>
-</header>
+<header th:replace="~{fragments/navProfessor :: nav(pagina='dashboard', usuarioLogado=${usuario})}"></header>
 
 <main class="conteudo dashboard">
 
-    <header th:replace="~{fragments/navProfessor :: nav(pagina='dashboard', usuarioLogado=${usuario})}"></header>
+    <header class="topo-conteudo">
+        <h1>Desempenho da turma</h1>
+        <p class="subtitulo-pagina"
+           th:text="${turmaEscolhida != null} ? ${turmaEscolhida.rotuloCompleto} : 'Acompanhe como cada turma está se saindo.'">
+            Sistemas de Informação · 8º semestre · Turma B · Noturno</p>
+
+        <form class="filtro-periodo" method="get" th:action="@{/professor/turma}" th:unless="${periodos.isEmpty()}">
+            <label for="filtro">Período letivo</label>
+            <select id="filtro" name="periodo" onchange="this.form.submit()">
+                <option th:each="p : ${periodos}" th:value="${p}" th:text="${p}"
+                        th:selected="${p == periodoSelecionado}">2026/2</option>
+            </select>
+        </form>
+
+        <div th:replace="~{professor/abas :: abas}"></div>
+    </header>
 
     <div class="palco">
 
